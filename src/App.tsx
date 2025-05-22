@@ -25,30 +25,6 @@ const THEMES = {
   }
 };
 
-const experienceItems = [
-  {
-    company: "The Noun Project",
-    role: "Software Engineer",
-    period: "May 2019 - Present",
-    description: "Global marketplace for design assets serving millions. Web app & Sketch plugin for digital asset manager, Lingo.",
-    tech: ["Python (Django/Flask)", "React (Redux & Hooks)", "CSS-in-JS (Emotion)", "Docker", "AWS"]
-  },
-  {
-    company: "Wondersauce",
-    role: "Engineer",
-    period: "Jul 2018 - May 2019",
-    description: "Integrated advertising agency. Worked on & led projects using a variety of web development technologies.",
-    tech: ["React", "React Native", "Vue", "SSGs (Gatsby, Nuxt)", "Wordpress", "Shopify", "Google Cloud", "Firebase/Firestore"]
-  },
-  {
-    company: "Sensai",
-    role: "Frontend Developer",
-    period: "Feb 2016 - Jul 2018",
-    description: "Hybrid social media app. Built features for a React/Redux hybrid app, Go APIs, and internal Ruby on Rails/React app.",
-    tech: ["React/Redux", "Go APIs", "Docker", "Cordova", "Rails+React", "Wordpress"]
-  }
-];
-
 type ThemeKey = keyof typeof THEMES;
 
 function scrollToSection(id: string) {
@@ -79,6 +55,13 @@ export default function App() {
   const accent = isOrange && dark ? themeColors.accentDark : themeColors.accent;
   const accentHover = isOrange && dark ? themeColors.accentDarkHover : themeColors.accentHover;
   const accentText = isOrange && dark ? themeColors.accentDark : themeColors.accentText;
+  const experienceItems = t('experience.companies', { returnObjects: true }) as Array<{
+    company: string;
+    role: string;
+    period: string;
+    desc: string;
+    tech: string[];
+  }>;
 
   // 获取当前语言
   const currentLanguage = i18n.language || 'zh';
@@ -129,7 +112,7 @@ export default function App() {
               className="hover:underline font-mono text-base lg:text-lg"
               style={{ color: "#fff" }}
             >
-              {section.label}
+              {t(`nav.${section.id}`)}
             </button>
           ))}
           <button
@@ -189,7 +172,7 @@ export default function App() {
                 onClick={() => handleMobileNav(section.id)}
                 className="w-full text-2xl my-2 py-2 font-mono text-white hover:underline"
               >
-                {section.label}
+                {t(`nav.${section.id}`)}
               </button>
             ))}
             <div className="flex mt-8 gap-4">
@@ -232,8 +215,9 @@ export default function App() {
 
       {/* Hero Section */}
       <section className="min-h-[45vh] flex flex-col items-center justify-center text-white pb-10 px-4 md:px-0" id="hero" style={{ backgroundColor: accent }}>
-        <div className="text-sm uppercase tracking-widest mt-8">{t('hero.hi')}</div>
-        <h1 className="font-mono text-lg mt-2 mb-4 text-center">Freelance Web Developer in Los Angeles</h1>
+        <div className="text-sm uppercase tracking-widest mt-8">{`${t('hero.hi')}`}</div>
+        <h2 className="text-2xl uppercase tracking-widest my-2">{t('hero.name')}</h2>
+        <h1 className="font-mono text-lg mt-2 mb-4 text-center">{t('hero.title')}</h1>
         <a
           href="#contact"
           className="border-2 border-white px-6 py-2 rounded font-semibold inline-block transition mt-2"
@@ -249,7 +233,7 @@ export default function App() {
             (e.target as HTMLElement).style.color = '#fff';
           }}
         >
-          Get in Touch
+          {t('hero.cta')}
         </a>
       </section>
 
@@ -257,15 +241,15 @@ export default function App() {
       <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="about"
         style={{ background: dark ? baseCard : '#fff', color: baseText }}>
         <h2 className="font-bold text-xl md:text-2xl mb-4" style={{ color: accentText }}>{t('about.header')}</h2>
-        <p className="mb-4">My name is Chase Ohlson. I'm a frontend software engineer & freelance web developer in Los Angeles—with roots in digital marketing & SEO. I'm passionate about music, technology, and basically everything that makes the internet tick.</p>
-        <p className="mb-4">My work currently consists of a full-time engineering role at The Noun Project (working on <a href="https://www.lingoapp.com" className="underline" style={{ color: accentText }} target="_blank" rel="noopener noreferrer">Lingo</a>), plus managing ongoing freelance clients. This balance is resourceful for my learning as a web developer and for keeping up with new tools, libraries, and frameworks.</p>
-        <p className="mb-4">Whether you're a business owner looking to get started on an app or web development project, a developer looking to collaborate on something cool, or just wanting to say hi, shoot me a message and let's work together.</p>
+        <p className="mb-4">{t('about.para1')}</p>
+        <p className="mb-4">{t('about.para2')}</p>
+        <p className="mb-4">{t('about.para3')}</p>
       </section>
 
       {/* Experience Section with interaction */}
       <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="experience"
         style={{ background: dark ? baseCard : '#fff', color: baseText }}>
-        <h2 className="font-bold text-xl md:text-2xl mb-8" style={{ color: accentText }}>EXPERIENCE</h2>
+        <h2 className="font-bold text-xl md:text-2xl mb-8" style={{ color: accentText }}>{t('experience.header')}</h2>
         <div className="flex flex-col md:flex-row gap-8">
           {/* Vertical Tabs (Companies) */}
           <div className="flex md:flex-col md:w-56 shrink-0 border-b md:border-b-0  md:border-l w-full overflow-x-auto border-[#E5E7EB] dark:border-[#292950]">
@@ -300,7 +284,7 @@ export default function App() {
               <span className="block font-normal text-sm opacity-80">@ {experienceItems[expTab].company}</span>
             </div>
             <div className="font-mono text-xs mb-2 text-[#888] dark:text-[#BBB]">{experienceItems[expTab].period}</div>
-            <div className="mb-2 leading-relaxed">{experienceItems[expTab].description}</div>
+            <div className="mb-2 leading-relaxed">{experienceItems[expTab].desc}</div>
             <ul className="list-disc pl-6 space-y-1 mt-1">
               {experienceItems[expTab].tech.map((t, i) => (
                 <li key={i} className="text-sm">{t}</li>
@@ -312,41 +296,76 @@ export default function App() {
 
       {/* Blog preview section */}
       <section id="blog" className="py-12 md:py-16 px-4 md:px-6" style={{ background: dark ? baseCard : '#fff', color: baseText }}>
-        <h2 className="font-bold text-xl md:text-2xl mb-8 md:mb-10" style={{ color: accentText }}>RECENT POSTS</h2>
+        <h2 className="font-bold text-xl md:text-2xl mb-8 md:mb-10" style={{ color: accentText }}>{t('blog.header')}</h2>
         {/* Blog post previews go here */}
       </section>
 
       {/* Contact/Form Section */}
-      <section id="contact" className="py-20 md:py-24 px-4 md:px-6 flex flex-col items-center" style={{ background: dark ? baseCard : '#fff', color: baseText }}>
-        <h2 className="font-bold text-xl md:text-2xl mb-6 text-center" style={{ color: accentText }}>NEED A LOS ANGELES WEB DEVELOPER? LET'S BUILD SOMETHING.</h2>
-        <a
-          href="mailto:test@example.com"
-          className="border-2 px-6 py-2 rounded font-mono font-bold hover:text-white hover:bg-opacity-85 transition"
-          style={{
-            borderColor: accent,
-            color: accentText,
-            backgroundColor: 'transparent'
-          }}
-          onMouseEnter={e => {
-            (e.target as HTMLElement).style.backgroundColor = accentHover;
-            (e.target as HTMLElement).style.color = '#fff';
-          }}
-          onMouseLeave={e => {
-            (e.target as HTMLElement).style.backgroundColor = 'transparent';
-            (e.target as HTMLElement).style.color = accentText;
-          }}
-        >
-          GET IN TOUCH
-        </a>
+      <section id="contact" className="py-16 md:py-24 px-4 md:px-8 flex flex-col items-center max-w-[1400px] mx-auto" style={{ background: dark ? baseCard : '#fff', color: baseText }}>
+        <div className="w-full max-w-4xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+            <div className="w-full md:w-1/3">
+              <h2 className="font-bold text-2xl md:text-3xl mb-8" style={{ color: accentText }}>{t('contact.header')}</h2>
+              <a
+                href="mailto:wtiroo@163.com"
+                className="border-2 px-6 py-3 rounded font-mono font-bold hover:text-white hover:bg-opacity-85 transition inline-block"
+                style={{
+                  borderColor: accent,
+                  color: accentText,
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={e => {
+                  (e.target as HTMLElement).style.backgroundColor = accentHover;
+                  (e.target as HTMLElement).style.color = '#fff';
+                }}
+                onMouseLeave={e => {
+                  (e.target as HTMLElement).style.backgroundColor = 'transparent';
+                  (e.target as HTMLElement).style.color = accentText;
+                }}
+              >
+                {t('contact.cta')}
+              </a>
+            </div>
+            <div className="w-full md:w-1/3 flex flex-col gap-4">
+              <a 
+                href="https://github.com/king-peach" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 group"
+              >
+                <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
+                <span className="text-sm font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">GITHUB</span>
+              </a>
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 group"
+              >
+                <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
+                <span className="text-sm font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">TWITTER</span>
+              </a>
+              <a 
+                href="https://linkedin.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 group"
+              >
+                <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
+                <span className="text-sm font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">LINKEDIN</span>
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Footer */}
       <footer className="py-6 md:py-8 px-4 md:px-6 text-xs flex flex-col md:flex-row justify-between items-center border-t border-[#c7c1b2] gap-2" style={{ color: dark ? '#c8cac4' : '#8b97a6', background: dark ? baseCard : 'transparent' }}>
-        <span>© Copyright 2025 Chase Ohlson</span>
+        <span>© Copyright 2025 Eric Wang <a target="_blank" href="https://beian.miit.gov.cn/" rel="noreferrer" style={{ color: accentText }}>湘ICP备2022001339号</a> </span>
         <span>
-          <a href="https://github.com/brohlson" target="_blank" rel="noopener noreferrer" className="mx-2">Github</a>
-          <a href="https://twitter.com/chase_ohlson" target="_blank" rel="noopener noreferrer" className="mx-2">Twitter</a>
-          <a href="https://www.linkedin.com/in/chase-ohlson-21013349/" target="_blank" rel="noopener noreferrer" className="mx-2">LinkedIn</a>
+          <a href="https://github.com /king-peach" target="_blank" rel="noopener noreferrer" className="mx-2">Github</a>
+          <a href="https://www.yuque.com/wpeach" target="_blank" rel="noopener noreferrer" className="mx-2">Yuque</a>
+          { /* <a href="https://www.linkedin.com/in/chase-ohlson-21013349/" target="_blank" rel="noopener noreferrer" className="mx-2">LinkedIn</a> */}
         </span>
       </footer>
     </div>

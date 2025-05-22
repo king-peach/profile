@@ -2,9 +2,9 @@ const zh = {
   translation: {
     nav: {
       about: "关于",
-      experience: "经历",
+      experience: "工作经验",
       blog: "博文",
-      contact: "联系"
+      contact: "联系我"
     },
     hero: {
       hi: "你好，我叫",
@@ -19,27 +19,27 @@ const zh = {
       para3: "无论你是企业主、有开发需求，还是开发者希望交流合作，欢迎与我联系！"
     },
     experience: {
-      header: "经历",
+      header: "工作经验",
       companies: [
         {
-          name: "梯度科技",
+          company: "梯度科技",
           role: "高级前端开发",
           period: "2022年5月 - 至今",
-          desc: "可信的PaaS解决方案提供商，依托自研的智能云、多云管理、运维管理、大数据平台产品及云MSP、大数据、一体化运维服务，为政企、军工、金融等客户提供云数一体化解决方案。",
+          desc: "负责公司两大产品前端研发工作，重构官网，参与自研组件库和BI产品研发",
           tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "静态站点生成 (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker"]
         },
         {
-          name: "七风网络",
+          company: "七风网络",
           role: "前端开发",
           period: "2018年7月 - 2022年5月",
-          desc: "游戏开发、推广公司，负责游戏营销推广、前端开发、SEO、PPC/SEM等工作。",
-          tech: ["Vue", "Webpack", "JQuery", "tailwindcss", "小程序开发（Taro）"]
+          desc: "负责游戏开发、推广公司，负责游戏营销推广、前端开发、SEO、PPC/SEM等工作。",
+          tech: ["Vue", "Webpack", "JQuery", "Tailwindcss", "小程序开发（Taro）"]
         },
         {
-          name: "亚信数据",
+          company: "亚信数据",
           role: "开发实习生",
           period: "2017年10月 - 2018年5月",
-          desc: "AI智能算力、数据资产、区域治理",
+          desc: "从事国家某局2期项目开发",
           tech: ["JQuery", "HTML5", "Css3", "Javascript"]
         }
       ]
@@ -48,7 +48,7 @@ const zh = {
       header: "近期博文"
     },
     contact: {
-      header: "需要长沙的网页开发者？欢迎合作！",
+      header: "需要长沙的前端开发者？欢迎合作！",
       cta: "联系我"
     },
     footer: {
