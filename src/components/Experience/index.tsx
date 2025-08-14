@@ -53,7 +53,7 @@ const Experience: React.FC = () => {
   useEffect(() => {
     if (contentRef.current) {
       gsap.fromTo(contentRef.current,
-        { y: 20, opacity: 0 },
+        { y: 10, opacity: 0 },
         {
           y: 0,
           opacity: 1,

@@ -9,7 +9,7 @@ const zh = {
     hero: {
       hi: "你好，我叫",
       name: "王涛",
-      title: "是一名全栈网站开发者",
+      title: "一名全栈网站开发者",
       cta: "联系我"
     },
     about: {
@@ -26,7 +26,7 @@ const zh = {
           role: "高级前端开发",
           period: "2022年5月 - 至今",
           desc: "负责公司两大产品前端研发工作，重构官网，参与自研组件库和BI产品研发",
-          tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "静态站点生成 (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker"]
+          tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "静态站点生成 (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker", "微前端（qiankun & wujie）"]
         },
         {
           company: "七风网络",

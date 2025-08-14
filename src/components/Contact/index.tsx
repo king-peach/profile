@@ -73,7 +73,7 @@ const Contact: React.FC = () => {
             <a
               ref={buttonRef}
               href="mailto:wtiroo@163.com"
-              className="border-2 px-6 py-3 rounded font-mono font-bold hover:text-white hover:bg-opacity-85 transition inline-block"
+              className="border-2 px-6 py-3 rounded font-mono font-bold hover:text-white hover:bg-opacity-95 transition inline-block"
               style={{
                 color: accentText,
                 backgroundColor: 'transparent'
@@ -98,25 +98,25 @@ const Contact: React.FC = () => {
               className="flex items-center gap-2 group"
             >
               <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
-              <span className="text-sm font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">GITHUB</span>
+              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">GITHUB</span>
             </a>
             <a 
-              href="https://twitter.com" 
+              href="https://www.yuque.com/wpeach" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 group"
             >
               <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
-              <span className="text-sm font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">TWITTER</span>
+              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">YUQUE</span>
             </a>
             <a 
-              href="https://linkedin.com" 
+              href="mailto:wtiroo@163.com" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 group"
             >
               <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
-              <span className="text-sm font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">LINKEDIN</span>
+              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">EMAIL</span>
             </a>
           </div>
         </div>

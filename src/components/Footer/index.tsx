@@ -11,21 +11,21 @@ const Footer: React.FC = () => {
 
   const footerRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    gsap.fromTo(footerRef.current,
-      { y: 20, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.6,
-        scrollTrigger: {
-          trigger: footerRef.current,
-          start: "top bottom",
-          toggleActions: "play none none reverse"
-        }
-      }
-    );
-  }, []);
+  // useEffect(() => {
+  //   gsap.fromTo(footerRef.current,
+  //     { y: 20, opacity: 0 },
+  //     {
+  //       y: 0,
+  //       opacity: 1,
+  //       duration: 0.6,
+  //       scrollTrigger: {
+  //         trigger: footerRef.current,
+  //         start: "top bottom",
+  //         toggleActions: "play none none reverse"
+  //       }
+  //     }
+  //   );
+  // }, []);
 
   return (
     <footer ref={footerRef} className="py-6 md:py-8 px-4 md:px-6 text-xs flex flex-col md:flex-row justify-between items-center border-t border-[#c7c1b2] gap-2" style={{ color: dark ? '#c8cac4' : '#8b97a6' }}>

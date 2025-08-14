@@ -26,7 +26,7 @@ const en = {
           role: "Advanced Front-end Development",
           period: "May 2022 - Present",
           desc: "Responsible for the front-end research and development of the company's two major products, reconstructing the official website, and participating in the research and development of self-developed component libraries and BI products.",
-          tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "SSG (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker"]
+          tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "SSG (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker", "Micro Front-end (qiankun & wujie)"]
         },
         {
           company: "QiFeng Technology",

@@ -49,7 +49,7 @@ const Hero: React.FC = () => {
   }, []);
 
   return (
-    <section className="min-h-screen flex items-center justify-between text-white px-4 md:px-8" id="hero" style={{ backgroundColor: accent }}>
+    <section className="h-[50vh] min-h-[600px] flex items-center justify-between text-white px-4 md:px-8" id="hero" style={{ backgroundColor: accent }}>
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between max-w-7xl">
         {/* 左侧内容 */}
         <div ref={leftContentRef} className="flex flex-col items-start md:w-1/2">
@@ -68,7 +68,7 @@ const Hero: React.FC = () => {
         {/* 右侧图片 */}
         <div ref={rightImageRef} className="md:w-1/2 flex justify-end mt-8 md:mt-0">
           <div className="w-full max-w-xl">
-            <img src="/placeholder.jpg" alt="Profile" className="w-full h-auto object-cover" onError={(e) => {
+            <img src="/avatar.jpg" alt="Profile" className="w-full h-[40vh] min-h-[300px] object-cover" onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22288%22%20height%3D%22288%22%20viewBox%3D%220%200%20288%20288%22%3E%3Crect%20fill%3D%22%23ffffff%22%20opacity%3D%220.2%22%20width%3D%22288%22%20height%3D%22288%22%2F%3E%3Ctext%20fill%3D%22%23ffffff%22%20font-family%3D%22Arial%22%20font-size%3D%2224%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20x%3D%22144%22%20y%3D%22144%22%20dominant-baseline%3D%22middle%22%3E图片占位符%3C%2Ftext%3E%3C%2Fsvg%3E';
             }} />
