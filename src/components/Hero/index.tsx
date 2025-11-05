@@ -4,15 +4,30 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../ThemeContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import ProfileCard from "../ui/ProfileCard";
+import SplitText from "../ui/SplitText";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Hero: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { accent, accentHover, isOrange, dark } = useTheme();
   
   const leftContentRef = useRef<HTMLDivElement>(null);
   const rightImageRef = useRef<HTMLDivElement>(null);
+
+  // 欢迎语文本：优先使用换行；如无换行则按感叹号插入换行
+  const greetingRaw = t('hero.greeting');
+  const greetingText = greetingRaw.includes('\n')
+    ? greetingRaw
+    : greetingRaw.replace(/[!！]+/g, '!').replace(/!\s*/g, '!\n');
+  const greetingLines = greetingText.split(/\n+/).filter((s) => s.trim().length > 0);
+
+  // 根据语言调整逐字动画参数
+  const isChinese = (i18n.language || '').toLowerCase().startsWith('zh');
+  const charDelay = isChinese ? 0.05 : 0.03;
+  const charDuration = isChinese ? 0.7 : 0.5;
+  const fromY = isChinese ? 32 : 24;
 
   useEffect(() => {
     // 左侧内容动画
@@ -49,29 +64,41 @@ const Hero: React.FC = () => {
   }, []);
 
   return (
-    <section className="h-[50vh] min-h-[600px] flex items-center justify-between text-white px-4 md:px-8" id="hero" style={{ backgroundColor: accent }}>
+    <section className="h-[50vh] min-h-[600px] flex items-center justify-between text-white px-4 md:px-8" id="hero">
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between max-w-7xl">
         {/* 左侧内容 */}
         <div ref={leftContentRef} className="flex flex-col items-start md:w-1/2">
-          <p className="text-sm font-mono mb-2">{t('hero.hi')}</p>
-          <h1 className="text-5xl font-extrabold mb-2">{t('hero.name')}</h1>
-          <p className="text-lg font-mono text-white/80">{t('hero.title')}</p>
-          <button 
-            className="mt-6 px-6 py-2 border border-white/40 text-white font-mono text-sm hover:bg-white hover:text-black transition-colors"
-            style={{ borderColor: 'rgba(255,255,255,0.4)' }}
-            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            {t('hero.cta')}
-          </button>
+          <h1 className="text-5xl font-extrabold space-y-2">
+            {greetingLines.map((line, idx) => (
+              <SplitText
+                key={idx}
+                tag="span"
+                text={line.trim()}
+                className="block"
+                splitType="chars"
+                delay={charDelay}
+                duration={charDuration}
+                ease="power3.out"
+                from={{ opacity: 0, y: fromY }}
+                to={{ opacity: 1, y: 0 }}
+              />
+            ))}
+          </h1>
         </div>
         
-        {/* 右侧图片 */}
+        {/* 右侧 Profile Card */}
         <div ref={rightImageRef} className="md:w-1/2 flex justify-end mt-8 md:mt-0">
           <div className="w-full max-w-xl">
-            <img src="/avatar.jpg" alt="Profile" className="w-full h-[40vh] min-h-[300px] object-cover" onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22288%22%20height%3D%22288%22%20viewBox%3D%220%200%20288%20288%22%3E%3Crect%20fill%3D%22%23ffffff%22%20opacity%3D%220.2%22%20width%3D%22288%22%20height%3D%22288%22%2F%3E%3Ctext%20fill%3D%22%23ffffff%22%20font-family%3D%22Arial%22%20font-size%3D%2224%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20x%3D%22144%22%20y%3D%22144%22%20dominant-baseline%3D%22middle%22%3E图片占位符%3C%2Ftext%3E%3C%2Fsvg%3E';
-            }} />
+            <ProfileCard
+              avatarUrl="/avatar.jpg"
+              name={t('hero.name')}
+              title={t('hero.title')}
+              contactText={t('hero.cta')}
+              showUserInfo
+              enableTilt
+              className="h-[40vh] min-h-[300px]"
+              onContactClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            />
           </div>
         </div>
       </div>

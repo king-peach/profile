@@ -10,7 +10,9 @@ const en = {
       hi: "Hi, my name is",
       name: "Eric Wang",
       title: "Web Developer in ChangeSha",
-      cta: "Get in Touch"
+      cta: "Get in Touch",
+      status: 'Online',
+      greeting: "Hello, There!\nNice to meet you!"
     },
     about: {
       header: "About",

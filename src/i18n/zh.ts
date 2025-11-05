@@ -9,8 +9,10 @@ const zh = {
     hero: {
       hi: "你好，我叫",
       name: "王涛",
-      title: "一名全栈网站开发者",
-      cta: "联系我"
+      title: "全栈网站开发者",
+      cta: "联系我",
+      status: '在线',
+      greeting: "你好！\n很高兴认识你！"
     },
     about: {
       header: "关于",

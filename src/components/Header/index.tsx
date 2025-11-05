@@ -42,8 +42,7 @@ const Header: React.FC<HeaderProps> = ({ sections }) => {
 
   return (
     <header
-      className="flex items-center justify-between px-4 md:px-8 py-5 sticky top-0 z-50"
-      style={{ backgroundColor: accent }}
+      className="flex items-center justify-between px-4 md:px-8 py-5 sticky top-0 z-50 bg-transparent"
     >
       <div className="font-extrabold text-2xl tracking-widest">{/* Logo SVG goes here */}</div>
       {/* Desktop Nav */}
