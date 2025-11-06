@@ -6,6 +6,20 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ProfileCard from "../ui/ProfileCard";
 import SplitText from "../ui/SplitText";
+import LogoLoop from "../ui/LogoLoop";
+import {
+  SiReact,
+  SiVuedotjs,
+  SiNodedotjs,
+  SiTypescript,
+  SiDocker,
+  SiNginx,
+  SiGnubash,
+  SiGit,
+  SiJavascript,
+  SiTailwindcss,
+  SiWebpack,
+} from "react-icons/si";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,6 +42,21 @@ const Hero: React.FC = () => {
   const charDelay = isChinese ? 0.05 : 0.03;
   const charDuration = isChinese ? 0.7 : 0.5;
   const fromY = isChinese ? 32 : 24;
+
+  // 技术栈图标：使用 react-icons/si 品牌图标
+  const techLogos: React.ReactNode[] = [
+    <SiReact key="react" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiVuedotjs key="vue" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiNodedotjs key="node" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiTypescript key="typescript" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiDocker key="docker" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiNginx key="nginx" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiGnubash key="shell" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiGit key="git" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiJavascript key="javascript" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiTailwindcss key="tailwindcss" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+    <SiWebpack key="webpack" size={32} color={dark ? "#e5e7eb" : "#6b7280"} />,
+  ];
 
   useEffect(() => {
     // 左侧内容动画
@@ -88,9 +117,9 @@ const Hero: React.FC = () => {
         
         {/* 右侧 Profile Card */}
         <div ref={rightImageRef} className="md:w-1/2 flex justify-end mt-8 md:mt-0">
-          <div className="w-full max-w-xl">
+          <div className="w-full max-w-xl flex flex-col">
             <ProfileCard
-              avatarUrl="/avatar.jpg"
+              avatarUrl="/avatar01.jpg"
               name={t('hero.name')}
               title={t('hero.title')}
               contactText={t('hero.cta')}
@@ -98,6 +127,22 @@ const Hero: React.FC = () => {
               enableTilt
               className="h-[40vh] min-h-[300px]"
               onContactClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              techStack={
+                <LogoLoop
+                  logos={techLogos}
+                  speed={80}
+                  repeatCount={4}
+                  direction="left"
+                  logoHeight={32}
+                  gap={28}
+                  pauseOnHover
+                  fadeOut
+                  fadeOutColor="transparent"
+                  scaleOnHover
+                  ariaLabel="Technology stack"
+                  className="py-2"
+                />
+              }
             />
           </div>
         </div>

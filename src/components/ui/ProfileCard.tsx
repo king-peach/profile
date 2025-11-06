@@ -1,6 +1,7 @@
 import { t } from "i18next";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTheme } from "../ThemeContext";
 
 type ProfileCardProps = {
   avatarUrl: string;
@@ -21,6 +22,8 @@ type ProfileCardProps = {
   contactText?: string;
   showUserInfo?: boolean;
   onContactClick?: () => void;
+  /** 技术栈 LogoLoop 节点 */
+  techStack?: React.ReactNode;
 };
 
 const defaultBehindGradient =
@@ -47,9 +50,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   contactText = "Contact",
   showUserInfo = true,
   onContactClick,
+  techStack,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
+  const { dark } = useTheme();
 
   const bgBehind = useMemo(
     () => behindGradient ?? defaultBehindGradient,
@@ -160,10 +165,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         />
       )}
 
-      {/* Inner card */}
+      {/* 上半：个人介绍 2/3 */}
       <div
-        className="relative z-10 p-4 md:p-6 flex items-center gap-4 md:gap-6 backdrop-blur-sm"
-        style={{ background: bgInner }}
+        className="relative z-10 p-4 md:p-6 flex items-center gap-4 md:gap-6 backdrop-blur-sm flex-shrink-0"
+        style={{ background: bgInner, height: "66.666%" }}
       >
         <img
           src={avatarUrl}
@@ -185,20 +190,28 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   className="w-6 h-6 rounded-md object-cover border border-white/20"
                 />
               )}
-              <h3 className="text-xl md:text-2xl font-semibold truncate">{name}</h3>
+              <h3 className={`text-xl md:text-2xl font-semibold truncate ${dark ? "text-white" : "text-gray-500"}`}>{name}</h3>
+              <span className={`text-sm md:text-base truncate ml-[10px] ${dark ? "text-white/80" : "text-gray-500"}`}>{title}</span>
             </div>
-            <p className="text-sm md:text-base text-white/80 mt-1 truncate">{title}</p>
-            <div className="mt-2 flex items-center gap-3 text-xs md:text-sm text-white/70">
+            <div
+              className={`mt-2 flex items-center gap-3 text-xs md:text-sm ${dark ? "text-white/70" : "text-gray-500"}`}
+            >
               {handle && <span>@{handle}</span>}
               {status && (
                 <span className="flex items-center gap-1">
-                  <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-green-300" />
                   {status}
                 </span>
               )}
             </div>
             <button
-              className="mt-3 md:mt-4 px-3 md:px-4 py-1.5 md:py-2 rounded-md border border-white/30 text-white/90 hover:bg-white hover:text-black transition-colors"
+              className={
+                `${
+                  dark
+                    ? "mt-3 md:mt-4 px-3 md:px-4 py-1.5 md:py-2 rounded-md border border-white/30 text-white/90 hover:bg-white hover:text-black"
+                    : "mt-3 md:mt-4 px-3 md:px-4 py-1.5 md:py-2 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                } bg-transparent transition-colors`
+              }
               onClick={onContactClick}
             >
               {contactText}
@@ -206,6 +219,15 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
         )}
       </div>
+
+      {/* 下半：技术栈 1/3 */}
+      {techStack && (
+        <div
+          className={`relative z-10 h-[33.333%] w-full flex items-center justify-center bg-transparent ${dark ? "text-white" : "text-gray-500"}`}
+        >
+          {techStack}
+        </div>
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useTheme } from "../ThemeContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import SpotlightCard from "../ui/SpotlightCard";
 import { cn } from "@/lib/utils";
 
 const Blog: React.FC = () => {
@@ -55,38 +56,42 @@ const Blog: React.FC = () => {
       
       <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 第一个博客卡片 */}
-        <Card className={cn("overflow-hidden transition-all hover:shadow-lg", dark ? "bg-zinc-800 border-zinc-700" : "")}>
-          <CardHeader>
-            <CardTitle style={{ color: accentText }}>React 18 新特性解析</CardTitle>
-            <CardDescription className="text-sm" style={{ color: baseText }}>2023-10-15</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm" style={{ color: baseText }}>
-              React 18 带来了许多令人兴奋的新特性，包括并发渲染、自动批处理和过渡API。本文将深入探讨这些特性如何提升应用性能和用户体验。
-            </p>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <p className="text-xs" style={{ color: baseText }}>阅读时间: 5分钟</p>
-            <button className="text-sm font-medium" style={{ color: accentText }}>阅读更多 →</button>
-          </CardFooter>
-        </Card>
+        <SpotlightCard spotlightColor={dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.08)"}>
+          <Card className={cn("overflow-hidden transition-all hover:shadow-lg", dark ? "bg-zinc-800 border-zinc-700" : "")}>
+            <CardHeader>
+              <CardTitle style={{ color: accentText }}>React 18 新特性解析</CardTitle>
+              <CardDescription className="text-sm" style={{ color: baseText }}>2023-10-15</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm" style={{ color: baseText }}>
+                React 18 带来了许多令人兴奋的新特性，包括并发渲染、自动批处理和过渡API。本文将深入探讨这些特性如何提升应用性能和用户体验。
+              </p>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <p className="text-xs" style={{ color: baseText }}>阅读时间: 5分钟</p>
+              <button className="text-sm font-medium" style={{ color: accentText }}>阅读更多 →</button>
+            </CardFooter>
+          </Card>
+        </SpotlightCard>
 
         {/* 第二个博客卡片 */}
-        <Card className={cn("overflow-hidden transition-all hover:shadow-lg", dark ? "bg-zinc-800 border-zinc-700" : "")}>
-          <CardHeader>
-            <CardTitle style={{ color: accentText }}>TypeScript 高级类型技巧</CardTitle>
-            <CardDescription className="text-sm" style={{ color: baseText }}>2023-09-28</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm" style={{ color: baseText }}>
-              掌握TypeScript的高级类型系统可以大幅提升代码质量和开发效率。本文介绍条件类型、映射类型和类型推断等高级技巧，帮助你编写更安全、更灵活的代码。
-            </p>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <p className="text-xs" style={{ color: baseText }}>阅读时间: 8分钟</p>
-            <button className="text-sm font-medium" style={{ color: accentText }}>阅读更多 →</button>
-          </CardFooter>
-        </Card>
+        <SpotlightCard spotlightColor={dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.08)"}>
+          <Card className={cn("overflow-hidden transition-all hover:shadow-lg", dark ? "bg-zinc-800 border-zinc-700" : "")}>
+            <CardHeader>
+              <CardTitle style={{ color: accentText }}>TypeScript 高级类型技巧</CardTitle>
+              <CardDescription className="text-sm" style={{ color: baseText }}>2023-09-28</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm" style={{ color: baseText }}>
+                掌握TypeScript的高级类型系统可以大幅提升代码质量和开发效率。本文介绍条件类型、映射类型和类型推断等高级技巧，帮助你编写更安全、更灵活的代码。
+              </p>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <p className="text-xs" style={{ color: baseText }}>阅读时间: 8分钟</p>
+              <button className="text-sm font-medium" style={{ color: accentText }}>阅读更多 →</button>
+            </CardFooter>
+          </Card>
+        </SpotlightCard>
       </div>
     </section>
   );
