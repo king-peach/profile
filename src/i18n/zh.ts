@@ -49,6 +49,20 @@ const zh = {
     blog: {
       header: "近期博文"
     },
+    articles: {
+      title: "探索文章",
+      subtitle: "从 Notion 数据库同步的精选内容，记录技术探索与思考",
+      home: "首页",
+      loading: "加载中...",
+      loadingMore: "加载更多...",
+      noArticles: "暂无文章",
+      loadedAll: "已加载全部",
+      articlesCount: "篇文章",
+      readMore: "阅读全文",
+      noSummary: "暂无摘要",
+      errorConfig: "未配置数据源",
+      errorLoad: "加载失败"
+    },
     contact: {
       header: "需要长沙的前端开发者？欢迎合作！",
       cta: "联系我"

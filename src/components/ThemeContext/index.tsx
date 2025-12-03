@@ -41,7 +41,11 @@ function getInitialColor(): ThemeKey {
 }
 
 function getInitialDark(): boolean {
-  return localStorage.getItem('darkMode') === 'true' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) {
+    return stored === 'true';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 export const ThemeProvider: React.FC<{children: ReactNode}> = ({ children }) => {
@@ -72,6 +76,16 @@ export const ThemeProvider: React.FC<{children: ReactNode}> = ({ children }) => 
       document.documentElement.classList.remove('dark');
     }
   }, [dark]);
+
+  // 如果用户未设置偏好（无 localStorage），则跟随系统主题变化
+  useEffect(() => {
+    const stored = localStorage.getItem('darkMode');
+    if (stored !== null) return; // 用户已设置偏好，尊重用户选择
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = (e: MediaQueryListEvent) => setDark(e.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
 
   return (
     <ThemeContext.Provider value={{

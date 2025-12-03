@@ -1,0 +1,546 @@
+{
+  "results": [
+    {
+      "object": "page",
+      "id": "2bb28bdf-58f2-801f-8536-c5899c49adde",
+      "created_time": "2025-11-30T14:01:00.000Z",
+      "last_edited_time": "2025-11-30T14:13:00.000Z",
+      "created_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "last_edited_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "cover": null,
+      "icon": null,
+      "parent": {
+        "type": "data_source_id",
+        "data_source_id": "2ba28bdf-58f2-80d3-8c45-000b4c0822f1",
+        "database_id": "2ba28bdf-58f2-80e2-8459-f52f40e41e0c"
+      },
+      "archived": false,
+      "in_trash": false,
+      "is_locked": false,
+      "properties": {
+        "Published": {
+          "id": "%3DIHN",
+          "type": "status",
+          "status": {
+            "id": "VV\\M",
+            "name": "Draft",
+            "color": "blue"
+          }
+        },
+        "Slug": {
+          "id": "IU%7Cn",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "FrontEnd Design Pattern",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "FrontEnd Design Pattern",
+              "href": null
+            }
+          ]
+        },
+        "summary": {
+          "id": "M%3EZX",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "常见的搭建网站SSG方式",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "常见的搭建网站SSG方式",
+              "href": null
+            }
+          ]
+        },
+        "PublishDate": {
+          "id": "kIB%7D",
+          "type": "date",
+          "date": null
+        },
+        "Cover": {
+          "id": "ov%7D%3F",
+          "type": "files",
+          "files": []
+        },
+        "Tags": {
+          "id": "vVsx",
+          "type": "select",
+          "select": {
+            "id": "376fbb7c-9620-4826-96b6-8fe468afa353",
+            "name": "Practical",
+            "color": "red"
+          }
+        },
+        "ContentPage": {
+          "id": "vy_%7D",
+          "type": "relation",
+          "relation": [
+            {
+              "id": "6b4badf3-c7c8-4314-af6f-f00e20d16885"
+            }
+          ],
+          "has_more": false
+        },
+        "Title": {
+          "id": "title",
+          "type": "title",
+          "title": [
+            {
+              "type": "text",
+              "text": {
+                "content": "SSG网站静态化实践",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "SSG网站静态化实践",
+              "href": null
+            }
+          ]
+        }
+      },
+      "url": "https://www.notion.so/SSG-2bb28bdf58f2801f8536c5899c49adde",
+      "public_url": null
+    },
+    {
+      "object": "page",
+      "id": "2bb28bdf-58f2-8036-b5d4-ea1b9b1e6025",
+      "created_time": "2025-11-30T14:01:00.000Z",
+      "last_edited_time": "2025-11-30T14:11:00.000Z",
+      "created_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "last_edited_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "cover": null,
+      "icon": null,
+      "parent": {
+        "type": "data_source_id",
+        "data_source_id": "2ba28bdf-58f2-80d3-8c45-000b4c0822f1",
+        "database_id": "2ba28bdf-58f2-80e2-8459-f52f40e41e0c"
+      },
+      "archived": false,
+      "in_trash": false,
+      "is_locked": false,
+      "properties": {
+        "Published": {
+          "id": "%3DIHN",
+          "type": "status",
+          "status": {
+            "id": "VV\\M",
+            "name": "Draft",
+            "color": "blue"
+          }
+        },
+        "Slug": {
+          "id": "IU%7Cn",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "FrontEnd Design Pattern",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "FrontEnd Design Pattern",
+              "href": null
+            }
+          ]
+        },
+        "summary": {
+          "id": "M%3EZX",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "是一种创建型设计模式，其在父类中提供一个创建对象的方法，允许子类决定实例化对象的类型。",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "是一种创建型设计模式，其在父类中提供一个创建对象的方法，允许子类决定实例化对象的类型。",
+              "href": null
+            }
+          ]
+        },
+        "PublishDate": {
+          "id": "kIB%7D",
+          "type": "date",
+          "date": null
+        },
+        "Cover": {
+          "id": "ov%7D%3F",
+          "type": "files",
+          "files": []
+        },
+        "Tags": {
+          "id": "vVsx",
+          "type": "select",
+          "select": {
+            "id": "a7aa6732-4e12-4108-858b-97abdb27e4f8",
+            "name": "DesignPattern",
+            "color": "purple"
+          }
+        },
+        "ContentPage": {
+          "id": "vy_%7D",
+          "type": "relation",
+          "relation": [
+            {
+              "id": "6b4badf3-c7c8-4314-af6f-f00e20d16885"
+            }
+          ],
+          "has_more": false
+        },
+        "Title": {
+          "id": "title",
+          "type": "title",
+          "title": [
+            {
+              "type": "text",
+              "text": {
+                "content": "工厂方法模式",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "工厂方法模式",
+              "href": null
+            }
+          ]
+        }
+      },
+      "url": "https://www.notion.so/2bb28bdf58f28036b5d4ea1b9b1e6025",
+      "public_url": null
+    },
+    {
+      "object": "page",
+      "id": "2bb28bdf-58f2-804f-8693-cb554f560116",
+      "created_time": "2025-11-30T14:00:00.000Z",
+      "last_edited_time": "2025-11-30T14:10:00.000Z",
+      "created_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "last_edited_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "cover": null,
+      "icon": null,
+      "parent": {
+        "type": "data_source_id",
+        "data_source_id": "2ba28bdf-58f2-80d3-8c45-000b4c0822f1",
+        "database_id": "2ba28bdf-58f2-80e2-8459-f52f40e41e0c"
+      },
+      "archived": false,
+      "in_trash": false,
+      "is_locked": false,
+      "properties": {
+        "Published": {
+          "id": "%3DIHN",
+          "type": "status",
+          "status": {
+            "id": "VV\\M",
+            "name": "Draft",
+            "color": "blue"
+          }
+        },
+        "Slug": {
+          "id": "IU%7Cn",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "FrontEnd Design Pattern",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "FrontEnd Design Pattern",
+              "href": null
+            }
+          ]
+        },
+        "summary": {
+          "id": "M%3EZX",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "抽象工厂模式是创建型模式，它提供了一种创建对象的最佳方式。",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "抽象工厂模式是创建型模式，它提供了一种创建对象的最佳方式。",
+              "href": null
+            }
+          ]
+        },
+        "PublishDate": {
+          "id": "kIB%7D",
+          "type": "date",
+          "date": null
+        },
+        "Cover": {
+          "id": "ov%7D%3F",
+          "type": "files",
+          "files": []
+        },
+        "Tags": {
+          "id": "vVsx",
+          "type": "select",
+          "select": {
+            "id": "a7aa6732-4e12-4108-858b-97abdb27e4f8",
+            "name": "DesignPattern",
+            "color": "purple"
+          }
+        },
+        "ContentPage": {
+          "id": "vy_%7D",
+          "type": "relation",
+          "relation": [
+            {
+              "id": "6b4badf3-c7c8-4314-af6f-f00e20d16885"
+            }
+          ],
+          "has_more": false
+        },
+        "Title": {
+          "id": "title",
+          "type": "title",
+          "title": [
+            {
+              "type": "text",
+              "text": {
+                "content": "抽象工厂模式",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "抽象工厂模式",
+              "href": null
+            }
+          ]
+        }
+      },
+      "url": "https://www.notion.so/2bb28bdf58f2804f8693cb554f560116",
+      "public_url": null
+    },
+    {
+      "object": "page",
+      "id": "2ba28bdf-58f2-807f-adcb-c92ee7440415",
+      "created_time": "2025-11-29T09:35:00.000Z",
+      "last_edited_time": "2025-11-30T14:09:00.000Z",
+      "created_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "last_edited_by": {
+        "object": "user",
+        "id": "270ec354-3ece-4ead-9eff-bf6398a65686"
+      },
+      "cover": null,
+      "icon": null,
+      "parent": {
+        "type": "data_source_id",
+        "data_source_id": "2ba28bdf-58f2-80d3-8c45-000b4c0822f1",
+        "database_id": "2ba28bdf-58f2-80e2-8459-f52f40e41e0c"
+      },
+      "archived": false,
+      "in_trash": false,
+      "is_locked": false,
+      "properties": {
+        "Published": {
+          "id": "%3DIHN",
+          "type": "status",
+          "status": {
+            "id": "VV\\M",
+            "name": "Draft",
+            "color": "blue"
+          }
+        },
+        "Slug": {
+          "id": "IU%7Cn",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "FrontEnd Design Pattern",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "FrontEnd Design Pattern",
+              "href": null
+            }
+          ]
+        },
+        "summary": {
+          "id": "M%3EZX",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "前端设计模式是一种解决软件设计中常见问题的通用解决方案。在前端开发中，设计模式帮助我们编写可维护、可扩展且易于理解的代码。以下是一些基本的设计模式概念和前端开发中常用的设计模式。",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "前端设计模式是一种解决软件设计中常见问题的通用解决方案。在前端开发中，设计模式帮助我们编写可维护、可扩展且易于理解的代码。以下是一些基本的设计模式概念和前端开发中常用的设计模式。",
+              "href": null
+            }
+          ]
+        },
+        "PublishDate": {
+          "id": "kIB%7D",
+          "type": "date",
+          "date": null
+        },
+        "Cover": {
+          "id": "ov%7D%3F",
+          "type": "files",
+          "files": []
+        },
+        "Tags": {
+          "id": "vVsx",
+          "type": "select",
+          "select": {
+            "id": "a7aa6732-4e12-4108-858b-97abdb27e4f8",
+            "name": "DesignPattern",
+            "color": "purple"
+          }
+        },
+        "ContentPage": {
+          "id": "vy_%7D",
+          "type": "relation",
+          "relation": [
+            {
+              "id": "6b4badf3-c7c8-4314-af6f-f00e20d16885"
+            }
+          ],
+          "has_more": false
+        },
+        "Title": {
+          "id": "title",
+          "type": "title",
+          "title": [
+            {
+              "type": "text",
+              "text": {
+                "content": "前端设计模式",
+                "link": null
+              },
+              "annotations": {
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "code": false,
+                "color": "default"
+              },
+              "plain_text": "前端设计模式",
+              "href": null
+            }
+          ]
+        }
+      },
+      "url": "https://www.notion.so/2ba28bdf58f2807fadcbc92ee7440415",
+      "public_url": null
+    }
+  ],
+  "total": 4,
+  "generated_at": "2025-12-03T02:32:06.445Z"
+}

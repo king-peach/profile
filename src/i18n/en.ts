@@ -49,6 +49,20 @@ const en = {
     blog: {
       header: "Recent Posts"
     },
+    articles: {
+      title: "Explore Articles",
+      subtitle: "Curated content synced from Notion database, documenting technical exploration and thoughts",
+      home: "Home",
+      loading: "Loading...",
+      loadingMore: "Loading more...",
+      noArticles: "No articles yet",
+      loadedAll: "All loaded",
+      articlesCount: "articles",
+      readMore: "Read More",
+      noSummary: "No summary available",
+      errorConfig: "Data source not configured",
+      errorLoad: "Failed to load"
+    },
     contact: {
       header: "Need a Changsha Web Developer? Let's build something.",
       cta: "Get in Touch"
