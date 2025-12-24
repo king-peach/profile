@@ -12,7 +12,41 @@ const en = {
       title: "Web Developer in ChangeSha",
       cta: "Get in Touch",
       status: 'Online',
-      greeting: "Hello, There!\nNice to meet you!"
+      greeting: "From Business to Advanced\nSystematic Learning & Engineering",
+      tagline: "Systematic Learning · Retrospective Driven · Advanced Frontend & Engineering",
+      subtitle: "Focusing on design patterns, frontend engineering, troubleshooting retrospectives, JS basics, and essays. Documenting real-world technical decisions and systematic learning paths to help frontend developers build reusable knowledge systems and show employers the value of engineering.",
+      primaryCta: "Start with Advanced Path →",
+      secondaryCta: "About Me & Collaboration →",
+      promise: "Advanced frontend & engineering notes driven by systematic learning and retrospectives.",
+    },
+    contentMap: {
+      title: "Core Topics",
+      subtitle: "Building a systematic frontend knowledge system around five major themes, from basics to advanced, theory to practice.",
+      engineering: {
+        title: "Frontend Engineering",
+        description: "From build, deploy to monitoring, managing frontend complexity with engineering thinking.",
+        cta: "View Engineering Articles →"
+      },
+      patterns: {
+        title: "Design Patterns",
+        description: "Understanding and applying common frontend design patterns in real business scenarios.",
+        cta: "View Design Patterns Series →"
+      },
+      retros: {
+        title: "Troubleshooting Retros",
+        description: "Documenting difficult problems and online incidents, from phenomenon to root cause to solution.",
+        cta: "View Retrospective Cases →"
+      },
+      js: {
+        title: "JS Basics",
+        description: "Returning to the language itself, laying the foundation for all engineering and architectural capabilities.",
+        cta: "View JS Basic Articles →"
+      },
+      essay: {
+        title: "Essays / Thoughts",
+        description: "Notes and reflections on learning methods, career development, and personal efficiency.",
+        cta: "View Essays →"
+      }
     },
     about: {
       header: "About",
@@ -47,7 +81,11 @@ const en = {
       ]
     },
     blog: {
-      header: "Recent Posts"
+      header: "Recent Posts",
+      viewMore: "View More",
+      readMore: "Read More",
+      readMoreAria: "Read more",
+      readMoreAriaWithTitle: "Read more: {{title}}"
     },
     articles: {
       title: "Explore Articles",
@@ -61,11 +99,21 @@ const en = {
       readMore: "Read More",
       noSummary: "No summary available",
       errorConfig: "Data source not configured",
-      errorLoad: "Failed to load"
+      errorLoad: "Failed to load",
+      all: "All",
+      filterByType: "Filter by type",
     },
     contact: {
       header: "Need a Changsha Web Developer? Let's build something.",
-      cta: "Get in Touch"
+      cta: "Get in Touch",
+      links: {
+        github: "GITHUB",
+        yuque: "YUQUE",
+        email: "EMAIL"
+      }
+    },
+    floatingActions: {
+      backToTop: "Back to top"
     },
     footer: {
       copyright: "© Copyright 2025 Eric Wang"

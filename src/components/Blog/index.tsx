@@ -25,6 +25,7 @@ type NotionPage = {
   object: "page";
   id: string;
   url?: string;
+  created_time?: string;
   last_edited_time?: string;
   properties?: Record<string, NotionProperty>;
 };
@@ -50,6 +51,17 @@ function extractRichText(prop?: NotionProperty): string {
   return prop.rich_text?.map((t) => t.plain_text).join("") || "";
 }
 
+function extractText(prop?: NotionProperty): string {
+  if (!prop) return "";
+  if (prop.type === "rich_text") {
+    return prop.rich_text?.map((t) => t.plain_text).join("") || "";
+  }
+  if (prop.type === "title") {
+    return prop.title?.map((t) => t.plain_text).join("") || "";
+  }
+  return "";
+}
+
 function extractDate(prop?: NotionProperty): string | null {
   if (!prop || prop.type !== "date" || !prop.date?.start) return null;
   return prop.date.start;
@@ -58,6 +70,34 @@ function extractDate(prop?: NotionProperty): string | null {
 function extractMultiSelect(prop?: NotionProperty): { name: string; color: string }[] {
   if (!prop || prop.type !== "multi_select" || !prop.multi_select) return [];
   return prop.multi_select.map((s) => ({ name: s.name || "", color: s.color || "default" }));
+}
+
+// 用于排序的“有效时间”：与文章列表保持一致：
+// PublishDate / 发布日期 / 日期 / Date > last_edited_time > created_time
+function getEffectiveDate(page: NotionPage): string | null {
+  const props = page.properties || {};
+  const dateProp =
+    props["PublishDate"] ||
+    props["发布日期"] ||
+    props["日期"] ||
+    props["Date"];
+
+  const dateFromProp = extractDate(dateProp as NotionProperty);
+  return dateFromProp || page.last_edited_time || page.created_time || null;
+}
+
+function getEffectiveTimestamp(page: NotionPage): number {
+  const d = getEffectiveDate(page);
+  if (!d) return 0;
+  const ts = new Date(d).getTime();
+  return Number.isNaN(ts) ? 0 : ts;
+}
+
+function selectTopArticles(pages: NotionPage[], limit = 4): NotionPage[] {
+  return pages
+    .filter((page) => page.object === "page")
+    .sort((a, b) => getEffectiveTimestamp(b) - getEffectiveTimestamp(a))
+    .slice(0, limit);
 }
 
 // Notion 颜色映射
@@ -88,10 +128,7 @@ function useRecentArticles() {
           const res = await fetch("/data/articles.json");
           if (!res.ok) throw new Error("加载静态数据失败");
           const json = await res.json();
-          const items = (json.results || [])
-            .filter((r: NotionPage) => r.object === "page")
-            .slice(0, 4);
-          setArticles(items);
+          setArticles(selectTopArticles(json.results || []));
         } else {
           // 开发环境：从 API 代理获取
           if (!DATABASE_ID) {
@@ -99,17 +136,38 @@ function useRecentArticles() {
             setLoading(false);
             return;
           }
-          const res = await fetch(`/api/notion/databases/${DATABASE_ID}/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              page_size: 4,
-              sorts: [{ timestamp: "last_edited_time", direction: "descending" }],
-            }),
-          });
-          if (!res.ok) throw new Error("加载失败");
-          const json = await res.json();
-          setArticles((json.results || []).filter((r: NotionPage) => r.object === "page"));
+          const requestPayloads = [
+            { page_size: 50, sorts: [{ property: "PublishDate", direction: "descending" }] },
+            { page_size: 50, sorts: [{ property: "publishDate", direction: "descending" }] },
+            { page_size: 50, sorts: [{ property: "发布日期", direction: "descending" }] },
+            { page_size: 50, sorts: [{ property: "日期", direction: "descending" }] },
+            { page_size: 50, sorts: [{ property: "Date", direction: "descending" }] },
+            { page_size: 50, sorts: [{ timestamp: "last_edited_time", direction: "descending" }] },
+          ];
+
+          let lastError: string | null = null;
+
+          for (const payload of requestPayloads) {
+            const res = await fetch(`/api/notion/databases/${DATABASE_ID}/query`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+              if (res.status === 400) {
+                lastError = (await res.json().catch(() => null))?.message || null;
+                continue;
+              }
+              throw new Error("加载失败");
+            }
+
+            const json = await res.json();
+            setArticles(selectTopArticles(json.results || []));
+            return;
+          }
+
+          throw new Error(lastError || "加载失败");
         }
       } catch (e: any) {
         setError(e?.message || "加载失败");
@@ -125,7 +183,7 @@ function useRecentArticles() {
 }
 
 const Blog: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { baseCard, baseText, accentText, dark } = useTheme();
   const { articles, loading, error } = useRecentArticles();
   
@@ -169,16 +227,38 @@ const Blog: React.FC = () => {
     }
   }, [loading, articles]);
 
-  const handleViewMore = () => {
+  const navigateTo = (target: string, { newTab = false } = {}) => {
+    if (newTab) {
+      window.open(target, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if ((window as any).navigateTo) {
-      (window as any).navigateTo("/articles");
+      (window as any).navigateTo(target);
     } else {
-      window.location.href = "/articles";
+      window.location.href = target;
+    }
+  };
+
+  const handleViewMore = () => navigateTo("/articles");
+
+  const handleArticleOpen = (url?: string) => {
+    if (!url) return;
+    navigateTo(url, { newTab: true });
+  };
+
+  const handleArticleKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    url?: string,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleArticleOpen(url);
     }
   };
 
   return (
-    <section id="blog" className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" style={{ color: baseText }}>
+    <section id="blog" className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" style={{ color: baseText }} data-component="Blog">
       {/* 标题行：左侧标题 + 右侧查看更多 */}
       <div className="flex items-center justify-between mb-8 md:mb-10">
         <h2 ref={titleRef} className="font-bold text-xl md:text-2xl" style={{ color: accentText }}>
@@ -192,7 +272,7 @@ const Blog: React.FC = () => {
           )}
           style={{ color: accentText }}
         >
-          查看更多
+          {t('blog.viewMore')}
           <FiArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -215,11 +295,25 @@ const Blog: React.FC = () => {
       {!loading && !error && (
         <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {articles.map((article) => {
-            const title = extractTitle(article);
             const props = article.properties || {};
+            const isEn = i18n.language.startsWith("en");
+            const slugTitle = extractText(props["slug"] || props["Slug"] || props["SLUG"]);
+            const title = (isEn ? slugTitle : "") || extractTitle(article);
+            const readMoreAriaLabel = title
+              ? t("blog.readMoreAriaWithTitle", { title })
+              : t("blog.readMoreAria");
             const summary = extractRichText(props["summary"] || props["摘要"] || props["Summary"] || props["描述"] || props["Description"]);
+            const summaryEn = extractText(props["summaryEn"] || props["SummaryEn"] || props["SummaryEN"]);
+            const displayedSummary = (isEn ? summaryEn : "") || summary;
             const tags = extractMultiSelect(props["标签"] || props["Tags"] || props["tags"]);
-            const date = extractDate(props["日期"] || props["Date"] || props["发布日期"]) || article.last_edited_time;
+            // 发布时间：优先使用 Notion 的 PublishDate，其次退回到其它日期字段或最后编辑时间
+            const date =
+              extractDate(
+                props["PublishDate"] ||
+                props["发布日期"] ||
+                props["日期"] ||
+                props["Date"],
+              ) || article.last_edited_time;
 
             return (
               <SpotlightCard key={article.id} spotlightColor={dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.08)"}>
@@ -232,7 +326,7 @@ const Blog: React.FC = () => {
                   </CardHeader>
                   <CardContent className="flex-1">
                     <p className="text-sm line-clamp-2 mb-3" style={{ color: baseText }}>
-                      {summary || "暂无摘要"}
+                      {displayedSummary || "暂无摘要"}
                     </p>
                     {/* 标签 */}
                     {tags.length > 0 && (
@@ -255,16 +349,24 @@ const Blog: React.FC = () => {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter className="flex justify-end pt-2 border-t border-gray-100 dark:border-zinc-700">
+                  <CardFooter
+                    className="flex justify-end pt-2 border-t border-gray-100 dark:border-zinc-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-800"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleArticleOpen(article.url)}
+                    onKeyDown={(event) => handleArticleKeyDown(event, article.url)}
+                    aria-label={readMoreAriaLabel}
+                  >
                     {article.url && (
                       <a
                         href={article.url}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm font-medium hover:underline"
+                        onClick={(event) => event.stopPropagation()}
                         style={{ color: accentText }}
                       >
-                        阅读更多 →
+                        {t('blog.readMore')} →
                       </a>
                     )}
                   </CardFooter>

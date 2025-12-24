@@ -69,6 +69,17 @@ function extractRichText(prop?: NotionProperty): string {
   return prop.rich_text?.map((t) => t.plain_text).join("") || "";
 }
 
+function extractText(prop?: NotionProperty): string {
+  if (!prop) return "";
+  if (prop.type === "rich_text") {
+    return prop.rich_text?.map((t) => t.plain_text).join("") || "";
+  }
+  if (prop.type === "title") {
+    return prop.title?.map((t) => t.plain_text).join("") || "";
+  }
+  return "";
+}
+
 function extractSelect(prop?: NotionProperty): { name: string; color: string } | null {
   if (!prop || prop.type !== "select" || !prop.select?.name) return null;
   return { name: prop.select.name, color: prop.select.color || "gray" };
@@ -96,6 +107,26 @@ function extractCover(p: NotionPage): string | null {
   return null;
 }
 
+// 用于排序的“有效时间”：优先 PublishDate / 发布日期 / 日期 / Date，其次 last_edited_time / created_time
+function getEffectiveDate(page: NotionPage): string | null {
+  const props = page.properties || {};
+  const dateProp =
+    props["PublishDate"] ||
+    props["发布日期"] ||
+    props["日期"] ||
+    props["Date"];
+
+  const dateFromProp = extractDate(dateProp as NotionProperty);
+  return dateFromProp || page.last_edited_time || page.created_time || null;
+}
+
+function getEffectiveTimestamp(page: NotionPage): number {
+  const d = getEffectiveDate(page);
+  if (!d) return 0;
+  const ts = new Date(d).getTime();
+  return Number.isNaN(ts) ? 0 : ts;
+}
+
 // Notion 颜色映射
 const notionColors: Record<string, string> = {
   default: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
@@ -109,6 +140,47 @@ const notionColors: Record<string, string> = {
   pink: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
   red: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
+
+// 文章类型筛选（Notion Tags 对应的业务类型）
+const TAG_FILTERS = [
+  { code: "FrontEndEngineering", label: "前端工程化", labelEn: "Front-end Engineering" },
+  { code: "DesignPattern", label: "设计模式", labelEn: "DesignPattern" },
+  { code: "ProblemsReview", label: "疑难问题复盘", labelEn: "Problems Review" },
+  { code: "Notes", label: "随笔", labelEn: "Notes" },
+  { code: "JavaScript", label: "JS基础", labelEn: "JavaScript" },
+];
+
+// Notion Tags 名称到业务类型 code 的映射
+const TAG_CODE_MAP: Record<string, string> = {
+  "Front-end Engineering": "FrontEndEngineering",
+  "前端工程化": "FrontEndEngineering",
+  DesignPattern: "DesignPattern",
+  "设计模式": "DesignPattern",
+  "Problems Review": "ProblemsReview",
+  "疑难问题复盘": "ProblemsReview",
+  Notes: "Notes",
+  "随笔": "Notes",
+  JavaScript: "JavaScript",
+  "JS基础": "JavaScript",
+};
+
+function getPageTagInfo(
+  p: NotionPage,
+): { code: string | null; label: string | null; color: string | null } {
+  const props = p.properties || {};
+  const tagSelect = extractSelect(props["Tags"] || props["标签"] || props["tags"]);
+  if (!tagSelect || !tagSelect.name) {
+    return { code: null, label: null, color: null };
+  }
+
+  const mappedCode = TAG_CODE_MAP[tagSelect.name] || tagSelect.name;
+
+  return {
+    code: mappedCode || null,
+    label: tagSelect.name,
+    color: tagSelect.color || null,
+  };
+}
 
 // 数据加载 Hook - 支持 SSG 静态数据和开发环境 API
 function useNotionDatabase() {
@@ -128,7 +200,10 @@ function useNotionDatabase() {
       const res = await fetch("/data/articles.json");
       if (!res.ok) throw new Error("加载静态数据失败");
       const json = await res.json();
-      const items = (json.results || []).filter((r: NotionPage) => r.object === "page");
+      const items = (json.results || [])
+        .filter((r: NotionPage) => r.object === "page")
+        .sort((a: NotionPage, b: NotionPage) => getEffectiveTimestamp(b) - getEffectiveTimestamp(a));
+
       setAllPages(items);
       // 初始显示第一页
       setPages(items.slice(0, PAGE_SIZE));
@@ -170,7 +245,9 @@ function useNotionDatabase() {
       }
 
       const json: DatabaseResponse = await res.json();
-      const items = (json.results || []).filter((r) => r.object === "page");
+      const items = (json.results || [])
+        .filter((r) => r.object === "page")
+        .sort((a, b) => getEffectiveTimestamp(b) - getEffectiveTimestamp(a));
 
       setPages((prev) => (isInitial ? items : [...prev, ...items]));
       setHasMore(json.has_more || false);
@@ -377,16 +454,27 @@ function HeaderHero() {
 
 // 文章卡片组件
 function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { baseText, accentText, dark } = useTheme();
   const props = page.properties || {};
 
-  const title = extractTitle(page);
+  const isEn = i18n.language.startsWith("en");
+  const slugTitle = extractText(props["slug"] || props["Slug"] || props["SLUG"]);
+  const title = (isEn ? slugTitle : "") || extractTitle(page);
   const cover = extractCover(page);
-  const category = extractSelect(props["分类"] || props["Category"] || props["类别"]);
   const tags = extractMultiSelect(props["标签"] || props["Tags"] || props["tags"]);
-  const date = extractDate(props["日期"] || props["Date"] || props["发布日期"]) || page.last_edited_time;
+  const tagInfo = getPageTagInfo(page);
+  // 发布时间：优先使用 Notion 的 PublishDate / 发布日期，其次退回到其它日期字段或最后编辑时间
+  const date =
+    extractDate(
+      props["PublishDate"] ||
+      props["发布日期"] ||
+      props["日期"] ||
+      props["Date"],
+    ) || page.last_edited_time;
   const summary = extractRichText(props["summary"] || props["摘要"] || props["Summary"] || props["描述"] || props["Description"]);
+  const summaryEn = extractText(props["summaryEn"] || props["SummaryEn"] || props["SummaryEN"]);
+  const displayedSummary = (isEn ? summaryEn : "") || summary;
 
   return (
     <motion.div
@@ -417,17 +505,19 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
             </div>
           )}
 
-          <CardHeader className={cn(cover ? "pt-4" : "")}>
-            {/* 分类标签 */}
-            {category && (
+          <CardHeader className={cn(cover ? "pt-4" : "")}>  
+            {/* 类型标签（Notion Tags） */}
+            {tagInfo.label && (
               <div className="mb-2">
                 <span
                   className={cn(
                     "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                    notionColors[category.color] || notionColors.default
+                    notionColors[tagInfo.color || "default"] || notionColors.default,
                   )}
                 >
-                  {category.name}
+                  {i18n.language.startsWith("en")
+                    ? tagInfo.label
+                    : TAG_FILTERS.find((f) => f.code === tagInfo.code)?.label || tagInfo.label}
                 </span>
               </div>
             )}
@@ -451,9 +541,9 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
 
           <CardContent className="flex-1">
             {/* 摘要 */}
-            {summary && (
+            {displayedSummary && (
               <p className="text-sm line-clamp-3 mb-4" style={{ color: baseText }}>
-                {summary}
+                {displayedSummary}
               </p>
             )}
 
@@ -528,9 +618,36 @@ function LoadMoreTrigger({ onLoadMore, loading }: { onLoadMore: () => void; load
 
 // 列表组件
 function ListGrid() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { pages, loading, loadingMore, error, hasMore, loadMore } = useNotionDatabase();
   const { baseText, dark } = useTheme();
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlTag = params.get("tag");
+      if (urlTag) {
+        setActiveTag(urlTag);
+      }
+    } catch (e) {
+      // ignore URL parse errors
+    }
+  }, []);
+
+  const updateUrlTag = (tag: string | null) => {
+    try {
+      const url = new URL(window.location.href);
+      if (tag) {
+        url.searchParams.set("tag", tag);
+      } else {
+        url.searchParams.delete("tag");
+      }
+      window.history.replaceState(null, "", url.toString());
+    } catch (e) {
+      // ignore URL update errors
+    }
+  };
 
   if (loading) {
     return (
@@ -570,10 +687,65 @@ function ListGrid() {
     );
   }
 
+  const filteredPages = activeTag
+    ? pages.filter((page) => {
+        const info = getPageTagInfo(page);
+        return info.code === activeTag;
+      })
+    : pages;
+
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-12">
+      {/* 类型筛选 */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="text-sm" style={{ color: baseText }}>
+          {t("articles.filterByType") || "按类型筛选"}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTag(null);
+            updateUrlTag(null);
+          }}
+          className={cn(
+            "px-3 py-1 rounded-full text-xs border transition-colors",
+            !activeTag
+              ? dark
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-blue-600 text-white border-blue-600"
+              : dark
+              ? "border-zinc-600 text-zinc-200"
+              : "border-gray-300 text-gray-700",
+          )}
+        >
+          {t('articles.all')}
+        </button>
+        {TAG_FILTERS.map((filter) => (
+          <button
+            key={filter.code}
+            type="button"
+            onClick={() => {
+              setActiveTag(filter.code);
+              updateUrlTag(filter.code);
+            }}
+            className={cn(
+              "px-3 py-1 rounded-full text-xs border transition-colors",
+              activeTag === filter.code
+                ? dark
+                  ? "bg-blue-500 text-white border-blue-500"
+                  : "bg-blue-600 text-white border-blue-600"
+                : dark
+                ? "border-zinc-600 text-zinc-200"
+                : "border-gray-300 text-gray-700",
+            )}
+          >
+            {i18n.language.startsWith("en") ? filter.labelEn : filter.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {pages.map((page, index) => (
+        {filteredPages.map((page, index) => (
           <ArticleCard key={page.id} page={page} index={index % PAGE_SIZE} />
         ))}
       </div>
@@ -595,15 +767,15 @@ function ListGrid() {
         </>
       )}
 
-      {/* 加载完成提示 */}
-      {!hasMore && pages.length > 0 && (
+      {/* 加载完成提示（基于筛选结果数量） */}
+      {!hasMore && filteredPages.length > 0 && (
         <motion.div
           className="text-center py-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           <p className="text-sm" style={{ color: baseText }}>
-            — {t('articles.loadedAll')} {pages.length} {t('articles.articlesCount')} —
+            — {t('articles.loadedAll')} {filteredPages.length} {t('articles.articlesCount')} —
           </p>
         </motion.div>
       )}
@@ -615,7 +787,10 @@ function ArticleListInner() {
   const { dark } = useTheme();
 
   return (
-    <div className={cn("min-h-screen", dark ? "bg-zinc-900" : "bg-gray-50")}>
+    <div
+      className={cn("min-h-screen", dark ? "bg-zinc-900" : "bg-gray-50")}
+      data-page="ArticleList"
+    >
       <HeaderHero />
       <ListGrid />
     </div>

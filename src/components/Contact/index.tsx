@@ -65,7 +65,7 @@ const Contact: React.FC = () => {
   }, []);
 
   return (
-    <section id="contact" className="py-16 md:py-24 px-4 md:px-8 flex flex-col items-center max-w-[1400px] mx-auto" style={{ color: baseText }}>
+    <section id="contact" className="py-16 md:py-24 px-4 md:px-8 flex flex-col items-center max-w-[1400px] mx-auto" style={{ color: baseText }} data-component="Contact">
       <div className="w-full max-w-4xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="w-full md:w-1/3">
@@ -98,7 +98,7 @@ const Contact: React.FC = () => {
               className="flex items-center gap-2 group"
             >
               <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
-              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">GITHUB</span>
+              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">{t('contact.links.github')}</span>
             </a>
             <a 
               href="https://www.yuque.com/wpeach" 
@@ -107,7 +107,7 @@ const Contact: React.FC = () => {
               className="flex items-center gap-2 group"
             >
               <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
-              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">YUQUE</span>
+              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">{t('contact.links.yuque')}</span>
             </a>
             <a 
               href="mailto:wtiroo@163.com" 
@@ -116,7 +116,7 @@ const Contact: React.FC = () => {
               className="flex items-center gap-2 group"
             >
               <span className="text-[#d93f31] font-bold text-xl transition-transform group-hover:scale-110">+</span>
-              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">EMAIL</span>
+              <span className="text-sm pt-1.5 font-mono tracking-wider transition-colors group-hover:text-[#d93f31] group-hover:font-semibold">{t('contact.links.email')}</span>
             </a>
           </div>
         </div>

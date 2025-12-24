@@ -1,6 +1,7 @@
 import { t } from "i18next";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../ThemeContext";
 
 type ProfileCardProps = {
@@ -55,6 +56,8 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const { dark } = useTheme();
+  const { i18n } = useTranslation();
+  const isEnglish = i18n.language?.toLowerCase().startsWith("en");
 
   const bgBehind = useMemo(
     () => behindGradient ?? defaultBehindGradient,
@@ -68,6 +71,15 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
+    // 移动端默认不启用 3D tilt，除非显式开启 enableMobileTilt
+    const isMobile = typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(max-width: 767px)").matches
+      : false;
+
+    if (isMobile && !enableMobileTilt) {
+      return;
+    }
 
     let raf = 0;
     let tx = 0;
@@ -132,7 +144,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden shadow-lg ${className}`}
+      className={`relative overflow-hidden rounded-none shadow-none md:rounded-xl md:shadow-lg ${className}`}
       style={{
         transformStyle: "preserve-3d",
         transition: isHovering ? "transform 80ms ease" : "transform 300ms ease",
@@ -141,7 +153,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     >
       {showBehindGradient && (
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 hidden md:block"
           style={{ background: bgBehind }}
           aria-hidden
         />
@@ -152,7 +164,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <img
           src={iconUrl}
           alt="bg-icon"
-          className="absolute inset-0 w-full h-full object-cover opacity-20"
+          className="absolute inset-0 w-full h-full object-cover opacity-20 hidden md:block"
           aria-hidden
         />
       )}
@@ -160,7 +172,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <img
           src={grainUrl}
           alt="grain"
-          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-20"
+          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-20 hidden md:block"
           aria-hidden
         />
       )}
@@ -168,7 +180,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       {/* 上半：个人介绍 2/3 */}
       <div
         className="relative z-10 p-4 md:p-6 flex items-center gap-4 md:gap-6 backdrop-blur-sm flex-shrink-0"
-        style={{ background: bgInner, height: "66.666%" }}
+        style={{ background: bgInner }}
       >
         <img
           src={avatarUrl}
@@ -182,7 +194,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
         {showUserInfo && (
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 ${isEnglish ? "flex-wrap" : ""}`}>
               {miniAvatarUrl && (
                 <img
                   src={miniAvatarUrl}
@@ -190,8 +202,20 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   className="w-6 h-6 rounded-md object-cover border border-white/20"
                 />
               )}
-              <h3 className={`text-xl md:text-2xl font-semibold truncate ${dark ? "text-white" : "text-gray-500"}`}>{name}</h3>
-              <span className={`text-sm md:text-base truncate ml-[10px] ${dark ? "text-white/80" : "text-gray-500"}`}>{title}</span>
+              <h3
+                className={`text-xl md:text-2xl font-semibold ${dark ? "text-white" : "text-gray-500"} ${
+                  isEnglish ? "basis-full md:basis-auto" : "truncate"
+                }`}
+              >
+                {name}
+              </h3>
+              <span
+                className={`text-sm md:text-base ${dark ? "text-white/80" : "text-gray-500"} ${
+                  isEnglish ? "basis-full md:basis-auto" : "truncate ml-[10px]"
+                }`}
+              >
+                {title}
+              </span>
             </div>
             <div
               className={`mt-2 flex items-center gap-3 text-xs md:text-sm ${dark ? "text-white/70" : "text-gray-500"}`}
@@ -223,7 +247,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       {/* 下半：技术栈 1/3 */}
       {techStack && (
         <div
-          className={`relative z-10 h-[33.333%] w-full flex items-center justify-center bg-transparent ${dark ? "text-white" : "text-gray-500"}`}
+          className={`relative z-10 w-full flex items-center justify-center bg-transparent py-2 md:py-3 ${dark ? "text-white" : "text-gray-500"}`}
         >
           {techStack}
         </div>

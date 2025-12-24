@@ -73,7 +73,7 @@ const Experience: React.FC = () => {
   }>;
 
   return (
-    <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="experience"
+    <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="experience" data-component="Experience"
       style={{ color: baseText }}>
       <h2 ref={titleRef} className="font-bold text-xl md:text-2xl mb-8" style={{ color: accentText }}>{t('experience.header')}</h2>
       <div className="flex flex-col md:flex-row gap-8">

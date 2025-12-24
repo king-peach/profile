@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { t, i18n } = useTranslation();
-  const { dark, setDark, accent, accentText } = useTheme();
+  const { dark, setDark, accent, accentText, baseText } = useTheme();
 
   // 获取当前语言
   const currentLanguage = i18n.language || 'zh';
@@ -58,8 +58,20 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
       className="flex items-center justify-between px-4 md:px-8 py-5 sticky top-0 z-50 bg-transparent"
+      style={{ color: baseText }}
+      data-component="Header"
     >
-      <div className="font-extrabold text-2xl tracking-widest">{/* Logo SVG goes here */}</div>
+      <div
+        className="flex items-center gap-2 font-extrabold text-xl md:text-2xl tracking-widest"
+      >
+        {/* Logo SVG goes here */}
+        <img
+          src="/eric.ico"
+          alt="Eric logo"
+          className="w-7 h-7 md:w-8 md:h-8 rounded"
+        />
+        <span className="ml-1">Eric</span>
+      </div>
       {/* Desktop Nav */}
       <nav className="hidden md:flex space-x-4 lg:space-x-8 items-center">
         {showNav && sections.map(section => (
@@ -67,7 +79,6 @@ const Header: React.FC<HeaderProps> = ({
             key={section.id}
             onClick={() => scrollToSection(section.id)}
             className="hover:underline font-mono text-base lg:text-lg"
-            style={{ color: "#fff" }}
           >
             {t(`nav.${section.id}`)}
           </button>
@@ -116,7 +127,17 @@ const Header: React.FC<HeaderProps> = ({
           className="fixed inset-0 z-50 flex flex-col items-center justify-center md:hidden transition-all"
           style={{ backgroundColor: accent }}
         >
-          <button className="absolute top-7 right-6 text-white text-3xl p-2" onClick={() => setMobileNavOpen(false)} aria-label="Close menu">×</button>
+          <button
+            className="absolute text-white rounded-full w-11 h-11 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+            style={{ top: "calc(1rem + env(safe-area-inset-top))", right: "1rem" }}
+            onClick={() => setMobileNavOpen(false)}
+            aria-label="Close menu"
+            type="button"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
           {showNav && sections.map(section => (
             <button
               key={section.id}

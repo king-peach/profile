@@ -25,7 +25,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const Hero: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { accent, accentHover, isOrange, dark } = useTheme();
+  const { accent, accentHover, isOrange, dark, baseText } = useTheme();
   
   const leftContentRef = useRef<HTMLDivElement>(null);
   const rightImageRef = useRef<HTMLDivElement>(null);
@@ -93,11 +93,28 @@ const Hero: React.FC = () => {
   }, []);
 
   return (
-    <section className="h-[50vh] min-h-[600px] flex items-center justify-between text-white px-4 md:px-8" id="hero">
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between max-w-7xl">
-        {/* 左侧内容 */}
-        <div ref={leftContentRef} className="flex flex-col items-start md:w-1/2">
-          <h1 className="text-5xl font-extrabold space-y-2">
+    <section
+      id="hero"
+      className="min-h-[640px] flex items-start md:items-center justify-between px-2 md:px-4 pt-8 md:pt-0"
+      data-component="Hero"
+    >
+      <div className="mx-auto flex flex-col md:flex-row items-center justify-between max-w-7xl gap-10">
+        {/* 左侧内容：标签 + 主标题 + 副标题 + CTA */}
+        <div
+          ref={leftContentRef}
+          className="flex flex-col items-start md:w-3/5 space-y-6"
+          style={{ color: baseText }}
+        >
+          {/* 顶部标签行：体现系统化学习 / 复盘 / 高级前端 / 工程化 */}
+          <div className="text-xs tracking-[0.2em] uppercase opacity-80 mb-1">
+            {t("hero.tagline", {
+              defaultValue:
+                "Systematic Learning · Retrospective Driven · Advanced Frontend & Engineering",
+            })}
+          </div>
+
+          {/* 主标题：保留逐字动画，但只用第一行主标题，其他行可从文案中控制 */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight space-y-2">
             {greetingLines.map((line, idx) => (
               <SplitText
                 key={idx}
@@ -113,20 +130,73 @@ const Hero: React.FC = () => {
               />
             ))}
           </h1>
+
+          {/* 副标题：具体说明内容方向和受众 */}
+          <p className="mt-2 text-sm md:text-base max-w-xl opacity-90 leading-relaxed">
+            {t("hero.subtitle", {
+              defaultValue:
+                "围绕设计模式、前端工程化、疑难问题复盘、JS 基础与随笔，记录真实项目中的技术决策和系统化学习路径，帮在职前端构建可复用的知识体系，也让雇主看见高级前端的工程化价值。",
+            })}
+          </p>
+
+          {/* CTA 区域：主按钮引导到精选/进阶路线，次按钮到关于/合作 */}
+          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <button
+              type="button"
+              className="px-5 py-2.5 rounded-full text-sm font-medium backdrop-blur bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+              onClick={() =>
+                document.getElementById("blog")?.scrollIntoView({
+                  behavior: "smooth",
+                })
+              }
+            >
+              {t("hero.primaryCta", {
+                defaultValue: "从进阶路线开始阅读 →",
+              })}
+            </button>
+            <button
+              type="button"
+              className="px-5 py-2.5 rounded-full text-sm font-medium border border-white/15 hover:border-white/40 bg-transparent hover:bg-white/5 transition-colors"
+              onClick={() =>
+                document.getElementById("about")?.scrollIntoView({
+                  behavior: "smooth",
+                })
+              }
+            >
+              {t("hero.secondaryCta", {
+                defaultValue: "关于我与合作 →",
+              })}
+            </button>
+          </div>
+
+          {/* 承诺/风格说明：过程型信息而非数据 */}
+          <p className="mt-2 text-xs md:text-sm opacity-80">
+            {t("hero.promise", {
+              defaultValue:
+                "以系统化学习和复盘为核心，持续更新的高级前端与工程化笔记。",
+            })}
+          </p>
         </div>
-        
+
         {/* 右侧 Profile Card */}
-        <div ref={rightImageRef} className="md:w-1/2 flex justify-end mt-8 md:mt-0">
-          <div className="w-full max-w-xl flex flex-col">
+        <div
+          ref={rightImageRef}
+          className="w-full md:w-2/5 flex justify-center md:justify-end mt-10 md:mt-0"
+        >
+          <div className="w-full max-w-md md:max-w-xl">
             <ProfileCard
               avatarUrl="/avatar01.jpg"
-              name={t('hero.name')}
-              title={t('hero.title')}
-              contactText={t('hero.cta')}
+              name={t("hero.name")}
+              title={t("hero.title")}
+              contactText={t("hero.cta")}
               showUserInfo
               enableTilt
-              className="h-[40vh] min-h-[300px]"
-              onContactClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              className="h-auto min-h-[260px] md:h-[40vh] md:min-h-[300px]"
+              onContactClick={() =>
+                document.getElementById("contact")?.scrollIntoView({
+                  behavior: "smooth",
+                })
+              }
               techStack={
                 <LogoLoop
                   logos={techLogos}

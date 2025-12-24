@@ -168,7 +168,7 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
 
   const a = data.attributes;
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-page="ArticleDetail">
       <HeaderHero title={a.title} date={a.updatedAt || a.publishedAt} coverUrl={coverUrl} />
       <Markdown content={a.content} />
     </div>

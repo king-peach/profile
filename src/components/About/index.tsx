@@ -48,7 +48,7 @@ const About: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="about"
+    <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="about" data-component="About"
       style={{ color: baseText }}>
       <h2 ref={titleRef} className="font-bold text-xl md:text-2xl mb-4" style={{ color: accentText }}>{t('about.header')}</h2>
       <div ref={contentRef}>

@@ -5,9 +5,11 @@ import Hero from "./components/Hero";
 import PrismBackground from "./components/ui/PrismBackground";
 import About from "./components/About";
 import Experience from "./components/Experience";
+import ContentMap from "./components/ContentMap";
 import Blog from "./components/Blog";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
+import FloatingActions from "./components/FloatingActions";
 
 const sections = [
   { id: "about", label: "About" },
@@ -19,7 +21,7 @@ const sections = [
 export default function App() {
   return (
     <ThemeProvider>
-      <div className="min-h-screen">
+      <div className="min-h-screen overflow-x-hidden">
         {/* 顶部区域：Header + Hero 使用统一的 Prism 背景 */}
         <section className="relative">
           <PrismBackground
@@ -45,9 +47,11 @@ export default function App() {
         </section>
         <About />
         <Experience />
+        <ContentMap />
         <Blog />
         <Contact />
         <Footer />
+        <FloatingActions />
       </div>
     </ThemeProvider>
   );

@@ -12,7 +12,41 @@ const zh = {
       title: "网站全栈开发者",
       cta: "联系我",
       status: '在线',
-      greeting: "你好！\n很高兴认识你！"
+      greeting: "从业务前端到高级前端\n系统化学习与工程化复盘",
+      tagline: "系统化学习 · 复盘驱动 · 高级前端与工程化实践",
+      subtitle: "围绕设计模式、前端工程化、疑难问题复盘、JS 基础与随笔，记录真实项目中的技术决策和系统化学习路径，帮在职前端构建可复用的知识体系，也让雇主看见高级前端的工程化价值。",
+      primaryCta: "从进阶路线开始阅读 →",
+      secondaryCta: "关于我与合作 →",
+      promise: "以系统化学习和复盘为核心，持续更新的高级前端与工程化笔记。",
+    },
+    contentMap: {
+      title: "核心主题",
+      subtitle: "围绕五大主题构建系统化的前端知识体系，从基础到进阶，从理论到实践。",
+      engineering: {
+        title: "前端工程化",
+        description: "从构建、部署到监控，用工程化思维管理前端复杂度。",
+        cta: "查看工程化文章 →"
+      },
+      patterns: {
+        title: "设计模式",
+        description: "结合真实业务场景理解和应用前端常用设计模式。",
+        cta: "查看设计模式系列 →"
+      },
+      retros: {
+        title: "疑难问题复盘",
+        description: "记录疑难问题与线上事故，从现象到根因再到方案的完整复盘。",
+        cta: "查看复盘案例 →"
+      },
+      js: {
+        title: "JS 基础",
+        description: "回到语言本身，打牢一切工程化与架构能力的地基。",
+        cta: "查看 JS 基础文章 →"
+      },
+      essay: {
+        title: "随笔 / 思考",
+        description: "关于学习方法、职业发展与个人效率的记录与反思。",
+        cta: "查看随笔 →"
+      }
     },
     about: {
       header: "关于",
@@ -47,7 +81,11 @@ const zh = {
       ]
     },
     blog: {
-      header: "近期博文"
+      header: "近期博文",
+      viewMore: "查看更多",
+      readMore: "阅读更多",
+      readMoreAria: "阅读更多",
+      readMoreAriaWithTitle: "阅读更多：{{title}}"
     },
     articles: {
       title: "探索文章",
@@ -61,11 +99,21 @@ const zh = {
       readMore: "阅读全文",
       noSummary: "暂无摘要",
       errorConfig: "未配置数据源",
-      errorLoad: "加载失败"
+      errorLoad: "加载失败",
+      all: "全部",
+      filterByType: "按类型筛选",
     },
     contact: {
       header: "需要长沙的前端开发者？欢迎合作！",
-      cta: "联系我"
+      cta: "联系我",
+      links: {
+        github: "GitHub",
+        yuque: "语雀",
+        email: "邮箱"
+      }
+    },
+    floatingActions: {
+      backToTop: "返回顶部"
     },
     footer: {
       copyright: "版权所有 2025 王涛"
