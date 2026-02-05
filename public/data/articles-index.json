@@ -1,0 +1,15 @@
+{
+  "slugToId": {
+    "syncthing-research-and-secondary-development": "2d228bdf-58f2-8044-b14a-e2553cf6c80a",
+    "concurrent-cache-optimization-techniques-for-large-scale-projects": "2d228bdf-58f2-80b3-a5d1-db01608a55a7",
+    "introduction-to-front-end-http-security-headers": "2d228bdf-58f2-8033-a3ef-f73aa5be1df4",
+    "how-to-elegantly-access-third-party-authorization": "2d228bdf-58f2-804d-bab2-d64cc5056a90",
+    "mysql-basic-syntax": "2d228bdf-58f2-8005-b5b2-c5bdf868d0f7",
+    "record-a-problem-of-installing-mysql8-on-centos-once": "2d228bdf-58f2-80c7-a2d1-df038e56a1c4",
+    "ssg-website-static-practice": "2bb28bdf-58f2-801f-8536-c5899c49adde",
+    "factory-method-pattern": "2bb28bdf-58f2-8036-b5d4-ea1b9b1e6025",
+    "abstract-factory-pattern": "2bb28bdf-58f2-804f-8693-cb554f560116",
+    "frontend-design-pattern": "2ba28bdf-58f2-807f-adcb-c92ee7440415"
+  },
+  "generated_at": "2026-02-05T15:46:48.253Z"
+}

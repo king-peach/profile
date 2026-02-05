@@ -1,0 +1,176 @@
+---
+title: "如何优雅的接入第三方授权"
+slug: "how-to-elegantly-access-third-party-authorization"
+date: "2024-08-23T09:00:00.000+08:00"
+lastModified: "2025-12-24"
+description: "详解基于OAuth 2.0协议的第三方授权接入流程、规范与最佳实践。"
+draft: true
+---
+
+
+## 第三方授权认证是什么？
+
+
+第三方授权认证是指通过用户的身份验证和授权过程交由第三方平台完成，以实现用户登录和授权的功能。用户可以使用已有的第三方平台（如微信、QQ、微博、Google、Github）账号来登录其他网站或应用程序，而无需再次创建新的账号和密码。
+
+
+## 为什么要接入第三方授权认证？
+
+
+对于用户而言，我们每使用一个新的App时，总是要注册一个账户，注册的步骤繁琐并且得记住账号密码，有些App可能还会需要手机号码验证、上传头像、邮箱验证等等复杂的身份验证过程，当我们使用第三方授权认证时，这些信息都可以通过第三方平台提供，用户只需要点一下授权按钮即可。而且在这个过程中，不会透露用户的敏感信息，也保护了用户的隐私。
+
+
+对于应用程序而言，开发者可以通过第三方平台授权登录，快速实现用户认证和授权，而无需自行构建复杂的登录系统。这不仅节省了开发时间和成本，还使得用户的登录过程更加简单和流畅。
+
+
+## 接入需求分析
+
+
+接入第三方平台授权认证之前需要分析下接入的必要条件，主要从以下几个方面进行需求分析：
+
+1. 支持的第三方平台：决定支持`微信`、`微博`、`Github`、`Gitlab`还是其他平台，不同平台接入的差异。
+2. 使用场景：需要注册登录。
+3. 用户信息同步：确认需要从第三方平台获取的用户信息是什么，比如头像、昵称、账号、手机号、邮箱等……
+4. 授权范围：需要获取用户基本信息或者更多开发数据的权限设置。
+5. 回调处理：第三方平台授权完成后会带回来什么参数，拿到这些参数需要做什么？
+6. 访问授权：理解授权的有效期和授权刷新`token`等，根据这些数据可以实现什么功能？
+7. 拓展性：是否考虑第三方授权场景的兼容性，比如授权操作中一些共用的场景进行抽象。
+8. 安全性：第三方平台授权的客户端`id`和`secret`不能外泄。
+
+## 接入流程
+
+
+根据以上接入需求分析需要实现的点，通过实践我总结了一个`Github`的接入流程，如下图所示：
+
+
+![Untitled.png](/images/notion/how-to-elegantly-access-third-party-authorization-48d96b65a983.png)
+
+
+上图中的第三方授权应用即`Github`
+
+
+## 接入实现
+
+
+根据以上接入流程，接入实现方案主要分为客户端和服务端。
+
+
+在开始授权之前需要先去第三方平台配置授权应用，获取到授权的客户端`id`和`secret`。
+
+
+以`Github`授权场景为例
+
+
+![Untitled.png](/images/notion/how-to-elegantly-access-third-party-authorization-241b6372170c.png)
+
+
+![Untitled.png](/images/notion/how-to-elegantly-access-third-party-authorization-73ccd421ff4c.png)
+
+
+### 客户端
+
+
+客户端主要职责是点击跳转到第三方授权页以及处理授权结果。
+
+
+需要在客户端上存储`Github`授权的地址和客户端`id` ，方便开发者拼接授权的`URL`。
+
+
+客户端还需要一个中间页来处理授权结果，当授权成功后，服务端会301到中间页进行授权的逻辑处理；授权成功后，服务端会返回`token` （拿到token代表登录成功了），中间页将这个`token`缓存在本地，然后跳转到首页即可
+
+
+### 服务端
+
+
+如何用户在`Github`点击了授权操作，则`Github`会调在`Oauth App`上配置的授权回调地址，并在回调地址上加上一次性的授权码**`code`**（供开发者去请求`access_token`）
+
+
+服务端需要根据`Github`跳转过来的`URL`中附带的客户端`id` 参数进行授权操作：
+
+- 拿到授权码code后，调用`/login/oauth/access_token` 接口获取`access_token`
+
+```javascript
+axios.post(`https://github.com/login/oauth/access_token`, params, {
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+})
+```
+
+- 获取到`access_token`后，相当于拥有了调用`Github`开放接口的能力，授权只需要取用户数据即可，所以调用`/user` 接口去获取用户数据，需要注意的是，这里的需要将`access_token`添加进请求头中，如下图：
+
+```javascript
+axios.get('https://api.github.com/user', {
+	headers: {
+    'Authorization': `Bearer ${access_token}`
+  }
+})
+```
+
+- 获取到`Github` 提供的用户数据以后，我们需要查询一下是否存在该用户数据，如果没有的话，需要注册一个新用户，调注册的接口即可
+
+```javascript
+const data = {
+      username: user_res.data.login,
+      password: '',
+      nick: user_res.data.name,
+      email: user_res.data.email,
+      phone: '',
+      avatar_url: user_res.data.avatar_url
+}
+const host = req.get('host')
+const logon_res = await axios.post(`http://${host}/api/vls/sys/logon`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+})
+```
+
+- 注册成功以后，或者上一步查询到用户数据后根据用户数据生成`token`返回给客户端
+
+```javascript
+// 伪代码仅供参考
+async createToken(user) {
+    try {
+      if (user) {
+        const { id, username } = user
+        return await jwt.sign({ id: id, username: username, role: 'BIZ' }, this.secret, { expiresIn: this.expiresIn })
+      } else {
+        return await jwt.sign({ role: 'GUEST' }, this.secret, { expiresIn: this.expiresIn })
+      }
+    } catch (error) {
+      console.log('createToken error: ', error)
+    }
+}
+
+const token = await createToken(logon_res.data.data)
+
+res.redirect(301, `${client_host}redirect?type=auth&token=${token}`)
+```
+
+
+## 常见问题
+
+
+在整个授权过程中，可能会遇到一些问题，列举如下：
+
+- 授权失败
+在整个授权的过程中可能会因为网络问题，或者服务端查询用户数据，调用第三方平台接口报错等等造成的授权失败，这时候需要处理过程中出现的错误，并返回错误给客户端，所以服务端的每一个异步操作都需要加上错误处理
+- 刷新`token`或缓存`token`
+大部分的第三方平台都会提高刷新`token`的功能，在返回`access_token`的时候，会返回一个`refresh_token` ，但是由于第三方平台返回的授权码是一次性的，所以服务端无法根据唯一标识缓存这个`token`，也就无法利用到这个`refresh_token`，目前的解决方案是每一次都去请求新的`token`
+- 权限不足
+部分第三方平台可能需要去授权api的使用范围，比如`GItlab` 需要根据`scope`去授权`api`的使用范围，未授权的情况就会出现错误；部分接口可以能会有调用次数限制；
+- 敏感信息安全性问题
+一般第三方平台的客户端`secret` ，属于敏感信息，所以将其存储在服务端比较好，这样客户端对于这些信息是无感知的，也不会泄漏
+
+## 总结
+
+
+第三方授权认证大大简化了用户的登录流程，这对于开发者来说，各个不同平台的接入也是一种挑战，每个第三方平台的授权规则可能都不一样，但是大部分的平台都会按照`OAuth`协议来设计授权认证，所以当我们熟悉了一种主流的授权方式基本也就掌握了第三方授权认证的技术了。
+
+
+参考文档：
+
+- [https://www.ruanyifeng.com/blog/2019/04/oauth_design.html](https://www.ruanyifeng.com/blog/2019/04/oauth_design.html)（类比外卖员或者送水员）

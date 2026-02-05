@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import App from "./App";
 import ArticleDetail from "./pages/ArticleDetail";
 import ArticleList from "./pages/ArticleList";
+import SEO from "./components/SEO";
+import { HOME_SEO, ARTICLES_SEO, getCanonicalUrl, SITE_URL } from "./config/seo";
 
 type Route = { name: "home" } | { name: "article"; slug: string } | { name: "articles" };
 
@@ -34,6 +37,27 @@ function getRoute(): Route {
 
 export default function Root() {
   const [route, setRoute] = useState<Route>(getRoute());
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language.startsWith("en") ? "en" : "zh";
+  const locale = lang === "zh" ? "zh_CN" : "en_US";
+
+  // 获取当前路由的 SEO 配置
+  const seoConfig = useMemo(() => {
+    if (route.name === "home") {
+      return HOME_SEO[lang];
+    }
+    if (route.name === "articles") {
+      return ARTICLES_SEO[lang];
+    }
+    // 文章详情页的 SEO 由 ArticleDetail 组件内部处理
+    return null;
+  }, [route, lang]);
+
+  // 获取 canonical URL
+  const canonicalUrl = useMemo(() => {
+    return getCanonicalUrl(window.location.pathname);
+  }, [route]);
+
   useEffect(() => {
     const onPop = () => setRoute(getRoute());
     const onRouteChange = () => setRoute(getRoute());
@@ -48,7 +72,26 @@ export default function Root() {
       window.removeEventListener("routechange", onRouteChange);
     };
   }, []);
-  if (route.name === "article") return <ArticleDetail slug={route.slug} />;
-  if (route.name === "articles") return <ArticleList />;
-  return <App />;
+
+  // 如果是文章详情页，不在这里渲染 SEO（由 ArticleDetail 处理）
+  if (route.name === "article") {
+    return <ArticleDetail slug={route.slug} />;
+  }
+
+  return (
+    <>
+      {seoConfig && (
+        <SEO
+          title={seoConfig.title}
+          description={seoConfig.description}
+          keywords={seoConfig.keywords}
+          ogImage={seoConfig.ogImage}
+          ogType={seoConfig.ogType}
+          canonicalUrl={canonicalUrl}
+          locale={locale}
+        />
+      )}
+      {route.name === "articles" ? <ArticleList /> : <App />}
+    </>
+  );
 }

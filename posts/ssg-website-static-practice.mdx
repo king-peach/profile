@@ -1,0 +1,104 @@
+---
+title: "SSG网站静态化实践"
+slug: "ssg-website-static-practice"
+date: "2024-09-18T15:20:00.000+08:00"
+lastModified: "2025-12-24"
+description: "常见的搭建网站SSG方式"
+draft: true
+---
+
+
+目前搭建网站的方式有：
+
+- [**CSR（客户端渲染）**](https://juejin.cn/post/7039151040188383268)[：在CSR中，页面的大部分内容是由浏览器中的JavaScript代码生成的。这种方法可以提高网站的性能，因为它可以减少服务器的负载。但是，由于页面的大部分内容是由JavaScript代码生成的，因此它可能会导致搜索引擎优化（SEO）问题。](https://juejin.cn/post/7039151040188383268)
+- [**SSR（服务器端渲染）**](https://juejin.cn/post/7039151040188383268)[：在SSR中，页面的大部分内容是由服务器生成的。这种方法可以提高网站的SEO，因为搜索引擎可以看到完整的HTML页面。但是，它可能会导致服务器负载过高，因为每次请求都需要重新生成HTML页面。](https://juejin.cn/post/7039151040188383268)
+- [**SSG（静态站点生成）**](https://juejin.cn/post/7039151040188383268)[：在SSG中，页面在构建时预先生成，并且在请求时不需要重新生成。这种方法可以提高网站的性能和SEO，并且可以减少服务器负载。但是，它可能会导致网站内容过时，因为每次更改都需要重新构建整个网站。](https://juejin.cn/post/7039151040188383268)
+
+**技术选型**
+
+
+选择`strapi`作为headless CMS，选择`gatsby.js`作为静态站点生成框架。接口设计规范采用`graphQL`
+
+
+介绍下无头CMS，无头CMS和gatsby.js 相关竞品介绍
+
+
+**为什么这么选型？**
+
+1. `strapi`是目前主流无头CMS里开源且上手成本较低的框架，基于`node.js`实现，对前端用户比较友好
+2. `gatsby.js`具有丰富的插件系统，里面比较中意的插件是响应式图片处理搭配`strapi`比较方便，不用自己再单独处理；`graphql`插件，直接查询`cms`的公开接口数据，很方便；
+3. 选用`graphQL`是因为其查询的便利性，可以合并多个查询请求、具有类型约束等优点（短板，安全性和错误处理比较麻烦）
+
+**注意事项**
+
+- `strapi`配置不生效，删除缓存（根目录下`build`、`.cache`文件夹）后，重新`yarn develop`
+- `strapi`中新增模型后需要配置权限给用户访问，路径 `setting / Roles / Public / Permissions`，勾选`find && findOne`
+- `graphQL`查询时，根据 `strapi` 提供的 `url` 模拟获取
+- `gatsby.js`使用自定义环境变量时，需要添加 `dotenv` 依赖并执行 `dotenv.config()` 方法才可生效
+- 开发环境下获取到cms中资源的相对路径无法访问时，需要在`gatsby-config`文件中配置代理
+- `gatsby`开发环境获取实时`strapi`数据，`.env`文件配置`ENABLE_GATSBY_REFRESH_ENDPOINT=true`
+
+**Gastby快速上手**
+
+1. 全局安装`gatsby cli`，运行命令 `npm install -g gatsby-cli`
+2. 创建项目，运行命令 `npx gatsby new`
+3. 按照cli提示初始化项目，具体设置如下图所示：
+
+    ![Untitled.png](/images/notion/ssg-website-static-practice-26e8e01588e1.png)
+
+4. 完成后，会生出一个项目文件夹，我这里是 `my-gatsby-blog` ，进入该文件夹，安装依赖 `yarn install` 或者 `npm install`
+5. 安装完依赖以后，运行项目 `gatsby develop`
+6. 运行成功后，访问[http://localhost:8000/](http://localhost:8000/)，出现下图所示界面，则代表项目运行成功
+
+    ![Untitled.png](/images/notion/ssg-website-static-practice-bc4349bc617c.png)
+
+7. 运行成功后项目还提供访问 调试 `graphQL` 的路径 [http://localhost:8000/___graphql](http://localhost:8000/___graphql)
+
+![Untitled.png](/images/notion/ssg-website-static-practice-6c0c2c1dd591.png)
+
+
+### GraphQL
+
+
+GraphQL是Facebook在2015年发布的一种查询语言。
+
+
+这个数据管理工具为从后端和前端查询数据提供了一个灵活的语法。现在，它被许多流行的公司使用，如GitHub、Pinterest、Coursera、Shopify等等。
+
+
+如今，有各种盛行的JavaScript框架和库，可以获得最大的数据管理。此外，所有互联网的使用有很大一部分来自于移动设备，这使得高效的数据加载成为必须。
+
+
+创建GraphQL的原因是Facebook需要提高其应用程序中数据调用的性能。而GraphQL很好地完成了这项工作。
+
+
+GraphQL的优势
+
+- 快速的数据检索
+
+这种语言在一个单一的端点下收集数据。因此，为了检索所需的数据，程序员只需要执行一次API调用。
+
+- 提高查询效率
+
+该语言的名称表明，它使用图形来定义服务器上的数据。这种基于图的方案允许以包的形式提供数据，而不是通过多次API调用。
+
+- 定制化的请求
+
+这种语言支持每个字段和嵌套对象的参数，包括标量字段。这种强类型化的特征来自于抽象原则。通过这样的方式，我们减少了复杂性，并专注于基本信息。
+
+
+GraphQL的劣势
+
+- 具有一定的学习成本
+- graphQL发送的请求，很难调试，无法在network中快速找到你想要查看的请求内容，因为它所有的请求都是graphql开头，差异体现在body里面
+- graphQL的错误处理比较麻烦，无法根据特定的HTTP错误码进行处理，错误捕获机制也不够健全
+- 因为graphQL不是通过URL作为唯一标识符，所以无法做http缓存
+- 通过graphQL接口实现文件上传变得困难
+- 接口安全问题，容易遭受DDos攻击
+
+参考文档：[https://betterprogramming.pub/graphql-from-excitement-to-deception-f81f7c95b7cf](https://betterprogramming.pub/graphql-from-excitement-to-deception-f81f7c95b7cf)
+课程分享重点：
+
+- graphql使用，如何获取cms数据后渲染到页面上
+- cms数据模型构建
+- SSG模式原理

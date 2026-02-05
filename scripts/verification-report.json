@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-02-04T14:24:57.182Z",
+  "results": [
+    {
+      "passed": true,
+      "message": "articles.json 存在且可读"
+    },
+    {
+      "passed": true,
+      "message": "articles.json JSON 格式正确"
+    },
+    {
+      "passed": true,
+      "message": "articles.json 包含 10 篇文章"
+    },
+    {
+      "passed": true,
+      "message": "所有文章都有必需字段 (10/10)"
+    },
+    {
+      "passed": true,
+      "message": "所有文章都有 urlSlug (10/10)"
+    },
+    {
+      "passed": true,
+      "message": "生成时间: 2026-02-04T13:58:21.117Z"
+    },
+    {
+      "passed": true,
+      "message": "articles-index.json 存在且可读"
+    },
+    {
+      "passed": true,
+      "message": "articles-index.json JSON 格式正确"
+    },
+    {
+      "passed": true,
+      "message": "索引包含 10 个 slug 映射"
+    },
+    {
+      "passed": true,
+      "message": "所有映射都有效 (10/10)"
+    },
+    {
+      "passed": true,
+      "message": "articles-content.json 存在且可读"
+    },
+    {
+      "passed": true,
+      "message": "articles-content.json JSON 格式正确"
+    },
+    {
+      "passed": true,
+      "message": "包含 10 篇文章的内容"
+    },
+    {
+      "passed": true,
+      "message": "所有文章都有 content 字段 (10/10)"
+    },
+    {
+      "passed": false,
+      "message": "所有文章都有 content_markdown 字段 (8/10)"
+    },
+    {
+      "passed": true,
+      "message": "文章数量与索引数量一致 (10 === 10)"
+    },
+    {
+      "passed": true,
+      "message": "文章数量与内容数量一致 (10 === 10)"
+    },
+    {
+      "passed": true,
+      "message": "Slug 映射一致性 (10/10)"
+    },
+    {
+      "passed": true,
+      "message": "所有文章 ID 都在 content 中 (缺失: 0)"
+    },
+    {
+      "passed": true,
+      "message": "所有 content ID 都在 articles 中 (多余: 0)"
+    },
+    {
+      "passed": true,
+      "message": "sitemap.xml 存在且可读"
+    },
+    {
+      "passed": true,
+      "message": "sitemap.xml XML 格式正确"
+    },
+    {
+      "passed": true,
+      "message": "Sitemap 包含 12 个 URL"
+    },
+    {
+      "passed": true,
+      "message": "所有文章 URL 都在 sitemap 中 (10/10)"
+    },
+    {
+      "passed": false,
+      "message": "图片目录不存在"
+    },
+    {
+      "passed": true,
+      "message": "所有文章都有有效的 Markdown (10/10)"
+    },
+    {
+      "passed": false,
+      "message": "所有文章的 Markdown 都有内容 (8/10)"
+    }
+  ],
+  "summary": {
+    "total": 27,
+    "passed": 24,
+    "failed": 3
+  }
+}

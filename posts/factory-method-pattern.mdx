@@ -1,0 +1,142 @@
+---
+title: "工厂方法模式"
+slug: "factory-method-pattern"
+date: "2024-07-22T10:00:00.000+08:00"
+lastModified: "2025-12-24"
+description: "是一种创建型设计模式，其在父类中提供一个创建对象的方法，允许子类决定实例化对象的类型。"
+draft: true
+---
+
+
+是一种创建型设计模式，其在父类中提供一个创建对象的方法，允许子类决定实例化对象的类型。
+
+
+## 问题
+
+
+假设你正在开发一款物流管理应用。最初版本只能处理卡车运输，因此大部分代码都在位于名为 `卡车` 的类中。
+
+
+一段时间后，这款应用变得很受欢迎，需要拓展更多运输方式的物流需求，比如说海上物流功能。但是，目前大部分代码都与`卡车` 类相关。在程序中添加`轮船` 类需要修改全部代码。更糟糕的是，如果你以后需要在程序中支持另一种运输方式，很可能需要再次对这些代码进行大幅修改。
+
+
+最后你不得不编写繁复的代码，根据不同的运输对象类，在应用中进行不同的处理。
+
+
+## 解决方案
+
+
+工厂方法模式建议使用特殊的工厂方法代替对于对象构造函数的直接调用（使用`new` 运算符）。不用担心，对象仍将通过`new` 运算符创建，只是该运算符改在工厂方法中调用罢了。工厂方法返回的对象通常被称作 “产品”。
+
+
+需要注意的是：仅当这些产品具有共同的基类或者接口时，子类才能返回不用类型的产品，同时基类中的工厂方法还应将其返回类型声明为这一共有接口。
+
+
+举例来说，`卡车` 和`轮船` 类都必须实现`运输` 接口，该接口声明了一个名为`交付` 的方法。每个类都将以不同的方式实现该方法；卡车走陆路交付货物，轮船走海路交付货物。`陆路运输` 类种的工厂方法返回`卡车对象` ，而`海路运输`类则返回`轮船对象` 。
+
+
+调用工厂方法的代码无需了解不同子类返回实际对象之间的差别，也不需要关心其具体的实现方式。
+
+
+## 伪代码
+
+
+```typescript
+abstract class Creator {
+	public abstract factoryMethod (): Product;
+	public someOperation (): string {
+		const product = this.factoryMethod();
+		return `Creator: The same creator's code has just worked with ${product.operation()}`;
+	}
+}
+
+class ConcreteCreator1 extends Creator {
+	public factoryMethod (): Product {
+		return new ConcreteProduct1();
+	}
+}
+
+class ConcreteCreator2 extends Creator {
+	public factoryMethod (): Product {
+		return new ConcreteProduct2();
+	}
+}
+
+interface Product {
+	operation (): string;
+}
+
+class ConcreteProduct1 implements Product {
+	public operation(): string {
+		return `{Result of the ConcreteProduct1}`;
+	}
+}
+
+class ConcreteProduct2 implements Product {
+	public operation(): string {
+		return `{Result of the ConcreteProduct2}`;
+	}
+}
+
+function clientCode (creator: Creator) {
+	console.log('Client: I\'m not aware of the creator\'s class, but it still works.');
+	console.log(creator.someOperation());
+}
+
+console.log(`App: Launched with ehr ConcreteCreator1.`); // App: Launched with ehr ConcreteCreator1.
+clientCode(new ConcreteCreator1)
+// Client: I'm not aware of the creator's class, but it still works.
+// Creator: The same creator's code has just worked with {Result of the ConcreteProduct1}
+console.log('');
+
+console.log(`App: Launched with ehr ConcreteCreator2.`); //App: Launched with ehr ConcreteCreator2.
+clientCode(new ConcreteCreator2)
+// Client: I'm not aware of the creator's class, but it still works.
+// Creator: The same creator's code has just worked with {Result of the ConcreteProduct2}
+```
+
+
+## 适用场景
+
+- **当你在编写代码的过程中，如果无法预知对象确切类别及其依赖关系时，可使用工厂方法。**
+工厂方法将创建产品的代码与实际使用产品的代码分离，从而能在不影响其他代码的情况下拓展产品创建部分代码。
+例如：如果需要向应用中添加一种新产品，你只需要开发新的创建者子类，然后重写其工厂方法即可。
+- **如果你希望用户能拓展你软件库或框架的内部组件，可使用工厂方法。**
+继承可能是拓展软件库或框架默认行为的最简单方法。但是当你使用子类替代标准组件时，框架如何辨识出该子类？
+解决方案是将各框架中构造组件的代码集中到单个工厂方法中，并在继承该组件之外允许任何人对该方法进行重写。
+例如：假设你使用开源UI框架编写自己的应用。你希望在应用中使用原型按钮，但是原框架仅支持矩形按钮。你可以使用`圆形按钮`子类来继承标准的矩形按钮
+- **如果你希望用户能拓展你软件库或框架的内部组件，可使用工厂方法。**
+继承可能是拓展软件库或框架默认行为的最简单方法。但是当你使用子类替代标准组件时，框架如何辨识出该子类？
+解决方案是将各框架中构造组件的代码集中到单个工厂方法中，并在继承该组件之外允许任何人对该方法进行重写。
+例如：假设你使用开源UI框架编写自己的应用。你希望在应用中使用原型按钮，但是原框架仅支持矩形按钮。你可以使用`圆形按钮`子类来继承标准的`按钮`类。但是，你需要告诉`UI框架` 类使用新的子类按钮代替默认按钮。为了实现这个功能，你可以根据基础框架类开发子类`圆形按钮` ，并且重写其`创建按钮` 方法。基类中的该方法返回`按钮` 对象，而你开发的子类返回`圆形按钮` 对象。现在，你就可以使用`圆形按钮` 类代替`默认按钮` 类。
+- **当你想要通过重用现有对象而不是每次重建它们来节省系统资源时，可使用工厂方法。**
+在处理大型资源密集型对象（如数据库连接、文件系统和网络资源）时，通过复用现有对象可以节省系统资源。
+我们思考一下复用现有对象的方法：
+1、首先，你需要创建存储空间来存放所有已创建的对象
+2、当他人请求一个对象时，程序将在存储空间中搜索可用对象
+3、然后将其返回给客户端代码
+4、如果存储空间中找不到该对象，则创建一个新对象，并加入存储空间中
+这代码量可不少，而且这些代码必须放在同一个地方，这样就不会用重复的代码污染程序。
+可能我们会试图重用其对象的类的构造函数。但是，构造函数必须始终根据定义返回**新对象**。它无法返回现有实例。
+因此，您需要有一个能够创建新对象并冲用这个对象的常规方法。这听起来像工厂方法。
+
+## 实现方式
+
+1. 让所有产品都遵循同一接口。该接口必须声明对所有产品都有意义的方法。
+2. 在创建者类中添加一个空工厂方法。方法的返回类型应与通用产品接口相匹配。
+3. 在创建者代码中找到对于产品构造函数的所有引用。将它们依次替换为对于工厂方法的调用，同时将创建产品的代码移入工厂方法。
+你可能需要在工厂方法中添加临时参数来控制返回的产品类型
+工厂方法的代码看上去非常糟糕。其中可能会有复杂的`switch` 语句，用于选择各种需要实例化的产品类。
+4. 现在，在工厂方法中列出的每种产品创建一组创建者子类。然后在子类中重写工厂方法， 并将基本方法中的相关创建代码移动到工厂方法中。
+5. 如果应用中的产品类型太多， 那么为每个产品创建子类并无太大必要， 这时你也可以在子类中复用基类中的控制参数。
+6. 如果代码经过上述移动后， 基础工厂方法中已经没有任何代码， 你可以将其转变为抽象类。 如果基础工厂方法中还有其他语句， 你可以将其设置为该方法的默认行为。
+
+## 优缺点
+
+
+| 优点                                        | 缺点                                                          |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| 可以避免创建者和具体产品之间的紧密耦合。                      | 应用工厂方法模式需要引入许多新的子类， 代码可能会因此变得更复杂。 最好的情况是将该模式引入创建者类的现有层次结构中。 |
+| _单一指责原则_。你可以将产品创建代码放在程序的单一位置，从而使得代码更容易维护。 |                                                             |
+| _开闭原则_。 无需更改现有客户端代码， 你就可以在程序中引入新的产品类型。    |                                                             |
+

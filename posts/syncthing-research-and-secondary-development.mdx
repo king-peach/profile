@@ -1,0 +1,129 @@
+---
+title: "Syncthing调研、二开"
+slug: "syncthing-research-and-secondary-development"
+date: "2025-03-20T09:00:00.000+08:00"
+lastModified: "2026-02-04"
+description: "对去中心化同步工具Syncthing的核心原理、适用性及其扩展潜力进行分析。"
+draft: true
+---
+
+
+## 背景
+
+
+项目中有一个容灾备份的需求，需要用到P2P技术，在市场中搜索了一圈，最后决定采用`syncthing`，将其改造一番，集成进项目中，那为什么会选择`syncthing`呢？
+
+
+## 浅析Syncthing
+
+
+### 简介
+
+
+`Syncthing` 是一款开源的文件同步工具，采用 Go 语言编写，支持多种操作系统，包括 Windows、macOS、Linux、BSD、Solaris 和 Android 等。它采用点对点（P2P）架构，没有中央服务器，数据传输直接在设备之间进行，确保了高效性和隐私保护。
+
+
+### 核心功能
+
+1. **实时文件同步**：文件修改后立即触发同步操作。
+2. **P2P 架构**：去中心化设计，数据传输直接在设备之间进行。
+3. **端到端加密**：使用 TLS 加密传输数据，确保通信安全。
+4. **跨平台支持**：支持多种操作系统。
+5. **版本控制**：保留多个文件版本，方便恢复到之前的版本。
+6. **丰富的配置选项**：可设置同步目录、同步频率、带宽限制等。
+
+### 同步机制
+
+
+`Syncthing` 采用“块级别增量同步”技术，仅传输文件的更改部分，减少带宽消耗并加快同步速度。此外，它支持版本控制，可恢复到之前的文件版本
+
+
+### 优势
+
+1. **隐私保护**：数据不存储在第三方服务器上，完全由用户掌控。
+2. **高效带宽利用**：仅传输文件的更改部分。
+3. **安全性高**：使用 TLS 加密，设备通信经过认证。
+4. **无缝集成**：支持多设备同步。
+5. **社区支持**：开源项目，拥有活跃社区。
+6. **定制化**：可高度定制同步策略。
+
+`Syncthing`开源、高效、隐私保护是我们想要的点，接下来我们就只需要梳理集成需要改造的点了，
+
+
+## 源码分析
+
+
+在二开之前，我们先熟悉下syncthing（v1.28.0）的源码结构吧（虽然官方文档里也有解释，但是我用图的方式阐述可能会更浅显一些）
+
+
+![SCR-20250207-nzpg.png](/images/notion/syncthing-research-and-secondary-development-32ccc736a622.png)
+
+
+UI界面的源码在`/gui`目录下，默认使用default的内容，主要逻辑也在`/default`下，另外的主题文件只包含样式覆盖。
+
+
+default目录下是一个angular的项目，版本是1.3.20，比较古早了，还是script引入js的模式，不过这也方便调试了，前端的代码不用再编译了，只用编译整个项目
+
+
+![image.png](/images/notion/syncthing-research-and-secondary-development-de312ec9eb59.png)
+
+
+核心的逻辑都在syncthing目录下，具体的功能点都按照文件夹区分了。
+
+
+调试的步骤：
+
+- 修改完源码
+- 执行命令`go run build.go --goos linux --goarch amd64 --version v1.28.0 --no-upgrade tar`
+- /bin目录下生成一个syncthing的二进制文件，执行 `./bin/syncthing` 即可
+
+## 二开
+
+
+我们打算通过`iframe`的方式嵌入`syncthing`的服务，所以我们首先要解决跨域的问题，`syncthing`又是P2P的技术，肯定会部署在不同的节点上，所以`syncthing`的服务肯定跟我们的项目不同源，所以我们要去寻找跨域的解决方案。
+
+
+首先去官方查找下有没有解决方案，搜索关键词frame，运气还不错，找到了一个配置项
+
+
+![image.png](/images/notion/syncthing-research-and-secondary-development-fd720c0c91d3.png)
+
+
+让后端在header里面把`X-Frame-Options: SAMEORIGIN` 的配置给注释掉就可以了，
+
+
+![image.png](/images/notion/syncthing-research-and-secondary-development-74b09c2804f7.png)
+
+
+注释以后，重启服务，然后用iframe集成以后，又出现了新的问题，iframe内容频繁刷新，经过一波仔细的调试，定位到问题是接口403了
+
+
+![image.png](/images/notion/syncthing-research-and-secondary-development-ccdac203b60a.png)
+
+
+但是页面直接访问是可以的，那可能就是在iframe中取不到cookie咯，非同源的cookie需要设置sameSite=None，secure=true。
+
+
+一般cookie是后端生成然后带到前端来的，但是我们也不能直接断定，所以分析了一波源码，在源码中定位到cookie设定的位置，是在后端。
+
+
+![image.png](/images/notion/syncthing-research-and-secondary-development-3532d737b4df.png)
+
+
+这样就解决了iframe嵌入的问题～
+
+
+嵌入后我们还需要解决syncthing的授权登陆问题，因为项目的登陆和syncthing没有打通，这里采用统一的账号密码登陆，用url传输账号密码，使用base64加密传输，然后在syncthing中接收使用，代码如下：
+
+
+![image.png](/images/notion/syncthing-research-and-secondary-development-dc952808e48d.png)
+
+
+自此syncthing的集成二开便完成了～
+
+
+## 结论
+
+
+容灾备份只是syncthing的一个应用场景，syncthing是一个强大的P2P工具，其开源轻量隐私保护的特性，可以应用于个人数据备份与同步、团队协同、物联网数据收集、局域网/离线环境数据共享、政企/医疗/军队等企事业单位内部隐私敏感场景的数据同步共享。学会和了解syncthing将给我们的工作和学历带来很大的便利～
+

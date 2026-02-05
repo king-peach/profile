@@ -24,8 +24,16 @@ pnpm-lock.yaml
 *.njsproj
 *.sln
 *.sw?
+.*/skills
+.*/rules
+*.skills
+/skills
 
 # 环境变量（包含敏感信息）
 .env
 .env.*
 !.env.example
+
+# Skills 相关文件
+SKILLS_USAGE.md
+.agents/

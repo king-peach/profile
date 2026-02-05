@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import "./index.css";
 import Root from "./Root";
 import "./i18n";
@@ -13,4 +14,8 @@ if (!rootElement) {
   throw new Error("Failed to find root element");
 }
 
-createRoot(rootElement).render(<Root />);
+createRoot(rootElement).render(
+  <HelmetProvider>
+    <Root />
+  </HelmetProvider>
+);
