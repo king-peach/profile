@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { FiHome, FiCalendar, FiTag, FiUser, FiExternalLink, FiLoader } from "react-icons/fi";
+import { FiCalendar, FiTag, FiUser, FiExternalLink, FiLoader } from "react-icons/fi";
 
 // Notion Database 字段类型
 type NotionRichText = { plain_text?: string }[];
@@ -35,6 +35,7 @@ type NotionPage = {
   object: "page";
   id: string;
   url?: string;
+  urlSlug?: string;
   created_time?: string;
   last_edited_time?: string;
   cover?: { type: string; external?: { url: string }; file?: { url: string } };
@@ -50,7 +51,8 @@ type DatabaseResponse = {
 
 const PAGE_SIZE = 10;
 const DATABASE_ID = import.meta.env.VITE_NOTION_DATASOURCE_ID;
-const USE_STATIC_DATA = import.meta.env.PROD;
+// 开发与生产均使用静态 JSON，不调用 Notion API（需先执行 npm run fetch-notion）
+const USE_STATIC_DATA = import.meta.env.VITE_USE_STATIC_DATA !== "false";
 
 // 提取属性值的工具函数
 function extractTitle(p: NotionPage): string {
@@ -296,43 +298,20 @@ function useNotionDatabase() {
   return { pages, loading, loadingMore, error, hasMore, loadMore };
 }
 
-// 返回首页按钮组件（用于 Header 插槽）
-function HomeButton() {
-  const { t } = useTranslation();
-  const handleGoHome = () => {
-    if ((window as any).navigateTo) {
-      (window as any).navigateTo("/");
-    } else {
-      window.location.href = "/";
-    }
-  };
-
-  return (
-    <button
-      onClick={handleGoHome}
-      className="flex items-center gap-1.5 px-3 py-1 rounded text-sm border border-white/40 hover:bg-white hover:text-black transition"
-      style={{ borderColor: 'rgba(255,255,255,0.4)' }}
-    >
-      <FiHome className="w-4 h-4" />
-      {t('articles.home')}
-    </button>
-  );
-}
-
 // 炫酷头部组件
 function HeaderHero() {
   const { t } = useTranslation();
   const { accentText, baseText, dark } = useTheme();
   const sectionRef = useRef<HTMLElement>(null);
-  const [headerVisible, setHeaderVisible] = useState(true);
+  const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
 
-  // 监听滚动，当滚动超过动画组件底部时隐藏 Header
+  // 监听滚动，判断是否滚动超过 hero section
   useEffect(() => {
     const handleScroll = () => {
       if (sectionRef.current) {
         const rect = sectionRef.current.getBoundingClientRect();
-        // 当 section 底部滚动到视口顶部时隐藏 Header
-        setHeaderVisible(rect.bottom > 60);
+        // 当 section 底部滚动到视口顶部时，切换为 fixed 吸顶
+        setIsScrolledPastHero(rect.bottom <= 60);
       }
     };
 
@@ -342,27 +321,31 @@ function HeaderHero() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative min-h-[calc(40vh+80px)] flex flex-col overflow-hidden">
-      {/* Header 跟随滚动，滚动到动画组件底部消失 */}
-      <motion.div
-        className="sticky top-0 z-50"
-        initial={{ opacity: 1, y: 0 }}
-        animate={{ 
-          opacity: headerVisible ? 1 : 0,
-          y: headerVisible ? 0 : -20,
-          pointerEvents: headerVisible ? "auto" : "none"
-        }}
-        transition={{ duration: 0.3 }}
-      >
-        <Header
-          showNav={false}
-          showLanguage={true}
-          showTheme={true}
-          leftSlot={<HomeButton />}
-        />
-      </motion.div>
+    <>
+      {/* 吸顶 Header - 滚动超过 hero 后显示 */}
+      {isScrolledPastHero && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Header
+            showNav={false}
+            showLanguage={true}
+            showTheme={true}
+          />
+        </div>
+      )}
+      
+      <section ref={sectionRef} className="relative min-h-[calc(40vh+80px)] flex flex-col overflow-hidden">
+        {/* 初始 Header - 在 hero 内部 */}
+        {!isScrolledPastHero && (
+          <div className="sticky top-0 z-50">
+            <Header
+              showNav={false}
+              showLanguage={true}
+              showTheme={true}
+            />
+          </div>
+        )}
       <PrismBackground
-        animationType="3drotate"
+        animationType="rotate"
         timeScale={0.3}
         colorFrequency={1.2}
         glow={1.5}
@@ -375,7 +358,7 @@ function HeaderHero() {
         lumBase={60}
         lumRange={20}
         suspendWhenOffscreen
-        className="z-0 opacity-90"
+        className="z-0 opacity-90 w-full"
       />
       
       {/* 浮动粒子效果 */}
@@ -449,6 +432,7 @@ function HeaderHero() {
         />
       </div>
     </section>
+    </>
   );
 }
 
@@ -476,6 +460,27 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
   const summaryEn = extractText(props["summaryEn"] || props["SummaryEn"] || props["SummaryEN"]);
   const displayedSummary = (isEn ? summaryEn : "") || summary;
 
+  // 构建文章详情链接
+  const articleUrl = page.urlSlug 
+    ? `/article/${encodeURIComponent(page.urlSlug)}` 
+    : page.url;
+  const isExternalLink = !page.urlSlug && page.url;
+
+  // 卡片点击跳转
+  const handleCardClick = (e: React.MouseEvent) => {
+    // 如果点击的是链接或按钮，不处理
+    if ((e.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    if (articleUrl) {
+      if (isExternalLink) {
+        window.open(articleUrl, "_blank");
+      } else {
+        window.location.href = articleUrl;
+      }
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -488,10 +493,11 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
       >
         <Card
           className={cn(
-            "overflow-hidden transition-all duration-300 h-full flex flex-col",
+            "overflow-hidden transition-all duration-300 h-full flex flex-col cursor-pointer",
             "hover:shadow-xl hover:-translate-y-1",
             dark ? "bg-zinc-800/80 border-zinc-700/50 backdrop-blur-sm" : "bg-white/80 backdrop-blur-sm"
           )}
+          onClick={handleCardClick}
         >
           {/* 封面图 */}
           {cover && (
@@ -499,7 +505,7 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
               <img
                 src={cover}
                 alt={title}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             </div>
@@ -523,9 +529,8 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
             )}
 
             <CardTitle
-              className="text-xl font-bold line-clamp-2 hover:text-blue-500 transition-colors cursor-pointer"
+              className="text-xl font-bold line-clamp-2 hover:text-blue-500 transition-colors"
               style={{ color: accentText }}
-              onClick={() => page.url && window.open(page.url, "_blank")}
             >
               {title}
             </CardTitle>
@@ -570,16 +575,17 @@ function ArticleCard({ page, index }: { page: NotionPage; index: number }) {
           </CardContent>
 
           <CardFooter className="pt-4 border-t border-gray-100 dark:border-zinc-700">
-            {page.url && (
+            {articleUrl && (
               <a
-                href={page.url}
-                target="_blank"
-                rel="noreferrer"
+                href={articleUrl}
+                target={isExternalLink ? "_blank" : undefined}
+                rel={isExternalLink ? "noreferrer" : undefined}
                 className={cn(
                   "flex items-center gap-1.5 text-sm font-medium transition-colors",
                   "hover:text-blue-500"
                 )}
                 style={{ color: accentText }}
+                onClick={(e) => e.stopPropagation()}
               >
                 {t('articles.readMore')}
                 <FiExternalLink className="w-4 h-4" />

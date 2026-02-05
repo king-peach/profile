@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../ThemeContext";
 
@@ -31,8 +31,43 @@ const Header: React.FC<HeaderProps> = ({
   leftSlot,
 }) => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { t, i18n } = useTranslation();
   const { dark, setDark, accent, accentText, baseText } = useTheme();
+
+  // 监听滚动，超过一屏后激活吸顶效果
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      // 超过一屏高度时激活吸顶效果
+      setIsScrolled(scrollY >= viewportHeight - 100);
+    };
+
+    // 使用 requestAnimationFrame 优化性能
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    // 监听滚动事件
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // 监听 resize 事件，确保视窗大小变化时重新计算
+    window.addEventListener('resize', handleScroll, { passive: true });
+    // 初始检查
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
 
   // 获取当前语言
   const currentLanguage = i18n.language || 'zh';
@@ -56,51 +91,148 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header
-      className="flex items-center justify-between px-4 md:px-8 py-5 sticky top-0 z-50 bg-transparent"
-      style={{ color: baseText }}
-      data-component="Header"
-    >
-      <div
-        className="flex items-center gap-2 font-extrabold text-xl md:text-2xl tracking-widest"
+    <>
+      {/* 占位元素，避免内容跳动 */}
+      {isScrolled && (
+        <div 
+          className="h-16 md:h-20"
+          aria-hidden="true"
+        />
+      )}
+      <header
+        className={`flex items-center justify-between px-4 md:px-6 lg:px-8 py-4 md:py-5 z-50 transition-all duration-300 ${
+          isScrolled ? 'fixed top-0 left-0 right-0 w-full' : 'relative'
+        }`}
+        style={{ 
+          color: baseText,
+          backdropFilter: "blur(24px) saturate(200%)",
+          WebkitBackdropFilter: "blur(24px) saturate(200%)",
+          backgroundColor: isScrolled
+            ? (dark 
+                ? "rgba(24, 24, 48, 0.85)" 
+                : "rgba(255, 255, 255, 0.75)")
+            : (dark 
+                ? "rgba(24, 24, 48, 0.5)" 
+                : "rgba(255, 255, 255, 0.25)"),
+          borderBottom: isScrolled
+            ? `1px solid ${dark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.08)"}`
+            : `1px solid ${dark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.15)"}`,
+          boxShadow: isScrolled
+            ? (dark
+                ? "0 8px 32px rgba(0, 0, 0, 0.3)"
+                : "0 8px 32px rgba(0, 0, 0, 0.1)")
+            : (dark
+                ? "0 4px 24px rgba(0, 0, 0, 0.15)"
+                : "0 4px 24px rgba(0, 0, 0, 0.03)"),
+        }}
+        data-component="Header"
+      >
+      <a
+        href="/"
+        className="flex items-center gap-3 font-extrabold text-xl md:text-2xl lg:text-3xl tracking-widest cursor-pointer transition-transform duration-300 hover:scale-105"
+        style={{ textDecoration: 'none', color: 'inherit' }}
       >
         {/* Logo SVG goes here */}
         <img
           src="/eric.ico"
           alt="Eric logo"
-          className="w-7 h-7 md:w-8 md:h-8 rounded"
+          className="w-8 h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-lg"
+          style={{
+            boxShadow: dark
+              ? "0 4px 12px rgba(0, 0, 0, 0.3)"
+              : "0 4px 12px rgba(0, 0, 0, 0.1)",
+          }}
         />
-        <span className="ml-1">Eric</span>
-      </div>
+        <span className="ml-1" style={{
+          textShadow: dark ? "0 2px 8px rgba(0, 0, 0, 0.3)" : "0 2px 8px rgba(255, 255, 255, 0.5)",
+        }}>Eric</span>
+      </a>
       {/* Desktop Nav */}
-      <nav className="hidden md:flex space-x-4 lg:space-x-8 items-center">
+      <nav className="hidden md:flex space-x-5 lg:space-x-6 xl:space-x-8 items-center">
         {showNav && sections.map(section => (
           <button
             key={section.id}
             onClick={() => scrollToSection(section.id)}
-            className="hover:underline font-mono text-base lg:text-lg"
+            className="font-mono text-base lg:text-lg transition-all duration-300 hover:scale-105 relative group"
+            style={{
+              textShadow: dark ? "0 1px 4px rgba(0, 0, 0, 0.3)" : "0 1px 4px rgba(255, 255, 255, 0.5)",
+            }}
           >
             {t(`nav.${section.id}`)}
+            <span 
+              className="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
+              style={{ backgroundColor: accent }}
+            />
           </button>
         ))}
         {/* 插槽内容 */}
         {leftSlot}
         {showLanguage && (
           <button
-            className="ml-6 px-3 py-1 rounded text-sm flex items-center border border-white/40 hover:bg-white hover:text-black transition"
+            className="ml-4 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95"
             aria-label="Toggle language"
-            style={{ borderColor: 'rgba(255,255,255,0.4)' }}
+            style={{
+              backdropFilter: "blur(16px) saturate(180%)",
+              WebkitBackdropFilter: "blur(16px) saturate(180%)",
+              backgroundColor: dark 
+                ? "rgba(255, 255, 255, 0.1)" 
+                : "rgba(255, 255, 255, 0.2)",
+              border: `1px solid ${dark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.3)"}`,
+              color: baseText,
+              boxShadow: dark
+                ? "0 4px 12px rgba(0, 0, 0, 0.2)"
+                : "0 4px 12px rgba(0, 0, 0, 0.08)",
+            }}
             onClick={toggleLanguage}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = dark 
+                ? "rgba(255, 255, 255, 0.2)" 
+                : "rgba(255, 255, 255, 0.3)";
+              e.currentTarget.style.borderColor = accent;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = dark 
+                ? "rgba(255, 255, 255, 0.1)" 
+                : "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.borderColor = dark 
+                ? "rgba(255, 255, 255, 0.2)" 
+                : "rgba(255, 255, 255, 0.3)";
+            }}
           >
             {currentLanguage === 'zh' ? 'English' : '中文'}
           </button>
         )}
         {showTheme && (
           <button
-            className="ml-2 px-2 py-1 rounded text-xs flex items-center border border-white/40 hover:bg-white hover:text-black transition"
+            className="ml-2 px-3 py-2 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center"
             aria-label="Toggle dark mode"
-            style={{ borderColor: 'rgba(255,255,255,0.4)' }}
+            style={{
+              backdropFilter: "blur(16px) saturate(180%)",
+              WebkitBackdropFilter: "blur(16px) saturate(180%)",
+              backgroundColor: dark 
+                ? "rgba(255, 255, 255, 0.1)" 
+                : "rgba(255, 255, 255, 0.2)",
+              border: `1px solid ${dark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.3)"}`,
+              color: baseText,
+              boxShadow: dark
+                ? "0 4px 12px rgba(0, 0, 0, 0.2)"
+                : "0 4px 12px rgba(0, 0, 0, 0.08)",
+            }}
             onClick={toggleDarkMode}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = dark 
+                ? "rgba(255, 255, 255, 0.2)" 
+                : "rgba(255, 255, 255, 0.3)";
+              e.currentTarget.style.borderColor = accent;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = dark 
+                ? "rgba(255, 255, 255, 0.1)" 
+                : "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.borderColor = dark 
+                ? "rgba(255, 255, 255, 0.2)" 
+                : "rgba(255, 255, 255, 0.3)";
+            }}
           >
             {/* Sun / Moon icons */}
             {dark ? (
@@ -113,11 +245,19 @@ const Header: React.FC<HeaderProps> = ({
       </nav>
       {/* Hamburger Icon for Mobile */}
       <button
-        className="md:hidden block focus:outline-none p-2"
+        className="md:hidden block focus:outline-none p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
         aria-label="Open menu"
+        style={{
+          backdropFilter: "blur(16px) saturate(180%)",
+          WebkitBackdropFilter: "blur(16px) saturate(180%)",
+          backgroundColor: dark 
+            ? "rgba(255, 255, 255, 0.1)" 
+            : "rgba(255, 255, 255, 0.2)",
+          border: `1px solid ${dark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.3)"}`,
+        }}
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
       >
-        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
@@ -125,11 +265,26 @@ const Header: React.FC<HeaderProps> = ({
       {mobileNavOpen && (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center md:hidden transition-all"
-          style={{ backgroundColor: accent }}
+          style={{ 
+            backgroundColor: dark 
+              ? "rgba(24, 24, 48, 0.95)" 
+              : "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(24px) saturate(200%)",
+            WebkitBackdropFilter: "blur(24px) saturate(200%)",
+          }}
         >
           <button
-            className="absolute text-white rounded-full w-11 h-11 flex items-center justify-center bg-black/20 backdrop-blur-sm"
-            style={{ top: "calc(1rem + env(safe-area-inset-top))", right: "1rem" }}
+            className="absolute text-white rounded-2xl w-12 h-12 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+            style={{ 
+              top: "calc(1rem + env(safe-area-inset-top))", 
+              right: "1rem",
+              backdropFilter: "blur(16px) saturate(180%)",
+              WebkitBackdropFilter: "blur(16px) saturate(180%)",
+              backgroundColor: dark 
+                ? "rgba(0, 0, 0, 0.3)" 
+                : "rgba(255, 255, 255, 0.2)",
+              border: `1px solid ${dark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"}`,
+            }}
             onClick={() => setMobileNavOpen(false)}
             aria-label="Close menu"
             type="button"
@@ -142,19 +297,31 @@ const Header: React.FC<HeaderProps> = ({
             <button
               key={section.id}
               onClick={() => handleMobileNav(section.id)}
-              className="w-full text-2xl my-2 py-2 font-mono text-white hover:underline"
+              className="w-full text-2xl md:text-3xl my-3 py-3 font-mono transition-all duration-300 hover:scale-105"
+              style={{
+                color: baseText,
+                textShadow: dark ? "0 2px 8px rgba(0, 0, 0, 0.3)" : "0 2px 8px rgba(255, 255, 255, 0.5)",
+              }}
             >
               {t(`nav.${section.id}`)}
             </button>
           ))}
           {/* 移动端插槽内容 */}
-          {leftSlot && <div className="my-4">{leftSlot}</div>}
+          {leftSlot && <div className="my-6">{leftSlot}</div>}
           <div className="flex mt-8 gap-4">
             {showLanguage && (
               <button
-                className="px-3 py-1 rounded text-sm flex items-center border border-white/40 hover:bg-white hover:text-black transition"
+                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95 flex items-center"
                 aria-label="Toggle language"
-                style={{ borderColor: 'rgba(255,255,255,0.4)' }}
+                style={{
+                  backdropFilter: "blur(16px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                  backgroundColor: dark 
+                    ? "rgba(255, 255, 255, 0.15)" 
+                    : "rgba(0, 0, 0, 0.08)",
+                  border: `1px solid ${dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.15)"}`,
+                  color: baseText,
+                }}
                 onClick={toggleLanguage}
               >
                 {currentLanguage === 'zh' ? 'English' : '中文'}
@@ -162,9 +329,17 @@ const Header: React.FC<HeaderProps> = ({
             )}
             {showTheme && (
               <button
-                className="px-2 py-1 rounded text-xs flex items-center border border-white/40 hover:bg-white hover:text-black transition"
+                className="px-4 py-2.5 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center"
                 aria-label="Toggle dark mode"
-                style={{ borderColor: 'rgba(255,255,255,0.4)' }}
+                style={{
+                  backdropFilter: "blur(16px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                  backgroundColor: dark 
+                    ? "rgba(255, 255, 255, 0.15)" 
+                    : "rgba(0, 0, 0, 0.08)",
+                  border: `1px solid ${dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.15)"}`,
+                  color: baseText,
+                }}
                 onClick={toggleDarkMode}
               >
                 {dark ? (
@@ -178,6 +353,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       )}
     </header>
+    </>
   );
 };
 

@@ -20,6 +20,7 @@ import {
   SiTailwindcss,
   SiWebpack,
 } from "react-icons/si";
+import { FiDownload } from "react-icons/fi";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -95,26 +96,47 @@ const Hero: React.FC = () => {
   return (
     <section
       id="hero"
-      className="min-h-[640px] flex items-start md:items-center justify-between px-2 md:px-4 pt-8 md:pt-0"
+      className="min-h-[calc(100vh-80px)] flex items-start md:items-center justify-between px-6 md:px-8 lg:px-12 xl:px-16 pt-20 md:pt-24 pb-16 md:pb-20"
       data-component="Hero"
     >
-      <div className="mx-auto flex flex-col md:flex-row items-center justify-between max-w-7xl gap-10">
+      <div className="mx-auto flex flex-col md:flex-row items-center justify-between max-w-[1600px] gap-12 md:gap-16 w-full">
         {/* 左侧内容：标签 + 主标题 + 副标题 + CTA */}
         <div
           ref={leftContentRef}
-          className="flex flex-col items-start md:w-3/5 space-y-6"
+          className="flex flex-col items-start md:w-[58%] lg:w-[55%] space-y-6 md:space-y-8"
           style={{ color: baseText }}
         >
           {/* 顶部标签行：体现系统化学习 / 复盘 / 高级前端 / 工程化 */}
-          <div className="text-xs tracking-[0.2em] uppercase opacity-80 mb-1">
+          <div 
+            className={`tracking-[0.15em] uppercase mb-2 ${
+              dark ? 'glass-dark' : 'glass'
+            } px-4 py-2 rounded-full ${
+              isChinese ? "text-xs md:text-sm" : "text-[10px] md:text-xs"
+            }`}
+            style={{
+              opacity: 0.9,
+              backdropFilter: dark ? 'blur(12px) saturate(180%)' : 'blur(12px) saturate(180%)',
+              WebkitBackdropFilter: dark ? 'blur(12px) saturate(180%)' : 'blur(12px) saturate(180%)',
+              backgroundColor: dark 
+                ? `rgba(24, 24, 48, 0.55)` 
+                : `rgba(255, 255, 255, 0.25)`,
+              borderColor: dark 
+                ? `rgba(255, 255, 255, 0.12)` 
+                : `rgba(255, 255, 255, 0.2)`,
+            }}
+          >
             {t("hero.tagline", {
               defaultValue:
                 "Systematic Learning · Retrospective Driven · Advanced Frontend & Engineering",
             })}
           </div>
 
-          {/* 主标题：保留逐字动画，但只用第一行主标题，其他行可从文案中控制 */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight space-y-2">
+          {/* 主标题：保留逐字动画，根据语言调整字号 */}
+          <h1 className={`font-extrabold leading-[1.15] tracking-tight space-y-2 ${
+            isChinese 
+              ? "text-3xl sm:text-4xl md:text-5xl lg:text-6xl" 
+              : "text-2xl sm:text-3xl md:text-4xl lg:text-5xl"
+          }`}>
             {greetingLines.map((line, idx) => (
               <SplitText
                 key={idx}
@@ -131,8 +153,12 @@ const Hero: React.FC = () => {
             ))}
           </h1>
 
-          {/* 副标题：具体说明内容方向和受众 */}
-          <p className="mt-2 text-sm md:text-base max-w-xl opacity-90 leading-relaxed">
+          {/* 副标题：具体说明内容方向和受众，英文时字号稍小 */}
+          <p className={`max-w-2xl opacity-90 leading-relaxed mt-2 ${
+            isChinese 
+              ? "text-sm md:text-base lg:text-lg" 
+              : "text-xs md:text-sm lg:text-base"
+          }`}>
             {t("hero.subtitle", {
               defaultValue:
                 "围绕设计模式、前端工程化、疑难问题复盘、JS 基础与随笔，记录真实项目中的技术决策和系统化学习路径，帮在职前端构建可复用的知识体系，也让雇主看见高级前端的工程化价值。",
@@ -140,10 +166,23 @@ const Hero: React.FC = () => {
           </p>
 
           {/* CTA 区域：主按钮引导到精选/进阶路线，次按钮到关于/合作 */}
-          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4">
             <button
               type="button"
-              className="px-5 py-2.5 rounded-full text-sm font-medium backdrop-blur bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+              className="px-5 py-2.5 md:px-6 md:py-3 rounded-full text-sm md:text-base font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: accent,
+                color: '#ffffff',
+                boxShadow: `0 8px 24px ${accent}40`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = accentHover;
+                e.currentTarget.style.boxShadow = `0 10px 28px ${accent}50`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = accent;
+                e.currentTarget.style.boxShadow = `0 8px 24px ${accent}40`;
+              }}
               onClick={() =>
                 document.getElementById("blog")?.scrollIntoView({
                   behavior: "smooth",
@@ -156,7 +195,20 @@ const Hero: React.FC = () => {
             </button>
             <button
               type="button"
-              className="px-5 py-2.5 rounded-full text-sm font-medium border border-white/15 hover:border-white/40 bg-transparent hover:bg-white/5 transition-colors"
+              className={`px-5 py-2.5 md:px-6 md:py-3 rounded-full text-sm md:text-base font-medium transition-all duration-300 ${
+                dark ? 'glass-dark' : 'glass'
+              } hover:scale-105 active:scale-95`}
+              style={{
+                backdropFilter: 'blur(16px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                backgroundColor: dark 
+                  ? `rgba(24, 24, 48, 0.55)` 
+                  : `rgba(255, 255, 255, 0.28)`,
+                borderColor: dark 
+                  ? `rgba(255, 255, 255, 0.2)` 
+                  : `rgba(255, 255, 255, 0.25)`,
+                color: baseText,
+              }}
               onClick={() =>
                 document.getElementById("about")?.scrollIntoView({
                   behavior: "smooth",
@@ -167,10 +219,46 @@ const Hero: React.FC = () => {
                 defaultValue: "关于我与合作 →",
               })}
             </button>
+            <a
+              href="/resume.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`px-5 py-2.5 md:px-6 md:py-3 rounded-full text-sm md:text-base font-medium transition-all duration-300 ${
+                dark ? 'glass-dark' : 'glass'
+              } hover:scale-105 active:scale-95 flex items-center gap-2`}
+              style={{
+                backdropFilter: 'blur(16px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                backgroundColor: dark 
+                  ? `rgba(24, 24, 48, 0.55)` 
+                  : `rgba(255, 255, 255, 0.28)`,
+                borderColor: dark 
+                  ? `rgba(255, 255, 255, 0.2)` 
+                  : `rgba(255, 255, 255, 0.25)`,
+                color: baseText,
+              }}
+            >
+              <FiDownload className="w-4 h-4 md:w-5 md:h-5" />
+              {t("hero.downloadResume", { defaultValue: "下载简历" })}
+            </a>
           </div>
 
           {/* 承诺/风格说明：过程型信息而非数据 */}
-          <p className="mt-2 text-xs md:text-sm opacity-80">
+          <p className={`mt-4 opacity-75 ${
+            dark ? 'glass-dark' : 'glass'
+          } px-4 py-2 rounded-lg inline-block ${
+            isChinese ? "text-xs md:text-sm" : "text-[10px] md:text-xs"
+          }`}
+          style={{
+            backdropFilter: 'blur(12px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+            backgroundColor: dark 
+              ? `rgba(24, 24, 48, 0.5)` 
+              : `rgba(255, 255, 255, 0.22)`,
+            borderColor: dark 
+              ? `rgba(255, 255, 255, 0.12)` 
+              : `rgba(255, 255, 255, 0.2)`,
+          }}>
             {t("hero.promise", {
               defaultValue:
                 "以系统化学习和复盘为核心，持续更新的高级前端与工程化笔记。",
@@ -181,9 +269,9 @@ const Hero: React.FC = () => {
         {/* 右侧 Profile Card */}
         <div
           ref={rightImageRef}
-          className="w-full md:w-2/5 flex justify-center md:justify-end mt-10 md:mt-0"
+          className="w-full md:w-[42%] lg:w-[45%] flex justify-center md:justify-end mt-12 md:mt-0"
         >
-          <div className="w-full max-w-md md:max-w-xl">
+          <div className="w-full max-w-sm md:max-w-md lg:max-w-lg">
             <ProfileCard
               avatarUrl="/avatar01.jpg"
               name={t("hero.name")}
@@ -191,7 +279,7 @@ const Hero: React.FC = () => {
               contactText={t("hero.cta")}
               showUserInfo
               enableTilt
-              className="h-auto min-h-[260px] md:h-[40vh] md:min-h-[300px]"
+              className="h-auto min-h-[260px] sm:min-h-[280px] md:min-h-[300px] lg:min-h-[320px] max-h-[400px] md:max-h-[420px]"
               onContactClick={() =>
                 document.getElementById("contact")?.scrollIntoView({
                   behavior: "smooth",
@@ -203,14 +291,14 @@ const Hero: React.FC = () => {
                   speed={80}
                   repeatCount={4}
                   direction="left"
-                  logoHeight={32}
-                  gap={28}
+                  logoHeight={28}
+                  gap={24}
                   pauseOnHover
                   fadeOut
                   fadeOutColor="transparent"
                   scaleOnHover
                   ariaLabel="Technology stack"
-                  className="py-2"
+                  className="py-1"
                 />
               }
             />

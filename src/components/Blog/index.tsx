@@ -25,13 +25,14 @@ type NotionPage = {
   object: "page";
   id: string;
   url?: string;
+  urlSlug?: string;
   created_time?: string;
   last_edited_time?: string;
   properties?: Record<string, NotionProperty>;
 };
 
-// SSG 模式：从静态 JSON 读取数据
-const USE_STATIC_DATA = import.meta.env.PROD;
+// 开发与生产均使用静态 JSON，不调用 Notion API（需先执行 npm run fetch-notion）
+const USE_STATIC_DATA = import.meta.env.VITE_USE_STATIC_DATA !== "false";
 const DATABASE_ID = import.meta.env.VITE_NOTION_DATASOURCE_ID;
 
 // 提取属性值
@@ -242,18 +243,21 @@ const Blog: React.FC = () => {
 
   const handleViewMore = () => navigateTo("/articles");
 
-  const handleArticleOpen = (url?: string) => {
-    if (!url) return;
-    navigateTo(url, { newTab: true });
+  const handleArticleOpen = (article: NotionPage) => {
+    if (article.urlSlug) {
+      navigateTo(`/article/${encodeURIComponent(article.urlSlug)}`);
+    } else if (article.url) {
+      navigateTo(article.url, { newTab: true });
+    }
   };
 
   const handleArticleKeyDown = (
     event: React.KeyboardEvent<HTMLDivElement>,
-    url?: string,
+    article: NotionPage,
   ) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      handleArticleOpen(url);
+      handleArticleOpen(article);
     }
   };
 
@@ -353,15 +357,15 @@ const Blog: React.FC = () => {
                     className="flex justify-end pt-2 border-t border-gray-100 dark:border-zinc-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-800"
                     role="button"
                     tabIndex={0}
-                    onClick={() => handleArticleOpen(article.url)}
-                    onKeyDown={(event) => handleArticleKeyDown(event, article.url)}
+                    onClick={() => handleArticleOpen(article)}
+                    onKeyDown={(event) => handleArticleKeyDown(event, article)}
                     aria-label={readMoreAriaLabel}
                   >
-                    {article.url && (
+                    {(article.urlSlug || article.url) && (
                       <a
-                        href={article.url}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={article.urlSlug ? `/article/${encodeURIComponent(article.urlSlug)}` : article.url}
+                        target={article.urlSlug ? undefined : "_blank"}
+                        rel={article.urlSlug ? undefined : "noreferrer"}
                         className="text-sm font-medium hover:underline"
                         onClick={(event) => event.stopPropagation()}
                         style={{ color: accentText }}
