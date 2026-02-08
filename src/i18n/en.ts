@@ -3,6 +3,7 @@ const en = {
     nav: {
       about: "About",
       experience: "Experience",
+      projects: "Projects",
       blog: "Blog",
       contact: "Contact"
     },
@@ -58,27 +59,61 @@ const en = {
     },
     experience: {
       header: "Experience",
+      responsibilitiesLabel: "Key Responsibilities",
+      achievementsLabel: "Key Achievements",
       companies: [
         {
-          company: "Tiduyun",
-          role: "Advanced Front-end Development",
-          period: "May 2022 - Present",
-          desc: "Responsible for the front-end research and development of company's two major products, reconstructing the official website, and participating in the research and development of self-developed component libraries and BI products.",
-          tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "SSG (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker", "Micro Front-end (qiankun & wujie)"]
+          company: "Gradient Technology Co., Ltd.",
+          role: "Senior Frontend Developer",
+          period: "May 2022 - Jul 2025",
+          desc: "Responsible for frontend development of core systems including Big Data Platform and O&M Management Platform. Led micro-frontend architecture implementation and AI-assisted programming workflow.",
+          responsibilities: [
+            "Led frontend development for Big Data Platform and O&M Management Platform",
+            "Integrated 5+ sub-applications using qiankun micro-frontend, solving style isolation, communication, and permission issues",
+            "Participated in frontend infrastructure and component library development",
+            "Introduced AI-assisted programming workflow for page development, component encapsulation, and complex logic implementation",
+            "Mentored junior developers, conducted regular Code Reviews and technical sharing sessions"
+          ],
+          achievements: [
+            "Independently responsible for O&M product line frontend architecture and core feature development",
+            "Encapsulated 10+ reusable business components, reducing development time by ~200 hours",
+            "Developed AI Rules & Skills based on historical projects, enabling direct deployment of AI-generated code",
+            "Rebuilt official website using Gatsby + Strapi, significantly improving UX and operational efficiency"
+          ],
+          tech: ["Vue2/3（Vuex & TypeScript）", "Node (Koa)", "SSG (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker", "Micro Front-end (qiankun & wujie)"]
         },
         {
-          company: "QiFeng Technology",
-          role: "Front-end Development",
+          company: "Hunan QiFeng Network Technology Co., Ltd.",
+          role: "Frontend Developer",
           period: "Jul 2018 - May 2022",
-          desc: "Work as a game development and promotion company, responsible for game marketing and promotion, front-end development, SEO, PPC/SEM and other tasks.",
-          tech: ["Vue", "Webpack", "JQuery", "Tailwindcss", "Mini Program（Taro）"]
-        },
+          desc: "Built multiple admin systems from scratch, managed SEM landing page ecosystem and monitoring systems, drove team engineering standardization.",
+          responsibilities: [
+            "Built multiple admin systems from scratch (Gaming, OA, QA)",
+            "Managed SEM landing page system and monitoring infrastructure",
+            "Introduced ESLint, Commitlint, Lint-staged to standardize team engineering workflow",
+            "Built automated regression testing with Selenium, reducing production incidents"
+          ],
+          achievements: [
+            "Supported 100+ landing page development, contributing to ~20% revenue growth",
+            "Established unified landing page templates and analytics solutions, improving conversion rate and SEO",
+            "Admin systems significantly improved operational and development efficiency, reducing iteration cycle by 80%"
+          ],
+          tech: ["Vue", "Webpack", "jQuery", "Tailwindcss", "Mini Program（Taro）"]
+        }
+      ]
+    },
+    projects: {
+      header: "Featured Projects",
+      toolsLabel: "DEVELOPMENT TOOLS",
+      viewProject: "VIEW PROJECT",
+      items: [
         {
-          company: "Asiainfo Data",
-          role: "Development Intern",
-          period: "Oct 2017 - May 2018",
-          desc: "Engaged in the development of the second-phase project of a certain national bureau.",
-          tech: ["JQuery", "HTML5", "Css3", "Javascript"]
+          name: "Datagradient Platform",
+          description: "A one-stop cloud-native data intelligence R&D and asset management platform. Covers offline development, real-time development, algorithm development, data assets, data quality, smart tags, data services, data sharing, and visual analysis to support the full lifecycle management of enterprise data assets.",
+          tools: ["Vue3", "TypeScript", "qiankun Micro-frontend", "Vuex", "Element Plus", "ECharts", "Node.js"],
+          image: "datagradient",
+          link: "https://www.tiduyun.com",
+          linkText: "VIEW PROJECT"
         }
       ]
     },

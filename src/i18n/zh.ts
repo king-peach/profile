@@ -3,6 +3,7 @@ const zh = {
     nav: {
       about: "关于",
       experience: "工作经验",
+      projects: "项目经历",
       blog: "博文",
       contact: "联系我"
     },
@@ -58,27 +59,61 @@ const zh = {
     },
     experience: {
       header: "工作经验",
+      responsibilitiesLabel: "主要职责",
+      achievementsLabel: "关键成果",
       companies: [
         {
-          company: "梯度科技",
-          role: "高级前端开发",
-          period: "2022年5月 - 至今",
-          desc: "负责公司两大产品前端研发工作，重构官网，参与自研组件库和BI产品研发",
-          tech: ["Vue2/3（Vuex & typescript）", "Node (Koa)", "静态站点生成 (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker", "微前端（qiankun & wujie）"]
+          company: "梯度科技股份有限公司",
+          role: "高级前端开发工程师",
+          period: "2022年5月 - 2025年7月",
+          desc: "负责大数据中台、运维管理平台等核心系统前端开发，主导微前端架构落地与 AI 辅助编程流程引入。",
+          responsibilities: [
+            "负责大数据中台、运维管理平台等核心系统前端开发",
+            "使用 qiankun 微前端集成 5+ 子应用，解决样式隔离、通信、权限等问题",
+            "参与前端基础设施与组件库建设",
+            "引入 AI 辅助编程流程，用于页面开发、组件封装与复杂逻辑实现",
+            "带教初中级前端，定期 Code Review 与技术分享"
+          ],
+          achievements: [
+            "独立负责运维产品线前端架构与核心功能开发",
+            "封装 10+ 通用业务组件，减少重复开发工时约 200 小时",
+            "基于历史项目沉淀 AI Rules & Skills，使 AI 生成代码可直接落地",
+            "使用 Gatsby + Strapi 重构官网，显著提升用户体验与运营效率"
+          ],
+          tech: ["Vue2/3（Vuex & TypeScript）", "Node (Koa)", "静态站点生成 (Gatsby, Nuxt)", "React (Redux & Hooks)", "Docker", "微前端（qiankun & wujie）"]
         },
         {
-          company: "七风网络",
-          role: "前端开发",
+          company: "湖南七风网络科技有限公司",
+          role: "前端开发工程师",
           period: "2018年7月 - 2022年5月",
-          desc: "负责游戏开发、推广公司，负责游戏营销推广、前端开发、SEO、PPC/SEM等工作。",
-          tech: ["Vue", "Webpack", "JQuery", "Tailwindcss", "小程序开发（Taro）"]
-        },
+          desc: "从 0-1 开发多套后台管理系统，负责 SEM 落地页体系与配套监控系统，推动团队工程化规范落地。",
+          responsibilities: [
+            "从 0-1 开发多套后台管理系统（游戏、OA、QA）",
+            "负责 SEM 落地页体系与配套监控系统",
+            "引入 ESLint、Commitlint、Lint-staged，规范团队工程流程",
+            "基于 Selenium 构建自动化回归测试，减少线上事故"
+          ],
+          achievements: [
+            "支撑 100+ 落地页开发，协助业务营收提升约 20%",
+            "搭建统一落地页模板与埋点方案，提升转化率与 SEO 效果",
+            "后台系统显著提升运营与开发效率，版本迭代周期缩短 80%"
+          ],
+          tech: ["Vue", "Webpack", "jQuery", "Tailwindcss", "小程序开发（Taro）"]
+        }
+      ]
+    },
+    projects: {
+      header: "项目经历",
+      toolsLabel: "技术栈",
+      viewProject: "查看项目",
+      items: [
         {
-          company: "亚信数据",
-          role: "开发实习生",
-          period: "2017年10月 - 2018年5月",
-          desc: "从事国家某局2期项目开发",
-          tech: ["JQuery", "HTML5", "Css3", "Javascript"]
+          name: "数度大数据平台",
+          description: "一站式云原生数据智能研发与资产管理平台。涵盖离线开发、实时开发、算法开发、数据资产、数据质量、智能标签、数据服务、共享开放、可视化分析等完整数据链路，支撑企业数据资产的全生命周期管理。",
+          tools: ["Vue3", "TypeScript", "qiankun 微前端", "Vuex", "Element Plus", "ECharts", "Node.js"],
+          image: "datagradient",
+          link: "https://www.tiduyun.com",
+          linkText: "访问官网"
         }
       ]
     },

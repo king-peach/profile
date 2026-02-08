@@ -33,19 +33,19 @@ const Experience: React.FC = () => {
     // 选项卡动画
     if (tabsRef.current?.children) {
       gsap.fromTo(Array.from(tabsRef.current.children),
-      { x: -30, opacity: 0 },
-      {
-        x: 0,
-        opacity: 1,
-        duration: 0.5,
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: tabsRef.current,
-          start: "top bottom-=50",
-          toggleActions: "play none none reverse"
+        { x: -30, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.5,
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: tabsRef.current,
+            start: "top bottom-=50",
+            toggleActions: "play none none reverse"
+          }
         }
-      }
-    );
+      );
     }
   }, []);
 
@@ -69,8 +69,12 @@ const Experience: React.FC = () => {
     role: string;
     period: string;
     desc: string;
+    responsibilities?: string[];
+    achievements?: string[];
     tech: string[];
   }>;
+
+  const currentExp = experienceItems[expTab];
 
   return (
     <section className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" id="experience" data-component="Experience"
@@ -78,7 +82,9 @@ const Experience: React.FC = () => {
       <h2 ref={titleRef} className="font-bold text-xl md:text-2xl mb-8" style={{ color: accentText }}>{t('experience.header')}</h2>
       <div className="flex flex-col md:flex-row gap-8">
         {/* Vertical Tabs (Companies) */}
-        <div ref={tabsRef} className="flex md:flex-col md:w-56 shrink-0 border-b md:border-b-0  md:border-l w-full overflow-x-auto border-[#E5E7EB] dark:border-[#292950]">
+        <div ref={tabsRef} className="flex md:flex-col md:w-56 shrink-0 border-b md:border-b-0 w-full overflow-x-auto relative" style={{ height: 'fit-content' }}>
+          {/* 左侧边框线 - 仅在桌面端显示，高度自适应 */}
+          <div className="hidden md:block absolute left-0 top-0 bottom-0 w-px bg-[#E5E7EB] dark:bg-[#292950]" />
           {experienceItems.map((item, idx) => (
             <button
               key={item.company}
@@ -106,16 +112,54 @@ const Experience: React.FC = () => {
             id={`exp-panel-${expTab}`}
             tabIndex={0}
           >
-            <span>{experienceItems[expTab].role}</span>
-            <span className="block font-normal text-sm opacity-80">@ {experienceItems[expTab].company}</span>
+            <span>{currentExp.role}</span>
+            <span className="block font-normal text-sm opacity-80">@ {currentExp.company}</span>
           </div>
-          <div className="font-mono text-xs mb-2 text-[#888] dark:text-[#BBB]">{experienceItems[expTab].period}</div>
-          <div className="mb-2 leading-relaxed">{experienceItems[expTab].desc}</div>
-          <ul className="list-disc pl-6 space-y-1 mt-1">
-            {experienceItems[expTab].tech.map((tech, index) => (
-              <li key={`${expTab}-tech-${index}`} className="text-sm">{tech}</li>
-            ))}
-          </ul>
+          <div className="font-mono text-xs mb-3 text-[#888] dark:text-[#BBB]">{currentExp.period}</div>
+          <div className="mb-4 leading-relaxed text-sm">{currentExp.desc}</div>
+
+          {/* 主要职责 */}
+          {currentExp.responsibilities && currentExp.responsibilities.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold text-sm mb-2" style={{ color: accentText }}>{t('experience.responsibilitiesLabel')}</h4>
+              <ul className="list-disc pl-5 space-y-1">
+                {currentExp.responsibilities.map((item, index) => (
+                  <li key={`${expTab}-resp-${index}`} className="text-sm leading-relaxed">{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* 关键成果 */}
+          {currentExp.achievements && currentExp.achievements.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold text-sm mb-2" style={{ color: accent }}>{t('experience.achievementsLabel')}</h4>
+              <ul className="list-disc pl-5 space-y-1">
+                {currentExp.achievements.map((item, index) => (
+                  <li key={`${expTab}-ach-${index}`} className="text-sm leading-relaxed">{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* 技术栈 */}
+          <div>
+            <h4 className="font-semibold text-sm mb-2 text-[#666] dark:text-[#AAA]">技术栈</h4>
+            <div className="flex flex-wrap gap-2">
+              {currentExp.tech.map((tech, index) => (
+                <span
+                  key={`${expTab}-tech-${index}`}
+                  className="px-2 py-1 text-xs rounded-md"
+                  style={{
+                    backgroundColor: dark ? 'rgba(138, 75, 255, 0.15)' : 'rgba(138, 75, 255, 0.1)',
+                    color: accent
+                  }}
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Hero from "./components/Hero";
 import About from "./components/About";
 import Experience from "./components/Experience";
+import Projects from "./components/Projects";
 import ContentMap from "./components/ContentMap";
 import Blog from "./components/Blog";
 import Contact from "./components/Contact";
@@ -13,6 +14,7 @@ import FloatingActions from "./components/FloatingActions";
 const sections = [
   { id: "about", label: "About" },
   { id: "experience", label: "Experience" },
+  { id: "projects", label: "Projects" },
   { id: "blog", label: "Blog" },
   { id: "contact", label: "Contact" },
 ];
@@ -87,6 +89,7 @@ export default function App() {
         </section>
         <About />
         <Experience />
+        <Projects />
         <ContentMap />
         <Blog />
         <Contact />
