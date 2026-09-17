@@ -490,7 +490,7 @@ const Contact: React.FC = () => {
             : "可沟通全职机会，也欢迎项目合作与技术交流。默认 1-2 天内回复。"}
         </p>
         <div className="ink-hero-ctas" style={{ justifyContent: "center" }}>
-          <InkButton variant="ink" href="mailto:hello@linxianglive.cn">
+          <InkButton variant="ink" href="mailto:wtiroo@163.com">
             {isEn ? "Get in Touch" : "联系我"}
           </InkButton>
           <InkButton variant="line" href="https://github.com/king-peach" external>
