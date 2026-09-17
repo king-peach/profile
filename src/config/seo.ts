@@ -13,16 +13,16 @@ export const DEFAULT_OG_IMAGE = 'https://linxianglive.cn/avatar01.jpg';
 // 首页 SEO 配置
 export const HOME_SEO: Record<string, SEOConfig> = {
   zh: {
-    title: '王涛 | 高级前端 · 工程化 · 复盘驱动',
-    description: '高级前端与工程化实践：系统化学习、设计模式、疑难问题复盘、前端工程化与 JS 基础笔记。围绕设计模式、前端工程化、疑难问题复盘、JS 基础与随笔，记录真实项目中的技术决策和系统化学习路径。',
-    keywords: '前端,高级前端,前端工程化,设计模式,疑难问题复盘,JavaScript,TypeScript,React,Vite,性能优化,架构,王涛,Eric Wang',
+    title: '王涛 | AI 应用开发 · 工程化 · 前端架构背景',
+    description: 'AI 应用开发工程师，拥有 7 年前端架构经验。聚焦 AI Agent、Prompt Engineering、LLM 应用落地，用工程化思维做 AI 产品。',
+    keywords: 'AI应用开发,AI Agent,Prompt Engineering,LLM应用,AI辅助开发,前端架构,前端工程化,JavaScript,TypeScript,React,Vite,王涛,Eric Wang',
     ogImage: DEFAULT_OG_IMAGE,
     ogType: 'website',
   },
   en: {
-    title: 'Eric Wang | Advanced Frontend & Engineering',
-    description: 'Advanced frontend and engineering practice: systematic learning, design patterns, troubleshooting retrospectives, frontend engineering, and JS basic notes. Documenting real-world technical decisions and systematic learning paths.',
-    keywords: 'frontend,advanced frontend,frontend engineering,design patterns,troubleshooting retrospectives,JavaScript,TypeScript,React,Vite,performance optimization,architecture,Eric Wang',
+    title: 'Eric Wang | AI Application Developer · Frontend Architecture',
+    description: 'AI application developer with 7 years of frontend architecture experience. Focused on AI Agents, Prompt Engineering, and LLM application delivery with engineering discipline.',
+    keywords: 'AI application development,AI Agent,Prompt Engineering,LLM applications,AI-assisted development,frontend architecture,frontend engineering,JavaScript,TypeScript,React,Vite,Eric Wang',
     ogImage: DEFAULT_OG_IMAGE,
     ogType: 'website',
   },
@@ -53,6 +53,24 @@ export const ARTICLE_DETAIL_BASE_SEO: Record<string, Partial<SEOConfig>> = {
   },
   en: {
     keywords: 'frontend development,JavaScript,tech article',
+  },
+};
+
+// 世界杯页面 SEO 配置
+export const WORLDCUP_SEO: Record<string, SEOConfig> = {
+  zh: {
+    title: '2026 世界杯实时比分 · 赛程 · 积分榜',
+    description: '2026 FIFA 美加墨世界杯实时数据看板：48 队 12 组赛程、实时比分、积分榜、射手榜。数据来源于 FIFA 官方 API，自动更新。',
+    keywords: '2026世界杯,世界杯比分,世界杯赛程,世界杯积分榜,FIFA World Cup,美加墨世界杯,世界杯实时数据,48强赛程,小组赛积分',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogType: 'website',
+  },
+  en: {
+    title: '2026 FIFA World Cup Live Scores · Schedule · Standings',
+    description: '2026 FIFA World Cup live dashboard: 48 teams across 12 groups, real-time scores, group standings, and top scorers. Data sourced from FIFA official API.',
+    keywords: '2026 World Cup,World Cup scores,World Cup schedule,World Cup standings,FIFA World Cup 2026,USA Canada Mexico World Cup,live football scores',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogType: 'website',
   },
 };
 

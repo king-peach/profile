@@ -1,0 +1,333 @@
+---
+title: "函数之call和apply的模拟实现"
+slug: "javascript-call-apply-implementation"
+date: "2019-03-26T00:00:00.000+08:00"
+lastModified: "2019-03-26"
+description: "函数之call和apply的模拟实现 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+在模拟之前先来看一下call和apply的定义：
+
+  
+
+> -   call()：调用一个函数，其具有一个指定的this值和分别提供的参数（参数列表）
+> -   apply()：调用一个给定具体的this值，以及一个作为数组(或类数组对象)提供的参数
+
+  
+
+这两个方法都是用来改变this指向的，第一个参数用来设置this指向的对象，call()方法的其他参数是一个参数列表，而apply()方法只有两个参数，第二个参数是函数的参数所组成的数组。
+
+### 模拟call()实现
+
+  
+
+首先看下call()方法的调用实例：
+
+  
+
+```javascript
+var foo = {
+	value: 1;
+}
+function bar() {
+	console.log(this.value);
+}
+bar.call(foo); // 1
+```
+
+  
+
+call()方法将this的指向foo对象。并执行了bar()方法
+
+  
+
+#### 模拟实现第一步
+
+  
+
+当bar调用call方法的时候，相当于bar方法是foo的一个局部方法。所以我们可以将foo对象改造为：
+
+  
+
+```javascript
+var foo = {
+	value: 1,
+  bar: function() {
+    console.log(this.value);
+  }
+}
+foo.bar(); // 1
+```
+
+  
+
+现在this的指向是指向foo了，但是给foo新增了一个属性。显然是不符号我们的需求的。那等这个方法执行完再delete这个属性不就行了。所以我们模拟的步骤分为：
+
+1、将函数设为对象的属性
+
+2、执行该函数
+
+3、删除该函数
+
+所以这个逻辑应该改造为：
+
+  
+
+```javascript
+// 第一步
+foo.fn = bar
+// 第二步
+foo.fn()
+// 第三步
+delete foo.fn
+```
+
+  
+
+fn是用来存放bar的属性名，最后都会删除的，所以这个属性名可以随意取。所以我们可以将上面的实例改造成：
+
+  
+
+```javascript
+Function.prototype.call2 = function(context) {
+  // 首先要获取调用call2的函数，用this获取
+	context.fn = this;
+  context.fn();
+  delete context.fn;
+}
+// 测试一下
+var foo = {
+	value: 1
+}
+function bar() {
+	console.log(this.value)
+}
+bar.call2(foo); // 1
+```
+
+  
+
+到这里基本就实现了call的模拟了。但是真正的call方法还需要传参数列表，所以请看模拟第二步
+
+  
+
+#### 模拟实现第二步
+
+  
+
+首先看下真实的call方法的实现效果：
+
+  
+
+```javascript
+// 还是同样的实例
+var foo = {
+	value: 1
+}
+function bar(name, age) {
+  console.log(name);
+  console.log(age);
+  console.log(this.value);
+}
+bar.call(foo, 'john', 18); // 'john' 18 1
+```
+
+  
+
+传入的参数是不确定的，我们可以从arguments数组中去出需要的参数值
+
+  
+
+```javascript
+/*以上个例子为例，此时的arguments为：
+arguments: {
+	0: foo,
+  1: 'john',
+  2: 18,
+  length: 3
+}*/
+var args = [];
+for (var i = 1; len = arguments.length; i < len; i++) {
+	args.push('arguments[' + i + ']');
+}
+// 执行后arg为['arguments[1]', 'arguments[2]', 'arguments[3]']
+```
+
+  
+
+参数的问题解决了，现在只要把这个参数放进等待执行的函数的参数中,那么文问题来了，现在args中保存的是字符串并没有求出每一个参数的值，如果用ES6的方法倒是可以改装一下，不过一个ES3的方法模拟用上了ES6的方法有点不合时宜。所以只能用eval方法去求出参数值。
+
+  
+
+```javascript
+// ES3方法改造
+Function.prototype.call2 = function(context) {
+	context.fn = this;
+  var args = [];
+  for(var i = 1, len = arguments.length; i < len; i++) {
+    args.push('arguments[' + i + ']');
+  }
+  eval('context.fn(' + args + ')'); // 这里args会自动调用Array.toString()，且firefox不能执行eval方法
+  delete context.fn;
+}
+var foo = {
+	value: 1
+}
+function bar(name, age) {
+	console.log(name);
+  console.log(age);
+  console.log(this.value);
+} 
+bar.call2(foo, 'john', 18); // 'john' 18 1
+
+// ES6方法改造
+Function.prototype.call2 = function(context) {
+  context.fn = this;
+  var args = [];
+  for(var i = 1, len = arguments.length; i < len; i++) {
+  	args.push(arguments[i]);
+  }
+  context.fn(...args);
+  delete context.fn;
+}
+```
+
+  
+
+现在就可以传递参数列表了，那这个call模拟到这里算完成了吗？答案是不，call方法还可以传null，这个方法没做处理。所以我们进行第三步模拟
+
+  
+
+#### 模拟实现第三步
+
+  
+
+加入给call方法传null，this指向window，举个例子：
+
+  
+
+```javascript
+var value = 1;
+function bar() {
+	console.log(this.value);
+}
+bar.call(null) // 1
+```
+
+  
+
+而且函数是有返回值的，举个例子：
+
+  
+
+```javascript
+var obj = {
+	value: 1
+}
+function bar(name, age) {
+	return {
+  	value: this.value,
+    name: name,
+    age: age
+  }
+}
+bar.call(obj, 'john', 18); // { value: 1, name: 'john', age: 18}
+```
+
+  
+
+我们对第二版的代码稍微改造一下就解决了这个问题
+
+  
+
+```javascript
+Function.prototype.call2 = function(context) {
+  var context = context || window;
+	context.fn = this;
+  var args = [];
+  for(var i = 1, len = arguments.length; i < len; i++) {
+    args.push('arguments[' + i + ']');
+  }
+  var result = eval('context.fn(' + args + ')'); // 这里args会自动调用Array.toString()，且firefox不能执行eval方法
+  
+  delete context.fn;
+  return result;
+}
+// 测试一下
+var value = 2;
+
+var obj = {
+    value: 1
+}
+
+function bar(name, age) {
+    console.log(this.value);
+    return {
+        value: this.value,
+        name: name,
+        age: age
+    }
+}
+
+bar.call2(null); // 2
+
+console.log(bar.call2(obj, 'john', 18)); // 1 { value: 1, name: 'john', age: 18}
+```
+
+  
+
+到这一步算是大功告成了～～～～
+
+  
+
+### 模拟apply()实现
+
+  
+
+apply与call方法的远离是一样的，只不过apply的参数只有两个，第二个参数是数组，所以只需要对参数进行处理就行，改造一下。实现方法如下：
+
+  
+
+```javascript
+Function.prototype.apply1 = function(context, arr) {
+	var context = Object(context) || window;
+  context.fn = this;
+  var result;
+  
+  if (!arr) {
+  	result = context.fn();
+  } else {
+  	var args = [];
+    for (var i = 0, len = arr.length;i < len; i++) {
+    	args.push('arr[' + i + ']');
+    }
+    result = eval('context.fn('+ args + ')'); // firefox下eval方法会报错
+  }
+  delete context.fn;
+  return result;
+}
+var foo = {
+	value: 1
+}
+function bar(name, age) {
+	console.log(name);
+  console.log(age);
+  console.log(this.value)
+} 
+bar.apply1(foo, ['Tom', 12]); // 'Tom' 12 1
+bar.apply(foo, ['Tom', 12]); // 'Tom' 12 1
+```
+
+  
+
+这样简单的模拟apply方法就实现啦～～
+
+  
+
+> 文档内容参考自：[冴](https://github.com/mqyqingfeng/Blog/issues/11)[](https://github.com/mqyqingfeng/Blog/issues/11)[羽大大](https://github.com/mqyqingfeng/Blog/issues/11)[的博客](https://github.com/mqyqingfeng/Blog/issues/11)

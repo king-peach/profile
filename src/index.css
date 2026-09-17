@@ -222,6 +222,88 @@ body {
   .md-content img {
     @apply rounded-lg my-4;
   }
+
+  .article-code-block__shell {
+    display: flex;
+    min-width: max-content;
+    font-family: 'Roboto Mono', 'Inconsolata', Consolas, monospace;
+  }
+
+  .article-code-block__gutter {
+    flex: 0 0 auto;
+    min-width: 2.75rem;
+    padding-right: 1rem;
+    text-align: right;
+    color: #6b7280;
+    user-select: none;
+  }
+
+  .article-code-block__line-number {
+    display: block;
+  }
+
+  .article-code-block__content {
+    display: block;
+    min-width: max-content;
+    white-space: pre;
+  }
+
+  .article-code-block .token.comment,
+  .article-code-block .token.prolog,
+  .article-code-block .token.doctype,
+  .article-code-block .token.cdata {
+    color: #5c6370;
+  }
+
+  .article-code-block .token.punctuation,
+  .article-code-block .token.operator {
+    color: #abb2bf;
+  }
+
+  .article-code-block .token.property,
+  .article-code-block .token.tag,
+  .article-code-block .token.constant,
+  .article-code-block .token.symbol,
+  .article-code-block .token.deleted {
+    color: #e06c75;
+  }
+
+  .article-code-block .token.boolean,
+  .article-code-block .token.number,
+  .article-code-block .token.attr-name,
+  .article-code-block .token.builtin,
+  .article-code-block .token.char,
+  .article-code-block .token.inserted {
+    color: #d19a66;
+  }
+
+  .article-code-block .token.selector,
+  .article-code-block .token.attr-value,
+  .article-code-block .token.string,
+  .article-code-block .token.regex,
+  .article-code-block .token.variable {
+    color: #98c379;
+  }
+
+  .article-code-block .token.atrule,
+  .article-code-block .token.keyword {
+    color: #c678dd;
+  }
+
+  .article-code-block .token.function,
+  .article-code-block .token.class-name {
+    color: #61afef;
+  }
+
+  .article-code-block .token.important,
+  .article-code-block .token.bold {
+    color: #e5c07b;
+    font-weight: 700;
+  }
+
+  .article-code-block .token.italic {
+    font-style: italic;
+  }
 }
 
 /* 页面加载动画 */
@@ -349,4 +431,97 @@ body {
       rgba(255, 255, 255, 0.05) 50%,
       rgba(255, 255, 255, 0) 100%);
   background-size: 200% 100%;
+}
+
+/* ============================================================
+   INK overrides — intentionally OUTSIDE any @layer.
+   Per CSS cascade, unlayered author rules beat ALL layered rules
+   (including Tailwind's @layer base bg-background), without needing
+   !important wars. Body is made transparent so the themed <html>
+   background (set by ink.css) shows through.
+   ============================================================ */
+html.ink body {
+  background: transparent !important;
+  color: var(--ink) !important;
+}
+html.ink [data-page="ArticleDetail"],
+html.ink [data-page="ArticleList"] {
+  background: transparent !important;
+}
+
+/* ============================================================
+   Prism token colors (rehype-prism-plus output) — one-dark palette.
+   Unlayered so it beats any Tailwind layer rules. Applies to the
+   pre/code inside .article-code-block (header bar is dark too).
+   ============================================================ */
+.article-code-block pre {
+  background: #1e1e2e;
+  color: #e6e6e6;
+  padding: 1rem;
+  font-family: "Fira Code", "Roboto Mono", Consolas, monospace;
+  tab-size: 2;
+}
+.article-code-block pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  color: inherit;
+  display: block;
+  white-space: pre;
+}
+.article-code-block .token.comment,
+.article-code-block .token.prolog,
+.article-code-block .token.cdata {
+  color: #7f848e;
+  font-style: italic;
+}
+.article-code-block .token.punctuation {
+  color: #abb2bf;
+}
+.article-code-block .token.operator,
+.article-code-block .token.entity,
+.article-code-block .token.url,
+.article-code-block .token.variable {
+  color: #56b6c2;
+}
+.article-code-block .token.keyword,
+.article-code-block .token.atrule,
+.article-code-block .token.important {
+  color: #c678dd;
+}
+.article-code-block .token.string,
+.article-code-block .token.char,
+.article-code-block .token.attr-value,
+.article-code-block .token.regex {
+  color: #98c379;
+}
+.article-code-block .token.number,
+.article-code-block .token.boolean,
+.article-code-block .token.constant,
+.article-code-block .token.symbol {
+  color: #d19a66;
+}
+.article-code-block .token.function,
+.article-code-block .token.class-name,
+.article-code-block .token.maybe-class-name {
+  color: #61afef;
+}
+.article-code-block .token.tag .token.tag,
+.article-code-block .token.tag,
+.article-code-block .token.deleted {
+  color: #e06c75;
+}
+.article-code-block .token.attr-name,
+.article-code-block .token.property,
+.article-code-block .token.builtin {
+  color: #e5c07b;
+}
+.article-code-block .token.namespace {
+  opacity: 0.8;
+}
+.article-code-block .token.bold {
+  font-weight: 700;
+}
+.article-code-block .token.italic {
+  font-style: italic;
 }

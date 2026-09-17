@@ -1,0 +1,273 @@
+---
+title: "简易轮播图"
+slug: "simple-carousel"
+date: "2019-03-19T00:00:00.000+08:00"
+lastModified: "2019-03-19"
+description: "简易轮播图 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+对于轮播图，之前一直使用的swiper插件，很方便，而且大部分业务场景都适用。想着自己来封装一下，无奈能力一般只能封装一个简易版的轮播图。
+
+原理：用一个盒子将一个ul列表框起来，只显示一张图片的大小，其他部分隐藏，通过动态改变ul的left值实现图片轮播。(这种模式存在弊端，间隔多张图片之间的轮播会滚动多张图片，不是循环轮播形式)
+
+css部分代码：
+
+  
+
+```css
+body, div, span, ul, li {
+  margin: 0;
+  padding: 0;
+}
+ul, li {
+  list-style: none;
+}
+#carousel { 
+	width: 600px;
+	height: 400px;
+	border: 1px solid #333;
+  margin: 200px auto;
+	overflow: hidden;
+	position: relative;
+}
+#carousel ul {
+	font-size: 0;
+	position: absolute;
+	left: 0px;
+	transition: all 1s;
+	-webkit-transition: all 1s;
+	-o-transition: all 1s;
+}
+#carousel ul li {
+	display: inline-block;
+}
+#carousel ul li img {
+	width: 600px;
+	height: 400px;
+}
+#carousel .button {
+	width: 100%;
+  height: 60px;
+	background-image: -webkit-gradient(linear, left bottom, left top, from(rgba(0, 0, 0, .8)), to(rgba(0, 0, 0, 0)));
+	background-image: -webkit-linear-gradient(bottom, rgba(0, 0, 0, .8), rgba(0, 0, 0, 0));
+	background-image: -o-linear-gradient(bottom, rgba(0, 0, 0, .8), rgba(0, 0, 0, 0));
+	background-image: linear-gradient(bottom, rgba(0, 0, 0, .8), rgba(0, 0, 0, 0));
+	line-height: 60px;
+	position: absolute;
+	bottom: 0;
+	font-size: 0;
+	text-align: center;
+}
+#carousel .button span {
+	display: inline-block;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+  background-color: bisque;
+	vertical-align: middle;
+	margin-left: 30px;
+}
+#carousel .button span:first-child {
+	margin-left: 0;
+}
+#carousel .button span.on {
+	background-color: coral;
+}
+#carousel .prev {
+	position: absolute;
+	left: 10px;
+	top: 50%;
+  color: #333;
+  display: inline-block;
+	border-top: 4px solid;
+	border-right: 4px solid;
+	width: 20px;
+	height: 20px;
+	border-color: #333;
+  transform: rotate(-135deg);
+	-webkit-transform: rotate(-135deg);
+	 -o-transform: rotate(-135deg);
+}
+#carousel .next {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+  color: #333;
+  display: inline-block;
+	border-top: 4px solid;
+	border-left: 4px solid;
+	width: 20px;
+	height: 20px;
+	border-color: #333;
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+  -o-transform: rotate(135deg);
+}
+```
+
+html部分代码
+
+  
+
+```html
+<div id="carousel">
+    <ul class="wrapper">
+      <li class="slide">
+        <img src="http://img.hb.aicdn.com/6ab520ee7922044f98d8ac67ec1c72f38b55ed86740f5-K6bn9d_fw658" alt="1">
+      </li>
+      <li class="slide">
+        <img src="http://img.hb.aicdn.com/68b8f4013c4a9f39d66c784b24aac7b2ee7dc38557776-niMWxT_fw658" alt="2">
+      </li>
+      <li class="slide">
+        <img src="http://img.hb.aicdn.com/b36c30ddea5ad7cdc5c223707e75fd9905b21456665ed-AM9mG8_fw658" alt="3">
+      </li>
+      <li class="slide">
+        <img src="http://img.hb.aicdn.com/80e3d88de8f7529503fa4c3a6ea5d8c20589ca045f84d-mLCAfa_fw658" alt="4">
+      </li>
+      <li class="slide">
+        <img src="http://img.hb.aicdn.com/3ff657691afda60dbf1958b4dae9f451729be02868187-8CYmGi_fw658" alt="5">
+      </li>
+      <li class="slide">
+        <img src="http://img.hb.aicdn.com/b1bfa6f148d255ee4bf5fe4d75244a84e97ada594cdb5-12kKSr_fw658" alt="6">
+      </li>
+    </ul>
+    <div class="button">
+      <span class="on"></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <span class="prev"></span>
+    <span class="next"></span>
+  </div>
+```
+
+js部分代码
+
+  
+
+```javascript
+window.onload = carouselInit(600, 6, '#carousel', 2000);
+  /**
+  * 轮播图初始化函数
+  * @params {imgWidth} 单张图片宽度数值
+  * @params {num} 轮播图中图片总数量
+  * @params {id} 轮播图盒子id
+  * @params {time} 自动轮播时间间隔
+  */
+  function carouselInit(imgWidth, num, id, time) {
+    if (!imgWidth || !num || !id || !time === true) {
+      console.info('参数缺失！！！')
+      return false;
+    };
+    var container = document.querySelector(id)
+    var wrapper = container.querySelector('.wrapper');
+    var prevNode = container.querySelector('.prev')
+    var nextNode = container.querySelector('.next')
+    var dots = container.querySelectorAll('.button span')
+    var flag = true; // 防止重复点击标识
+    var index = 0;
+    // 设置ul总宽度
+    wrapper.style.width = imgWidth * 6 + 'px';
+    /**
+    * 滑动到上一张执行函数
+    */
+    function prev() {
+      index--;
+      index < 0 ? index = num - 1 : true;
+      if (flag) {
+        if (window.getComputedStyle(wrapper).left === '0px') {
+          wrapper.style.left = -imgWidth * (num - 1) + 'px';
+        } else {
+          var prevPosition = parseFloat(window.getComputedStyle(wrapper).left) + imgWidth;
+          wrapper.style.left = prevPosition + 'px';
+        }
+        setTimeout(function() {
+          flag = true;
+          currentDot();
+        }, 1000);
+      };
+    }
+
+    /**
+    * 滑到下一张执行函数
+    */
+    function next() {
+      index++;
+      index > (num - 1) ? index = 0 : true;
+      if (flag) {
+        flag = false;
+        if (window.getComputedStyle(wrapper).left === -imgWidth * (num - 1) + 'px') {
+          wrapper.style.left = '0px';
+        } else {
+          var nextPosition = parseFloat(window.getComputedStyle(wrapper).left) - imgWidth;
+          wrapper.style.left = nextPosition + 'px';
+        }
+        setTimeout(function() {
+          flag = true;
+          currentDot();
+        }, 1000);
+      };
+    }
+
+    nextNode.addEventListener('click', function() {
+        next();
+    });
+    prevNode.addEventListener('click', function() {
+        prev();
+    });
+
+    /**
+    * 小圆点变化执行函数
+    */
+    function currentDot() {
+      for (var i = 0; i < dots.length; i++) {
+        dots[i].classList.remove('on')
+      }
+      dots[index].classList.add('on')
+    }
+
+    /**
+    * 点击小圆点滑动到对应图片
+    */
+    for (var i = 0; i < dots.length; i++) {
+      (function(i) {
+        dots[i].addEventListener('click', function() {
+          index = i;
+          wrapper.style.left = -imgWidth * i + 'px';
+          currentDot();
+        });
+      })(i);
+    };
+
+    /**
+    * 自动轮播
+    */
+    var autoPlay = setInterval(function() {
+      next()
+    }, time);
+
+    /**
+    * 鼠标移入轮播图盒子停止轮播
+    * 鼠标移出轮播图盒子开始轮播
+    */
+    container.addEventListener('mouseover', function() {
+      clearInterval(autoPlay);
+    });
+    container.addEventListener('mouseout', function() {
+      autoPlay = setInterval(function() {
+        next()
+      }, time);
+    })
+  }
+```
+
+新手封装，欢迎大神指正～～～～

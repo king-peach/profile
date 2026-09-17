@@ -191,10 +191,127 @@ export default defineConfig(({ mode }) => {
   process.env.NOTION_API_KEY = env.NOTION_API_KEY;
 
   return {
+    test: {
+      environment: 'happy-dom', // 模拟浏览器 DOM 环境
+      globals: true,           // 支持全局 describe, it, expect
+    },
     plugins: [react(), notionProxyPlugin()],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    server: {
+      proxy: {
+        "/api/worldcup": {
+          target: "https://api.fifa.com",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/worldcup/, "/api/v3"),
+          headers: {
+            Origin: "https://www.fifa.com",
+            Referer: "https://www.fifa.com/",
+          },
+        },
+      },
+    },
+    build: {
+      modulePreload: false,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return;
+
+            const bucketByFirstChar = (name: string, prefix: string) => {
+              const lang = name.toLowerCase();
+              const first = lang.charCodeAt(0);
+
+              if (first >= 97 && first <= 100) return `${prefix}-a-d`;
+              if (first >= 101 && first <= 104) return `${prefix}-e-h`;
+              if (first >= 105 && first <= 108) return `${prefix}-i-l`;
+              if (first >= 109 && first <= 112) return `${prefix}-m-p`;
+              if (first >= 113 && first <= 116) return `${prefix}-q-t`;
+              return `${prefix}-u-z`;
+            };
+
+            const syntaxLanguageMatch = id.match(/react-syntax-highlighter\/dist\/esm\/languages\/prism\/([^/]+)\.js$/);
+            if (syntaxLanguageMatch?.[1]) {
+              return bucketByFirstChar(syntaxLanguageMatch[1], "syntax-lang");
+            }
+
+            const refractorLanguageMatch = id.match(/refractor\/lang\/([^/]+)\.js$/);
+            if (refractorLanguageMatch?.[1]) {
+              return bucketByFirstChar(refractorLanguageMatch[1], "refractor-lang");
+            }
+
+            if (id.includes("react-syntax-highlighter/dist/esm/styles/")) {
+              return "syntax-style";
+            }
+
+            if (
+              id.includes("rehype-raw") ||
+              id.includes("rehype-slug") ||
+              id.includes("react-syntax-highlighter") ||
+              id.includes("refractor")
+            ) {
+              return "syntax-core";
+            }
+
+            if (
+              id.includes("react-markdown") ||
+              id.includes("remark-gfm") ||
+              id.includes("remark-") ||
+              id.includes("rehype-") ||
+              id.includes("micromark") ||
+              id.includes("mdast") ||
+              id.includes("hast") ||
+              id.includes("unist") ||
+              id.includes("vfile") ||
+              id.includes("unified") ||
+              id.includes("mdurl") ||
+              id.includes("character-entities") ||
+              id.includes("property-information") ||
+              id.includes("decode-named-character-reference") ||
+              id.includes("comma-separated-tokens") ||
+              id.includes("space-separated-tokens") ||
+              id.includes("html-url-attributes")
+            ) {
+              return "markdown-vendor";
+            }
+
+            if (
+              id.includes("framer-motion") ||
+              id.includes("motion-dom") ||
+              id.includes("motion-utils") ||
+              id.includes("popmotion")
+            ) {
+              return "motion-vendor";
+            }
+
+            if (id.includes("gsap")) {
+              return "gsap-vendor";
+            }
+
+            if (id.includes("react-icons")) {
+              return "icons-vendor";
+            }
+
+            if (id.includes("date-fns")) {
+              return "date-vendor";
+            }
+
+            if (
+              id.includes("/react/") ||
+              id.includes("/react-dom/") ||
+              id.includes("react-helmet-async") ||
+              id.includes("react-i18next") ||
+              id.includes("i18next")
+            ) {
+              return "react-vendor";
+            }
+
+            return "vendor";
+          },
+        },
       },
     },
   };

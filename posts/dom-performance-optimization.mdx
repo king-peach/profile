@@ -1,0 +1,314 @@
+---
+title: "优化DOM操作提升性能"
+slug: "dom-performance-optimization"
+date: "2019-03-25T00:00:00.000+08:00"
+lastModified: "2019-03-25"
+description: "优化DOM操作提升性能 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+#### DOM的介绍和浏览器的DOM解析
+
+首先先了解下浏览器中DOM的定义：DOM(Document Object Model)是一个与语言无关的、用来操作XML和HTML文档的应用程序接口。尽管DOM与语言无关，但是在浏览器中的接口都是用Javascript来实现的。
+
+  
+
+> 用脚本进行DOM操作是非常耗费性能的，它是富web应用中最常见的性能瓶颈。主要问题有三：
+> 
+> 1、访问和修改DOM元素
+> 
+> 2、修改DOM元素的样式导致repaint(重绘)和reflow(重排)
+> 
+> 3、通过DOM事件处理与用户进行交互
+
+  
+
+这里有个关于前端DOM的冷知识：
+
+浏览器通常会把js和DOM分开来分别独立实现，在IE中，js的实现名为JScript，位于jscript.dll文件中；DOM的实现则存在于另一个库中，名为mshtml.dll(Trident)。chrome中的DOM实现为webkit中的webCore,但js引擎是Google自己研发的V8；firefox中的js引擎是SpiderMonkey，渲染引擎（DOM）则是Gecko。
+
+  
+
+通过上面的冷知识可以得知，浏览器把实现页面渲染的部分和解析js的部分分开来实现，既然是分开的，一旦两者有耦合，就要付出代价。所以尽量减少js操作DOM的次数才是提升性能的王道
+
+  
+
+#### DOM的访问与修改
+
+首先看一段代码： 
+
+  
+
+```javascript
+function innerHTMLLoop() {
+	for (var count = 0; count < 15000; count++) {
+  	document.getElementById('text').innerHTML += 'dom';
+  }
+}
+```
+
+  
+
+这段代码每次循环都会进行两次DOM操作，第一次访问这个DOM元素的innerHTML属性；第二次设置这个innerHTML的属性值。如果我们要对这段代码进行一次优化，就要尽量减少DOM的访问和修改，那么我们可以用一个局部变量来存储每次循环后的innerHTML值，最后一次添加进text元素中。优化后的代码为：
+
+  
+
+```javascript
+function innerHTMLLoop2() {
+	var content = '';
+  for (var i = 0; i < 15000; i++) {
+  	content += 'dom';
+  }
+  document.getElementById('text').innerHTML = content;
+}
+```
+
+  
+
+#### HTML元素集合
+
+HTML元素集合是包含了DOM节点引用的类数组对象，可以通过以下方法或属性或者一个HTML元素集合(HTMLCollection)：
+
+-   document.getELementsByName();  返回含有该name属性值的元素集合
+-   document.getElementsByTagName(); 返回含有该标签名的元素集合
+-   document.getElementsByClassName(); 返回含有该类名的元素集合
+-   document.images 返回页面中所有的img元素
+-   document.links 返回页面中所有的a元素
+-   document.forms 返回页面中所有的表单元素
+-   document.forms[0].elements 页面中第一个表单的所有字段
+
+  
+
+HTML元素集合处于一种“实时的状态”，这意味着当底层文档对象更新时，它也会自动更新。也就是每次更改DOM元素这个集合也会随之更新，这就导致了性能比较低效。观察一个示例：
+
+  
+
+```javascript
+var allDIvs = document.getELementsByTagName('div');
+for (var i = 0; i < allDivs.length; i++) {
+	document.body.appendChild(document.createElement('div'));
+}
+```
+
+  
+
+仔细分析以下这段代码，循环一个页面中所有div的数量，然后每次添加一个div，感觉好像没啥毛病哈～～。实际这是个死循环，每次for 循环中的`allDivs.length`都会动态增加。所以我们优化一下这段代码：
+
+  
+
+```javascript
+var allDivs = document.getElementsByTagName('div');
+var len = allDivs.length;
+for (var i = 0; i < len; i++) {
+	document.body.appendChild(document.createElement('div'));
+}
+```
+
+  
+
+#### 访问集合元素时使用局部变量
+
+一般来说，对于任何类型的DOM访问，当同一个DOM属性或方法需要被多次访问时。最好使用一个局部变量缓存次成员。当遍历一个集合时，首要优化原则是把集合存储在局部变量中，并把length存储在循环外部。
+
+  
+
+#### 元素节点
+
+我们知道，DOM节点分为五个大类：
+
+-   整个文档是一个文档节点
+-   每个HTML元素是元素节点
+-   HTML元素内的文本是文本节点
+-   每个HTML属性是属性节点
+-   注释是注释节点
+
+  
+
+诸如childNodes、nextSibling、firstChild这些DOM属性是不区分元素节点和其他类型的节点的，但是往往我们只需要元素节点就行了，需要对这些DOM属性节点进行过滤。如果不考虑兼容性的情况下，我们在遍历节点的时候使用现代浏览器提供的新API来获取节点和属性，这样可以提升访问节点和属性的效率：
+
+-   现代浏览器提供的API （被替换的API）
+-   children (childNodes) 获取子元素节点
+-   childELementCount（childNode.length）获取第一个自元素节点
+-   firstElementChild（firstChild）获取第一个子节点
+-   lastElementChild（lastChild）获取最后一个子节点
+-   nextElementChild （nextSibling）获取下一个兄弟节点
+-   previousElementChild（previousSibiling）获取上一个兄弟节点
+
+使用这些新的API，可以直接获取到元素节点，所以效率也更高
+
+  
+
+#### 选择器API
+
+有时候为了得到需要的元素列表，我们不得不组合调用getElementsById、getElementsByClassName等，而且这些API都是动态实时更新的返回节点列表，在实际业务场景中获取会有些不适用。
+
+现代浏览器提供了一个传递参数为css选择器的原生DOM方法querySelector()、querySelectorAll()。这种方法效率更高，而且返回的是静态的节点列表（NodeList）。
+
+  
+
+```javascript
+// 获取与文档对应的实时元素集合
+document.getElementById('text')
+document.getElementsByClassName('text')
+// 获取元素节点列表
+document.querySelector('#text')
+document.querySelectorAll('.text')
+```
+
+  
+
+#### 重排与重绘
+
+浏览器用来显示页面的所有内容，有：HTML标签、js、css、图片---之后会解析生成两个内部的数据结构：
+
+-   DOM树（表示页面结构）
+-   渲染树（表示DOM节点应该如何表示）
+
+DOM树中的每一个需要显示的节点在渲染树中至少存在一个对应的节点，渲染树的节点被称为“帧(frames)”或“盒(boxes)”，符合css盒模型的定义，理解页面元素为一个具有padding、margin、borders和position的盒子。一旦渲染树构建完成，浏览器就开始显示页面元素， 这个过程称为绘制(paint)
+
+当DOM的变化影响了元素的几何属性（宽、高）---- 比如改变了边框的高度或者给一个段落增加了一些文字导致其行数的增加----浏览器就需要重新计算元素的几何属性，同样页面中其他元素的几何属性和位置也受到了影响。浏览器会使渲染树中受到影响的部分消失，重新构建渲染树，这个过程称为“重排”，重排完成以后，浏览器会重新将受到影响的部分绘制到浏览器中，这个过程称为“重绘”
+
+如果改变的不是元素的几何属性，如：改变元素的北京颜色，不会发送重排，只会发生一次重绘。因为元素的布局没有发生改变。
+
+不管是重排还是重绘，都是代价高昂的操作，它们会导致web应用程序的UI反应迟钝，应当尽量减少这类过程的发生
+
+  
+
+重排何时发生：
+
+-   添加或删除可见的DOM元素
+-   元素位置的改变
+-   元素尺寸的改变（padding、margin、border、height、width）
+-   内容改变（文本改变或图片尺寸改变）
+-   页面渲染器初始化
+-   浏览器窗口尺寸改变
+-   滚动条的出现（会触发整个页面的重排）
+
+  
+
+最小化重绘和重排
+
+就拿改变样式来说，如果同一个元素需要同时修改多个css属性，在现代浏览器中可以使用一次修改所有css属性、也可以动态添加类名。
+
+  
+
+```javascript
+// 传统方法进行了三次重排
+var el = document.getElementById('div');
+el.style.color = 'red';
+el.style.width = '200px';
+el.style.border = '1px solid #000';
+
+//现代浏览器可以使用cssText方法处理,只触发一次重排
+el.style.cssText = 'width: 200px; color: red; border: 1px solid #000;'
+
+// 动态增加类名是比较灵活的办法
+el.className = 'changeStyle'
+```
+
+  
+
+批量修改DOM
+
+当你需要对DOM元素进行一系列操作的时候，不妨按照一下步骤：
+
+-   使元素脱离文档流
+-   对其应用多重改变
+-   把元素带回文档中
+
+  
+
+以上第一步和第三步分别触发一次重排，但是如果忽略第一步和第三步，那第二步每一次改变都会触发一次重排。而第一步让元素脱离文档流的方法有：
+
+-   隐藏元素
+-   使用文档片段（document fragment）在当前DOM之外构建一个子树，再把它拷贝回文档
+-   将原始元素拷贝到一个脱离文档的节点中，修改副本，完成后再替换原始元素
+
+  
+
+让动画元素脱离文档流
+
+一般情况下，重排只影响渲染树中的一小部分，但也可能影响很大的一部分，甚至是整个渲染树。浏览器所需的重排次数越少，应用程序的响应速度就越快。因此以下步骤可以避免页面中的大部分重排：
+
+-   使用绝对定位让页面上的动画元素脱离文档流
+-   动画展示阶段
+-   动画结束时，将元素恢复定位
+
+如果页面中存在大量元素使用:hover，页面会变得很卡
+
+  
+
+#### 事件委托
+
+当页面中有大量的元素，并且这些元素都需要绑定事件处理器。每绑定一个事件处理器都是有代价的。事件绑定会占用处理事件，而且浏览器需要跟踪每个事件处理器。这也会占用更多的内存，而且动态新增的节点不会被绑定监听事件。所以当页面中存在很多元素都需要绑定同一个事件监听时，可以给这些元素的父元素绑定一个事件。通过事件逐层冒泡被父元素捕获，这就叫事件委托。
+
+存在一个ul，我们需要给ul里的每个li绑定一个鼠标划入划出事件，并且点击添加按钮，ul中的最后会新增一个li，并且这个li也被添加了鼠标监听事件。
+
+  
+
+```javascript
+var button = document.querySelector('.btn');
+var oUl = document.querySelector('.list');
+var oLi = oUl.querySelectorAll('li');
+var len = oLi.length;
+
+// 传统方法遍历，并且给每个li添加鼠标事件
+for (var i = 0; i < len; i++) {
+	oLi[i].addEventListener('mouseover', function() {
+  	this.style.background = 'red';
+  })
+  oLi[i].addEventListener('mouseout', function() {
+  	this.style.backgroudn = '';
+  })
+}
+button.addEventListener('click', function() {
+	var li = document.createElement('li');
+  oUl.appendChild(li);
+})
+// 事件委托， 给ul绑定一个事件
+oUl2.addEventListener('mouseover', function(e) {
+  // 事件源，event对象，不管在哪个事件中，只要你操作的那个事件就是事件源
+	var e = e || window.event;
+  var target = e.target || e.srcElement; // 兼容IE
+  if (target.nodeName.toLowerCase() === 'li') {
+  	target.style.background = 'red';
+  }
+})
+oUl2.addEventListener('mouseout', function(e) {
+  // 事件源，event对象，不管在哪个事件中，只要你操作的那个事件就是事件源
+	var e = e || window.event;
+  var target = e.target || e.srcElement; // 兼容IE
+  if (target.nodeName.toLowerCase() === 'li') {
+  	target.style.background = '';
+  }
+})
+button.addEventListener('click', function() {
+	oUl.appendChild(document.createElement('li'));
+})
+```
+
+  
+
+在事件委托中需要注意几点：
+
+-   访问事件对象，判断事件源
+-   按需取消文档树中的冒泡
+-   按需阻止默认动作
+
+  
+
+#### 总结
+
+如果要优化DOM操作，需要做到一下几点：
+
+-   最小化DOM访问次数
+-   对于需要多次访问的DOM节点，使用局部变量存储其引用
+-   如果要操作一个HTML集合，建议把它拷贝到一个数组中
+-   使用速度更快的选择器：querySelector()、querySelectorAll()
+-   尽量减少重排和重绘的次数
+-   用事件委托代替遍历监听

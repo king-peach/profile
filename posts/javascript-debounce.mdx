@@ -1,0 +1,401 @@
+---
+title: "模仿underscore实现防抖"
+slug: "javascript-debounce"
+date: "2019-04-18T00:00:00.000+08:00"
+lastModified: "2019-04-18"
+description: "模仿underscore实现防抖 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+在前端的日常开发中，可能经常碰到一些频繁触发的事件，比如：
+
+1、window的`resize`、`scroll`
+
+2、`mousedown`、`mousemove`、`click`
+
+3、键盘事件：`keydown`、`keyup`等
+
+当我们碰到这类事件需要优化时，该怎么办呢？
+
+首先我们先写一个简单的示例了解下事件频繁触发的情况
+
+  
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    #container {
+      width: 400px;
+      height: 200px;
+      line-height: 200px;
+      margin: 100px auto;
+      background-color: rgb(219, 68, 68);
+      color: #FFF;
+      font-size: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <script type="text/javascript">
+    var count = 1;
+    var container = document.querySelector('#container');
+
+    function getUserAction() {
+      container.innerHTML = count++;
+    }
+    container.addEventListener('mousemove', getUserAction);
+  </script>
+</body>
+</html>
+```
+
+  
+
+我们来看看效果：
+
+  
+![mfvat-24vmp.gif](语雀备份/javaScript疑难梳理/assets/模仿underscore实现防抖-1.gif)
+
+  
+
+从左边滑到右边就触发了129次`getUserAction`函数！
+
+这个例子的触发频率还不算很高，所以浏览器完全可以处理，可是如果是复杂的回调函数或是ajax请求呢？假设1秒触发了60次，每个回调都必须在1000 / 60 ～=16.67秒内完成，否则就会有卡顿出现。
+
+为了解决这个问题，一般会有两种解决方案：
+
+1、debounce 防抖
+
+2、throttle 节流
+
+### 防抖原理
+
+防抖的原理就是：随便用户如何触发事件、但是我一定在事件触发n秒后执行，如果你在一个事件触发的n秒内又触发了这个事件，那我就以新事件的时间为准，n秒后才执行，总之，就是要等你触发完事件n秒内不再触发事件，我才执行。
+
+### 简单实现
+
+根据上诉原理，我们来简单实现一下：
+
+  
+
+```javascript
+// 第一版
+function debounce(func, wait) {
+  var timeout;
+  return function() {
+  	clearTimeout(timeout);
+    timeout = setTimeout(func, wait);
+  }
+}
+```
+
+  
+
+我们来改造下上诉栗子，将要执行事件添加进防抖函数中
+
+  
+
+```javascript
+container.addEventListener('mousemove', debounce(getUserAction, 200));
+```
+
+  
+
+效果如下：
+
+  
+
+![0d29r-q30zj.gif](语雀备份/javaScript疑难梳理/assets/模仿underscore实现防抖-2.gif)
+
+  
+
+现在如论你如何移动，都要等到1s后才会执行事件，顿时就从129次减少成了一次，但是现在还存在一些问题，比如说this。我们接着看
+
+### this
+
+如果我们在`getUserAction`函数中`console.log(this)`， 在不使用`debounce`函数的时候，`this`的值为触发事件的元素节点也就是：
+
+  
+
+```html
+<div id="container"></div>
+```
+
+  
+
+如果我们使用了`debounce`函数，`this`就会指向`window`对象！
+
+所以我们需要将`this`指向正确的对象。
+
+  
+
+修改代码如下：
+
+  
+
+```javascript
+// 第二版
+function debounce(func, wait) {
+	var timeout;
+  
+  return function() {
+  	var context = this;
+    
+    clearTimeout(timeout);
+    timeout = setTimeout(function() {
+    	func.apply(context);
+    }, wait);
+  }
+}
+```
+
+  
+
+现在`this`已经可以正确指向了，让我们看下一个问题：
+
+### event对象
+
+javascript在事件处理程序中会提供事件对象`event`，我们修改下`getUserAction`函数：
+
+  
+
+```javascript
+function getUserAction(e) {
+	console.log(e);
+  container.innerHTML = count++;
+}
+```
+
+  
+
+如果我们不实用`debounce`函数，这里会打印`MouseEvent`对象，如图所示：
+
+  
+
+![image.png](语雀备份/javaScript疑难梳理/assets/模仿underscore实现防抖-3.png)
+
+  
+
+但是如果我们使用`debounce`函数，却只会打印undefined 
+
+![image.png](语雀备份/javaScript疑难梳理/assets/模仿underscore实现防抖-4.png)
+
+  
+
+我们再来修改下代码：
+
+  
+
+```javascript
+// 第三版
+function debounce(func, wait) {
+	var timeout;
+  
+  return function() {
+  	var context = this;
+    var args = arguments;
+    
+    clearTimeout(timeout);
+    timeout = setTimeout(function() {
+    	func.apply(context, args);
+    }, wait);
+  }
+}
+```
+
+  
+
+这样就解决了event问题。
+
+  
+
+### 立即执行
+
+这时候已经很完善了，但是为了让这个函数更加完善，我们接下来思考一个新的需求。
+
+  
+
+这个需求就是：
+
+我们不希望非要等到触发事件停止以后才执行这个函数，我希望立即执行函数，然后等到停止触发n秒后，才可以重新触发执行。
+
+  
+
+这个需求也是日常开发经常遇到的， 所以我们改造下代码，加个`immediate`参数判断是否是立即执行：
+
+  
+
+```javascript
+// 第四版
+function debounce(func, wait, immediate) {
+	var timeout;
+  
+  return function() {
+  	var context = this;
+    var args = arguments;
+    
+    if (timeout) clearTimeout(timeout);
+    if (immediate) {
+    	// 如果已经执行过，不再执行
+      var callNow = !timeout;
+      timeout = setTimeout(function() {
+      	timeout = null;
+      }, wait)
+      if (callNow) func.apply(context, args);
+    } else {
+    	timeout = setTimeout(function() {
+      	func.apply(context, args);
+      }, wait);
+    }
+   }
+}
+```
+
+  
+
+再来看看效果：
+
+  
+
+  
+![y14h9-1o6yb.gif](语雀备份/javaScript疑难梳理/assets/模仿underscore实现防抖-5.gif)
+
+  
+
+### 返回值
+
+值得注意的是，`getUserAction`函数可能是有返回值的，所以我们也要返回函数的结果，但是当`immediate`为false的时候，因为使用了`setTimeout`，我们将`func.apply(context, args)`的返回值赋给变量，最后在`return`的时候，因为`timeout`是一个异步函数，所以值会是`undefined`，所以我们只在`immediate`为true的时候返回值
+
+所以我们再来优化一下我们的函数
+
+  
+
+```javascript
+// 第五版
+function debounce(func, wait, immediate) {
+	var timeout, immediate, result;
+  
+  return function() {
+    var context = this;
+    var args = arguments;
+    
+    if (timeout) clearTimeout(timeout);
+    if (immediate) {
+    	var callNow = !timeout;
+      timeout = setTimeout(function() {
+      	timeout = null;
+      }, wait);
+      if (timeout) result = func.apply(context, args);
+    } else {
+    	timeout = setTimeout(function() {
+      	func.apply(context, args);
+      }, wait);
+    }
+    
+    return result;
+  }
+}
+```
+
+  
+
+这里效果就不展示了，在实际应用场景中很少出现这种情况。
+
+### 取消防抖函数延迟
+
+最后我们在思考一个小需求，我们希望可以手动取消`debounce`函数的延时，比如说我们的`debounce`函数的`wait`设置为10s，`immediate`为true的话，我们需要等10s才能重新触发事件，现在我希望点一下按钮就取消防抖，然后重新执行。
+
+  
+
+为了实现这个需求，我们来写最后一版代码：
+
+  
+
+```javascript
+// 第六版代码
+function debounce(func, wait, immediate) {
+	var timeout, immediate, result;
+  
+  var debounced = function() {
+  	var context = this;
+    var args = arguments;
+    
+    if (timeout) clearTimeout(timeout);
+    if (immediate) {
+    	var callNow = !timeout;
+      timeout = setTimeout(function() {
+      	timeout = null;
+      }, wait);
+      if (callNow) result = func.apply(context, args);
+    } else {
+    	timeout = setTimeout(function() {
+      	func.apply(context, args);
+      }, wait);
+    }
+    
+    return result;
+  }
+  
+  debounced.cancel = function() {
+ 		clearTimeout(timeout);
+    timeout = null;
+  }
+  
+  return debounced;
+}
+```
+
+  
+
+那么我们该怎么使用这个cancel函数呢？以上诉demo 为例
+
+  
+
+```javascript
+var count = 1;
+var container = document.querySelector('#container');
+var  button = document.querySelector('.cancel');
+
+function getUserAction() {
+  container.innerHTML = count++;
+}
+
+var setUserAction = debounce(getUserAction, 10000, true);
+
+container.addEventListener('mousemove', setUserAction);
+
+button.addEventListener('click', function() {
+  setUserAction.cancel()
+})
+```
+
+  
+
+我们来看下演示效果吧：
+
+  
+
+![txshx-fp6t4.gif](语雀备份/javaScript疑难梳理/assets/模仿underscore实现防抖-6.gif)
+
+到这里我们就完成了underscore的防抖函数模拟了～～～～
+
+  
+
+---
+
+  
+
+> 本文档摘抄自：[冴羽大大的博客](https://github.com/mqyqingfeng/Blog/issues/22)

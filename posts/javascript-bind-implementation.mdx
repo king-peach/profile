@@ -1,0 +1,233 @@
+---
+title: "函数的bind方法模拟实现"
+slug: "javascript-bind-implementation"
+date: "2019-03-28T00:00:00.000+08:00"
+lastModified: "2019-03-28"
+description: "函数的bind方法模拟实现 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+MDN对于bind方法的定义：bind()方法创建一个新的函数，在调用时设置this关键字提供的值。并在调用新函数时，将给定参数列表作为原函数的参数序列的前若干项。读起来有些晦涩难懂。我的理解是：bind()方法创建一个新的函数，其第一个参数用来设置this指向，其余的参数序列插入到原函数的参数序列之前。所以我们来分析一下bind()方法的特点：
+
+1、返回一个函数
+
+2、可以传入参数
+
+  
+
+#### 返回函数的模拟实现
+
+首先简单模拟一下bind方法的第一个特点：
+
+  
+
+```javascript
+// bind原函数演示
+var foo = {
+ value: 1
+}
+function bar() {
+	console.log(this.value);
+}
+var bindFoo = bar.bind(foo); // 返回一个函数
+bindFoo(); // 1
+
+// 模拟实现bind()方法
+Function.prototype.bind2 = function(context) {
+	var self = this;
+  return function() { // 创建一个新的函数
+  	return self.apply(context); // 考虑到绑定的函数可能有返回值
+  }
+}
+var bind2Foo = bar.bind(foo);
+bar2Foo(); // 1
+// 带返回值的示例
+function baz() {
+	return this.value;
+}
+var bind2Baz = baz.bind(foo);
+bind2Baz(); // 1
+```
+
+  
+
+#### 传参的模拟实现
+
+  
+
+在MDN定义中指出bind方法的传参比较特别，bind()方法绑定的参数放在原函数参数之前。用一个示例来了解一下
+
+  
+
+```javascript
+var foo = {
+	value: 1
+}
+
+function bar(name, age) {
+	console.log(name);
+  console.log(age);
+  console.log(this.value);
+}
+var bindFoo = bar.bind(foo, 'Tom');
+bindFoo(18); // 'Tom' 18 1
+```
+
+  
+
+以上函数需要传name和age两个参数，奇怪的是竟然可以在bind绑定的时候先传一个参数，执行新函数的时候再传另一个参数，那我们该怎么模拟呢，看来要对`arguments`进行处理了：
+
+  
+
+```javascript
+Function.prototype.bind2 = function(context) {
+	var self = this;
+  // 截取bind2函数从第二个到最后一个的参数
+  // 这里为什么要使用Array.prototype.slice.call呢？
+  // 因为arguments不是一个真正的数组，而是类数组，没有push、shift这些操作，所以需要用Array.prototype上的方法来模拟slice
+  var args = Array.prototype.slice.call(arguments, 1);
+   return function() {
+   		// 此时的arguments是指bind返回的函数传入的参数
+     var bingArgs = Array.prototype.slice.call(arguments);
+     return self.apply(context, args.concat(bingArgs));
+   }
+}
+var bind2Foo = bar.bind(foo, 'sam');
+bind2Foo(18); // 'sam' 18 1
+```
+
+  
+
+#### 构造函数的模拟实现
+
+完成以上两点，最难的部分到了，因为bind还有一个特点，就是一个绑定函数也能使用new操作符创建对象：这种行为就像把原函数当成构造器。提供的this值被忽略，同时调用的参数被提供给模拟函数。通俗的说就是bind函数返回的新函数作为构造函数的时候，bind绑定的this值会失效，但是传入的参数依然生效。用示例说明：
+
+  
+
+```javascript
+var value = 2;
+var foo = {
+  value: 1
+};
+
+function bar(name, age) {
+  this.favorate = 'games';
+	console.log(name);
+  console.log(age);
+  console.log(this.value);
+}
+
+bar.prototype.friend = 'kevin';
+
+var bindFoo = bar.bind(foo, 'sam');
+var obj = new bindFoo('18'); // undefined 'sam' '18'
+obj.favorate; // 'games'
+obj.friend; // 'kevin'
+```
+
+  
+
+从这个示例可以看出，尽管在全局和foo中都声明了value值，但是依然返回了`undefined`,说明bind绑定的this失效了，如果大家对new操作符有了解的话，应该明白此处的this指向obj实例。所以我们可以通过修改返回的函数的原型来实现，实现如下
+
+  
+
+```javascript
+Function.prototype.bind2 = function(context) {
+	var self = this;
+  var args = Array.prototype.slice.call(arguments, 1);
+  
+  var fBound = function() { // fBound就是bing绑定后返回的函数
+  	var bingArgs = Array.prototype.slice.call(arguments);
+    // 当作为构造函数时，this指向实例，此时结果为true，将绑定函数的this指向该实例，可以让实例获得来自绑定函数的值
+    // 以上面的demo为例，如果改成`this instanceof fBound ? null : context`，实例只是一个空对象，将null改成this（fBound）,实例就具有favorate属性了
+    // 当作为普通函数时，this指向window,此时结果为false，将绑定函数的this指向context
+    return self.apply(this instanceof fBound ? this : context, args.concat(bindArgs));
+  }
+  // 修改返回函数的prototype为绑定函数的prototype，实例就可以继承绑定函数的原型中的值
+  fBound.prototype = this.prototype;
+  
+  return fBound;
+}
+```
+
+  
+
+但是在这个写法中，我们直接将`fBound.prototype = this.prototype`，我们直接修改`fBound.prototype`的时候，也会直接修改绑定函数的`prototype`。这个时候，我们可以通过一个空函数来进行中转：
+
+  
+
+```javascript
+Function.prototype.bind2 = function(context) {
+	var self = this;
+  var args = Array.prototype.slice.call(arguments, 1);
+  
+  var fNop = function() {};
+   var fBound = function() {
+   		var bindArgs = Array.prototype.slice.call(arguments);
+      
+     	return self.apply(this instanceof fNop ? this : context, args.concat(bindArgs));
+   }
+  fNop.prototype = this.prototype;
+  fBound.prototype = new fNop();
+  return fBound;
+}
+```
+
+  
+
+#### 小问题优化
+
+假如调用bind的不是函数咋办呢？我们需要对调用函数类型进行一个判断
+
+  
+
+```javascript
+if (typeof this !== 'function') {
+	throw new Error('Function. prototype.bind - what is trying to be bind is not callable')
+}
+```
+
+  
+
+如果这个代码放在线上用，需要做个兼容
+
+  
+
+```plain
+Function.prototype.bind2 = Function.prototype.bind || function() {
+	……
+}
+```
+
+  
+
+#### 最终代码
+
+  
+
+```javascript
+Function.prototype.bind2 = function(context) {
+	var self = this;
+  var args = Array.prototype.slice.call(arguments, 1);
+  
+  var fNop = function() {};
+  var fBound = function() {
+  	var bindArgs = Array.prototype.slice.call(arguments);
+    return self.apply(this instanceof fNop ? this : context, args.concat(bindArgs));
+  }
+  fNop.prototype = this.prototype;
+  fBound.prototype = new fNop();
+  return fBound;
+}
+```
+
+  
+
+到这里bind函数的模拟算是完成了，这篇文章的内容参考自[冴羽大神](https://github.com/mqyqingfeng/Blog/issues/12)的博客，其中还有一些细节还不是很熟悉，需要多看几遍，这篇文档涉及到的知识点很多，还需要注重基础，基础扎实了，理解起这些概念才会事半功倍。
+
+学习，任何时候开始都不算晚～～～

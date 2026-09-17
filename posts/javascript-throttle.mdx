@@ -1,0 +1,433 @@
+---
+title: "模拟undescore学节流"
+slug: "javascript-throttle"
+date: "2019-04-22T00:00:00.000+08:00"
+lastModified: "2019-04-22"
+description: "模拟undescore学节流 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+在[《模拟undescore学防抖中》](https://www.yuque.com/wpeach/uqz90h/2019-04-18)，我们了解到为啥要限制频繁操作，但是除了防抖可以限制以外还有没有别的办法呢？
+
+答案是肯定有的，所以今天我们就来讲讲另一种限制频繁操作的方式：节流
+
+  
+
+### 节流的原理
+
+如果你持续触发某个事件，每隔一段时间，只执行一次这个事件。
+
+  
+
+根据首次是否执行以及停止出发后是否再执行一次，效果有所不同，实现的方式也有所不同。
+
+我们用leading代表首次是否执行，trailing代表停止触发后是否再执行一次
+
+  
+
+关于节流的实现，有两种主流的实现方式，一种是使用时间戳，一种是设置定时器。
+
+  
+
+### 使用时间戳
+
+首先来看一个简单的示例，高频鼠标移动事件：
+
+  
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>跟着undescore学节流</title>
+  <style>
+    #container {
+      width: 400px;
+      height: 200px;
+      line-height: 200px;
+      margin: 0 auto;
+      margin-top: 200px;
+      background-color: rgb(219, 68, 68);
+      color: #FFF;
+      font-size: 16px;
+      text-align: center;
+    }
+    .cancel {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+
+  </div>
+  <script type="text/javascript">
+    var box = document.querySelector('#container');
+    var count = 0;
+		
+    function getUserAction() {
+    	box.innerHTML = count++;
+    }
+    
+    box.addEventListener('mousemove', getUserAction);
+  </script>
+</body>
+</html>
+```
+
+  
+
+效果如下：
+
+  
+![节流gif1.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-1.gif)
+
+  
+
+以上示例中，一秒钟这个事件触发了上百次，我们如何来进行优化呢？
+
+来看看第一种方法： 使用时间戳，当触发事件的时候我们取出当前的时间戳，然后减去之前的时间戳（最一开始值设为0），如果大于设置的时间周期，就执行函数，然后更新时间戳为当前的时间戳，如果小于就不执行。
+
+  
+
+看了这个表述，是不是感觉已经可以写出代码了……让我们来写第一版的代码：
+
+  
+
+```javascript
+// 第一版
+function throttle(func, wait) {
+	var contet = this;
+  var previous = 0;
+  
+  return function() {
+  	var now = +new Date();
+    context = this;
+    args = arguments;
+    if (now - previous > wait) {
+      func.apply(context.args);
+      previous = now;
+    }
+  }
+}
+```
+
+  
+
+在我们的例子中使用这个函数：
+
+  
+
+```javascript
+box.addEventListener('mousemove', throttle(getUserAction, 1000));
+```
+
+  
+
+效果演示如下：
+
+  
+![节流gif2.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-2.gif)
+
+  
+
+我们可以看到：当鼠标移入时，事件立即执行，没过1s会执行一次，如果在6～7s之间停止触发，以后不会再执行事件。
+
+  
+
+### 使用定时器
+
+接下来讲讲第二种实现方式，使用定时器。
+
+  
+
+当触发事件的时候，我们设置一个定时器，定时器延时执行之前不会触发事件，在定时器中执行函数并清除定时器，这样就可以设置下一个定时器。所以我们来实现下第二版代码：
+
+  
+
+```javascript
+// 第二版
+function throttle(func, wait) {
+	var timeout;
+  var previous = 0;
+  
+  return function() {
+  	context = this;
+    args = arguments;
+    if (!timeout) {
+    	timeout = setTimeout(function() {
+      	timeout = null;
+        func.apply(context, args);
+      }, wait)
+    }
+  }
+}
+```
+
+  
+
+将第二版代码加入之前的例子中，我们来看下效果：
+
+  
+![节流gif3.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-3.gif)
+
+  
+
+我设置的事件间隔为1s。当我们鼠标移入的时候，事件不会立即执行，间隔1s以后执行事件，此后只要触发此事件，事件就会以1s的间隔执行，一旦停止触发，最后1s内会执行一次。然后停止执行。
+
+  
+
+所以我们比较下两个方法：
+
+1、时间戳方法：事件会立即执行；定时器方法：事件会在n秒后第一次执行
+
+2、时间戳方法：停止触发后没有办法再执行事件；定时器方法：事件停止触发后依然会再执行一次事件。
+
+  
+
+### 合并优化方法
+
+假如存在一个这样的需求：我想要一个事件一触发就立即执行，停止触发后还能执行一次的节流函数！
+
+  
+
+那针对这个需求我们怎么实现呢？当事件触发的时候立即执行，那我们就需要借助时间戳的方法，在设置时间间隔内立即执行第一次事件函数，再进行判断是否含有定时器，如果有就在设置的时间间隔后执行。
+
+  
+
+根据以上原理我们来简单实现一下吧：
+
+  
+
+```javascript
+// 第三版
+function throttle(func, wait) {
+	var timeout, args, context, result;
+  var previous = 0;
+  
+  var later = function() {
+  	previous = +new Date();
+    timeout = null;
+    func.apply(context, args);
+  }
+  
+  var throttled = function() {
+  	var now = +new Date();
+    // 下次触发func剩余的时间
+    var remaining = wait - (now - previous);
+    context = this;
+    args = arguments;
+    // 如果没有剩余时间了或者你修改了系统时间
+    if (remaining <= 0 || remaining > wait) {
+    	if (timeout) {
+      	clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = now;
+      func.apply(context, args);
+    } else if (!timeout) {
+    	timeout = setTimeout(later, remaining);
+    }
+  }
+  
+  return throttled;
+}
+```
+
+  
+
+为了让展示效果明显一点，我们将时间间隔改成3s，假如示例中
+
+  
+
+```javascript
+box.addEventListener('mouseomove', throttle(getUserAction, 3000));
+```
+
+  
+
+效果如下：
+
+  
+
+  
+![节流gif4.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-4.gif)
+
+  
+
+我们可以看到：当鼠标移入时，事件立即执行了，鼠标移动了3s后，事件再一次触发。当数字变成2的时候，我们停止触发事件，9s的时候依旧会执行一次事件。但是假如我们需要执行一个立即执行，但是停止触发后后不会再执行一次或者不会立即执行，停止触发后仍然会执行一次。这个该咋办呢？
+
+  
+
+不要慌，我们把第三版代码进行一个封装，给它一个参数options，根据传的值判断到底是哪种效果。options中约定：
+
+leading：false 表示禁用第一次执行
+
+trailing：false 表示禁用停止触发的回调
+
+  
+
+我们来改下代码：
+
+  
+
+```javascript
+// 第四版
+function throttle(func, wait, options) {
+	var timeout, context, args, result;
+  var previous = 0;
+  if (!options) options = {};
+  
+  var later = function() {
+  	previous = options.leading === false ? 0 : new Date().getTime();
+    timeout = null;
+    func.apply(context, args);
+    if (!timeout) context = args = null;
+  };
+  
+  var throttled = function() {
+  	var now = new Date().getTime();
+    if (!previous && options.leading === false) previous = now;
+    var remaining = wait - (now - previous);
+    context = this;
+    args = arguments;
+    if (remaining < = 0 || remaining > wait) {
+    	if (timeout) {
+      	clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = now;
+      func.apply(context, args);
+      if (!timeout) context = args = null;
+    } else if (!timeout && options.trailing !== false) {
+    	timeout = setTimeout(later, remaining);
+    }
+  };
+  
+  return throttled;
+}
+```
+
+  
+
+需要注意的是，leading：false和trailing：false不能同时设置，如果同时设置的话，比如当你鼠标移出的时候，因为trailing设置为false，停止触发的时候不会设置定时器，所以只要再过了设置的时间，再移入的话，就会立即执行。就违反了leading：false，bug就出来了，所以，这个throttle只有三种用法：
+
+  
+
+```javascript
+// 有头有尾
+box.addEventListener('mousemove', throttle(getUserAction, 3000));
+// 无头有尾
+box.addEventListener('mousemove', throttle(getUserAction, 3000, { leading: false }));
+// 有头无尾
+box.addEventListener('mousemove', throttle(getUserAction, 3000, { trailing: false }));
+```
+
+  
+
+其中第二、三种展示效果如下：
+
+  
+
+  
+![节流gif5.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-5.gif)
+
+  
+
+  
+![节流gif6.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-6.gif)
+
+  
+
+### 取消
+
+当然了，在防抖的模拟实现中，我们加了一个cancel方法，所以我们在节流中也可以加个cancel方法：
+
+  
+
+```javascript
+// 第五版
+function throttle(func, wait, options) {
+	var timeout, context, args, result;
+  var previous = 0;
+  if (!options) options = {};
+  
+  var later = function() {
+  	previous = options.leading === false ? 0 : new Date().getTime();
+    timeout = null;
+    func.apply(context, args);
+    if (!timeout) context = args = null;
+  };
+  
+  var throttled = function() {
+  	var now = new Date().getTime();
+    if (!previous && options.leading === false) previous = now;
+    var remaining = wait - (now - previous);
+    context = this;
+    args = arguments;
+    if (remaining < = 0 || remaining > wait) {
+    	if (timeout) {
+      	clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = now;
+      func.apply(context, args);
+      if (!timeout) context = args = null;
+    } else if (!timeout && options.trailing !== false) {
+    	timeout = setTimeout(later, remaining);
+    }
+  };
+  
+  throttle.cancel = function() {
+    clearTimeout(timeout);
+    previous = 0;
+    timeout = null;
+  }
+  
+  return throttled;
+}
+```
+
+  
+
+在示例中的使用方法：
+
+  
+
+```javascript
+var button = document.querySelector('.cancel');
+var box = document.querySelector('#container');
+
+var setUserAction = throttle(getUserAction, 3000);
+box.addEventListener('mousemove', setUserAction);
+
+button.addEventListener('click', function() {
+	setUserAction.cancel()
+})
+
+```
+
+  
+
+示例效果：
+
+  
+
+  
+![节流gif7.gif](语雀备份/javaScript疑难梳理/assets/模拟undescore学节流-7.gif)
+
+到这里模拟underscore的节流函数就算是完成了🎉🎉🎉
+
+  
+
+---
+> 本文档内容参考：[冴羽大大的博客](https://github.com/mqyqingfeng/Blog/issues/26)

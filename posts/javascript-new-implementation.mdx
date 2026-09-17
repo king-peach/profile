@@ -1,0 +1,208 @@
+---
+title: "new的模拟实现"
+slug: "javascript-new-implementation"
+date: "2019-03-28T00:00:00.000+08:00"
+lastModified: "2019-03-28"
+description: "new的模拟实现 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+挪用MDN对new运算符的定义：new运算符创建一个用户定义的对象类型的实例或具有构造函数的内置对象实例。光看这句话有些不理解。我们举例说明吧。
+
+  
+
+```javascript
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+  
+  this.favorate = 'Games';
+}
+
+// 向Person构造函数的原型中添加属性
+Person.prototype.strength = 60;
+
+Person.prototype.sayYourName = function() {
+	console.log('I am' + this.name)
+}
+var person1 = new Person('kevin', 18);
+console.log(person1.name); // 'kevin'
+console.log(person1.favorate); // 'Games'
+console.log(person1.strength); 60
+
+person1.sayYourName(); // 'I am kevin'
+```
+
+  
+
+从这个例子中我们可以看到，实例person1可以：
+
+-   访问到`Person`构造函数里的属性
+-   访问到`Person.prototype`中的属性
+
+  
+
+接下来，我们可以尝试着模拟一下，因为new是关键字，所以无法像bind函数一样直接覆盖。我们用一个函数来实现，命名为`objectFactory`，来模拟new的效果。用的时候是这样的：
+
+  
+
+```javascript
+function Otaku() {
+	……
+}
+// 使用new
+var person = new Person(……);
+// 使用objectFactory
+var person = objectFactory(Otaku, ……)
+```
+
+  
+
+#### 初步实现
+
+因为new的结果是一个新对象，所以在模拟实现的时候，我们也要建立一个新对象，假设这个对象叫obj，因为obj会具有Otaku构造函数里的属性，想想经典继承的例子，我们可以使用`Otaku.apply(obj, arguments)`来给obj添加新的属性。
+
+我们知道原型和原型链中，示例的`_proto_`属性会指向构造函数的`prototype`，也正式因为建立这样的关系，实例可以访问原型上的属性。所以我们来简单实现一下：
+
+  
+
+```javascript
+function objectFacatory() {
+	var obj = new Object();
+  // arguments是类数组，没有slice方法，用[].shift来去arguments从第二个到最后一个的值
+  Constructor = [].shift.call(arguments);
+  obj._proto_ = Constructor.prototype;
+  Constructor.apply(obj, arguments);
+  return obj;
+}
+```
+
+  
+
+在以上示例中，我们做了五步：
+
+1、用`{}或new Object()`的方式创建了一个对象obj
+
+2、取出第一个参数，就是我们要传入的构造函数，此外因为shfit会修改原数组，所以`arguments`会被取出第一个参数
+
+3、将obj原型指向构造函数，这样obj就可以访问到构造函数原型中的属性
+
+4、使用apply，改变构造函数this的指向到新建的对象，这样obj就可以访问到构造函数的属性
+
+5、返回obj
+
+这里涉及到的概念：[原型和原型链](https://github.com/mqyqingfeng/Blog/issues/2)、[apply](https://github.com/mqyqingfeng/Blog/issues/11)、[经典继承](https://github.com/mqyqingfeng/Blog/issues/16)。
+
+下面我们来做一下简单的测试：
+
+  
+
+```javascript
+function Otaku(name, age) {
+	this.name = name;
+  this.age = age;
+  
+  this.habit = 'Games';
+}
+Otaku.prototype.strength = 60;
+
+Otaku.prototype.sayYourName = function() {
+	console.log('I am' + this.name);
+}
+
+function objectFactory() {
+	var obj = new Object();
+  Constructor = [].shift.call(arguments);
+  obj._proto_ = Constructor.prototype;
+  Constructor.apply(obj, arguments);
+  return obj;
+}
+
+var person = objectFactory(Otaku, 'kevin', 12);
+
+console.log(person.name); // kevin
+console.logg(person.habit); // Games
+console.log(person.strength); // 60
+
+person.sayYourName(): // I am kevin
+```
+
+  
+
+#### 返回值效果的实现
+
+先来看下带返回值的new方法的示例：
+
+  
+
+```javascript
+function Otaku(name, age) {
+	this.strenth = 60;
+  this.age = age;
+  
+  return {
+  	name: name,
+    habit: 'Games'
+  }
+}
+
+var person = new Otaku('kevin', 12);
+console.log(person.name); // kevin
+console.log(person.habit); // Games
+console.log(person.age); // undefined
+console.log(person.strength); // undefined
+```
+
+  
+
+在这个例子中，构造函数返回一个对象，实例peroson中只能访问到返回对象的属性。
+
+如果返回的是一个基本类型呢？我们再来看一个例子：
+
+  
+
+```javascript
+function Otaku(name, age) {
+	this.strenth = 60;
+  this.age = age;
+  
+  return 'this is a simple text'
+}
+
+var person = new Otaku('kevin', 12);
+console.log(person.name); // undefined
+console.log(person.habit); // undefined
+console.log(person.age); // 12
+console.log(person.strength); // 60
+```
+
+  
+
+这次尽管有返回值，但是跟没有返回值的效果是一样的，所以我们最后只需要到返回值是否为对象进行判断就行了。
+
+#### 最后一版模拟
+
+  
+
+```javascript
+function objectFactory() {
+	var obj = new Object();
+  Constructor = [].shift.call(arguments);
+  obj._proto_ = Constructor.prototype;
+  var ret = Constructor.apply(obj, arguments);
+  return typeof ret === 'object' ? ret : obj;
+}
+```
+
+  
+
+到这里就实现了new的模拟了🎉🎉🎉
+
+  
+
+> 本文档参考自：[冴羽大神的博客](https://github.com/mqyqingfeng/Blog/issues/13)

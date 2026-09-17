@@ -1,0 +1,277 @@
+---
+title: "类数组对象与arguments"
+slug: "javascript-array-like-arguments"
+date: "2019-04-01T00:00:00.000+08:00"
+lastModified: "2019-04-01"
+description: "类数组对象与arguments - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+所谓的类数组对象：拥有一个length属性和若干索引属性的对象
+
+举个例子：
+
+  
+
+```javascript
+var array = ['name', 'age', 'sex'];
+
+var arrayLike = {
+	0: 'name',
+  1: 'age',
+  2: 'sex',
+  length: 3
+}
+```
+
+  
+
+即便如此，为什么叫类数组对象呢？
+
+那我们从读写、获取长度、遍历三个方面来看看这两个对象。
+
+  
+
+```plain
+// 读写
+console.log(array[0]); // 'name'
+console.log(arrayLike[0]); // 'name'
+
+// 获取长度
+console.log(array.length); // 3
+console.log(arrayLike.length); // 3
+
+// 遍历
+for (var i = 0, i < array.length; i < len; i++) {
+	……
+}
+for (var i = 0, i < arrayLike.length; i < len; i++) {
+	……
+}
+```
+
+  
+
+这三个属性的处理类数组对象和数组是一致的，那类数组对象可以使用数组的其他方法吗？比如push、splice方法等，
+
+  
+
+```javascript
+arrayLike.push(4); // arrayLike.push is not a function 
+```
+
+  
+
+所以类数组对象和数组还是有分别的。
+
+  
+
+#### 调用数组方法
+
+如果类数组对象想使用数组的方法怎么办呢？
+
+既然无法直接调用，我们可以用Function.call间接调用。（原理是使用数组的构造函数方法，然后用call方法将this指向该类数组对象，这样类数组对象就可以使用数组的构造函数的数组方法了），示例：
+
+  
+
+```javascript
+var arrayLike = { 0: 'name', 1: 'age', 2: 'sex', length: 3 }
+
+Array.prototype.join.call(arrayLike, '&'); // name&age&sex
+Array.prototype.slice.call(arrayLike, 0); // ['name', 'age', 'sex']
+// slice方法可以做到类数组转数组
+
+Array.prototype.map.call(arrayLike, function(item) {
+  return item.toUpperCase();
+});
+// ['NAME', 'AGE', 'SEX']
+```
+
+  
+
+#### 类数组转数组
+
+在上面的例子中已经提到一种类数组对象转数组的方法，再补充三个：
+
+  
+
+```javascript
+var arrayLike = { 0: 'name', 1: 'age', 2: 'sex' }
+// 1. slice
+Array.prototype.slice.call(arrayLike); // ['name', 'age', 'sex']
+// 2. splice
+Array.prototype.splice.call(arrayLike, 0); // ['name', 'age', 'sex']
+// 3. ES6 Array.form 将类数组对象转化成数组
+Array.form(arrayLike); // ['name', 'age', 'sex']
+// 4. apply
+Array.prototype.concat.apply([], arrayLike); 将arrayLike作为参数传给一个空数组
+```
+
+  
+
+那为什么会讲到类数组对象呢？以及类数组对象有什么应用呢？
+
+要说到类数组对象， Arguments对象就是一个类数组对象。在客户端Javascript中，一些DOM方法document.getElementsByTagName()等也返回类数组对象。
+
+一般获取页面元素集合HTMLCollection都是一个类数组，遍历的话只能使用for循环，如果要使用forEach方法就会报错，此时就需要使用[].slice.call(HTMLCollection)或者Array.prototype.slice.call(HTMLCollection)把类数组转换成真正的数组。
+
+  
+
+#### Arguments对象
+
+接下来重点介绍Arguments对象。
+
+Arguments对象只定义在函数体内，包括了函数的参数和其他属性。在函数体中， arguments指代该函数的Arguments对象。举个例子：
+
+  
+
+```javascript
+function foo(name, age, sex) {
+	console.log(arguments);
+}
+foo('name', 'age', 'sex')
+```
+
+  
+
+打印结果如下：
+
+![image.png](语雀备份/javaScript疑难梳理/assets/类数组对象与arguments-1.png)
+
+  
+
+我们可以看到除了类数组的索引属性的length属性之外，还有一个callee属性，接下来我们一一介绍
+
+  
+
+#### length属性
+
+Arguments对象的length属性，表示实参的长度，举个例子：
+
+  
+
+```javascript
+function foo(b, c, d) {
+	console.log('实参的长度为：' + arguments.length)
+};
+console.log('形参的长度为：' + foo.length);
+
+foo(1);
+// 形参的长度为：3
+// 实参的长度为：1
+```
+
+  
+
+#### callee属性
+
+Arguments对象的callee属性，通过它可以调用函数自身。
+
+讲个闭包经典面试题使用callee的解决方法：
+
+  
+
+```javascript
+var data = [];
+ for (var i = 0; i < 3; i++) {
+ 		(data[i] = function() {
+    	console.log(arguments.callee.i)
+    }).i = i
+ }
+data[0](); // 0
+data[1](); // 1
+data[2](); // 2
+```
+
+  
+
+接下来要讲讲几个arguments对象的几个要点：
+
+#### auguments和对应参数的绑定
+
+  
+
+```javascript
+function foo(name, age, sex, hobits) {
+	console.log(name, arguments[0]); // name name
+	
+  // 改变形参
+  name = 'new name';
+  
+  console.log(name, arguments[0]); // new name new name
+  
+  // 改变arguments
+  arguments[1] = 'new age';
+  
+  console.log(age, arguments[1]); // new age new age
+  
+  // 测试未传入的是否会绑定
+  console.log(sex); // undefined
+  
+  sex = 'new sex';
+  
+  console.log(sex, arguments[2]); new sex undefined
+  
+  arguments[3] = 'new hobits';
+  
+  console.log(hobits, arguments[3]); // undefined new hobits
+  
+}
+
+foo('name', 'age');
+```
+
+  
+
+传入参数时，实参和arguments的值会共享，当没有传入参数时，实参与arguments值不会共享
+
+除此之外，以上是在非严格模式下，如果是在严格模式下，实参和arguments是不会共享的。
+
+  
+
+#### 传递参数
+
+将参数从一个函数传递到另一个函数
+
+  
+
+```javascript
+// 使用apply 将 foo 的参数传递到 bar
+function foo() {
+	bar.apply(this, arguments);
+}
+function bar(a, b, c) {
+	console.log(a, b, c);
+}
+foo(1, 2, 3); // 1 2 3
+```
+
+  
+
+#### 强大的ES6
+
+使用ES6 的拓展运算符，可以轻松转换成数组
+
+  
+
+```javascript
+function foo(...arguments) {
+	console.log(arguments);
+}
+foo(1, 2, 3); // [1, 2, 3]
+```
+
+  
+
+#### 应用
+
+arguments的应用其实很多，在jQuery的extend实现、函数柯里化、递归调用、函数重载等场景都可以看见arguments的身影。这里就不具体展开了。
+
+  
+
+> 此文档参考自：[冴羽](https://github.com/mqyqingfeng/Blog/issues/14)[大神的博客](https://github.com/mqyqingfeng/Blog/issues/14)

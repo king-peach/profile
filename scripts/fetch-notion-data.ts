@@ -554,7 +554,7 @@ async function main() {
       slugToId[urlSlug] = page.id;
     }
 
-    // 保存文章列表（含 urlSlug）
+    // 保存文章列表（含 urlSlug）—— 注意：content 获取后可能会回填 title/slug，届时会重新保存
     const articlesPath = path.join(OUTPUT_DIR, "articles.json");
     fs.writeFileSync(
       articlesPath,
@@ -621,6 +621,54 @@ async function main() {
         
         await processContentImages(imageFetch, page.id, content);
         const content_markdown = blocksToMarkdown(content);
+        
+        // ---- 回填缺失的元数据 ----
+        // 1. Title 为空时从 content_markdown 提取
+        const resolvedTitle = extractTitle(page, content_markdown) || pageTitle || "Untitled";
+        if (resolvedTitle && resolvedTitle !== pageTitle) {
+          const props = page.properties || {};
+          const titleProp = Object.values(props).find((p: any) => p?.type === "title");
+          if (titleProp) {
+            (titleProp as any).title = [{ plain_text: resolvedTitle }];
+          }
+        }
+        
+        // 2. Slug 为空时从标题重新生成
+        const currentSlug = extractSlug(page);
+        if (!currentSlug) {
+          const newSlug = slugify(resolvedTitle);
+          const props = page.properties || {};
+          const slugProp = props["slug"] || props["Slug"];
+          if (slugProp) {
+            (slugProp as any).rich_text = [{ plain_text: newSlug || resolvedTitle }];
+          }
+          // 更新 urlSlug
+          if (newSlug) {
+            // 释放旧 slug
+            usedSlugs.delete((page as any).urlSlug);
+            let finalSlug = newSlug;
+            let n = 0;
+            while (usedSlugs.has(finalSlug)) {
+              n += 1;
+              finalSlug = `${newSlug}-${n}`;
+            }
+            usedSlugs.add(finalSlug);
+            (page as any).urlSlug = finalSlug;
+            slugToId[finalSlug] = page.id;
+          }
+        }
+        
+        // 3. Tags 为空时根据标题/内容智能分类
+        const props = page.properties || {};
+        const tagProp = props["Tags"] || props["tags"];
+        const hasTag = tagProp?.type === "select" && tagProp.select?.name;
+        if (!hasTag) {
+          const guessedTag = guessTagFromContent(resolvedTitle, content_markdown);
+          if (tagProp && tagProp.type === "select") {
+            (tagProp as any).select = { name: guessedTag, color: "blue" };
+          }
+        }
+        
         articlesWithContent[page.id] = {
           ...page,
           content,
@@ -681,6 +729,31 @@ async function main() {
     );
     console.log(`📄 文章内容已保存: ${contentPath}`);
 
+    // 回填元数据后重新保存文章列表和索引（title/slug 可能已更新）
+    fs.writeFileSync(
+      articlesPath,
+      JSON.stringify(
+        {
+          results: pages,
+          total: pages.length,
+          generated_at: new Date().toISOString(),
+        },
+        null,
+        2
+      )
+    );
+    console.log(`📄 文章列表（回填后）已重新保存: ${articlesPath}`);
+
+    fs.writeFileSync(
+      indexPath,
+      JSON.stringify(
+        { slugToId, generated_at: new Date().toISOString() },
+        null,
+        2
+      )
+    );
+    console.log(`📄 文章索引（回填后）已重新保存: ${indexPath}`);
+
     // 生成 Sitemap
     console.log("\n🗺️ 生成 Sitemap...");
     await generateSitemap(pages);
@@ -719,20 +792,26 @@ async function main() {
   }
 }
 
-// 辅助函数：提取 Rich Text 内容
+// 辅助函数：提取 Rich Text 内容（兼容 plain_text 和 text.content 两种格式）
 function extractRichText(prop: any): string {
   if (!prop || prop.type !== "rich_text") return "";
-  return prop.rich_text?.map((t: any) => t.plain_text).join("") || "";
+  return prop.rich_text?.map((t: any) => t.plain_text ?? t.text?.content ?? "").join("") || "";
 }
 
-// 辅助函数：提取 Title
-function extractTitle(page: any): string {
+// 辅助函数：提取 Title（为空时从 content_markdown 提取第一个 # 标题，兼容两种格式）
+function extractTitle(page: any, fallbackMarkdown?: string): string {
   const props = page.properties || {};
   for (const key of Object.keys(props)) {
     const prop = props[key];
     if (prop?.type === "title" && Array.isArray(prop.title) && prop.title.length > 0) {
-      return prop.title.map((t: any) => t.plain_text).join("") || "";
+      const text = prop.title.map((t: any) => t.plain_text ?? t.text?.content ?? "").join("");
+      if (text) return text;
     }
+  }
+  // Fallback: 从 content_markdown 提取第一个 # 或 ## 标题
+  if (fallbackMarkdown) {
+    const m = fallbackMarkdown.match(/^#{1,2}\s+(.+)$/m);
+    if (m) return m[1].trim();
   }
   return "";
 }
@@ -745,6 +824,21 @@ function extractSlug(page: any): string {
     return extractRichText(slugProp);
   }
   return "";
+}
+
+/** 根据标题和内容关键词智能推测 Tags 分类 */
+function guessTagFromContent(title: string, markdown: string): string {
+  const text = (title + " " + markdown.slice(0, 500)).toLowerCase();
+  const rules: [RegExp, string][] = [
+    [/设计模式|design.?pattern|单例|工厂|观察者|策略|装饰器|代理模式/i, "DesignPattern"],
+    [/webpack|vite|rollup|esbuild|ssr|ssg|csr|构建|打包|工程化|部署|ci.?cd/i, "FrontEndEngineering"],
+    [/报错|异常|bug|排查|疑难|踩坑|问题|error|debug|troubleshoot/i, "ProblemsReview"],
+    [/javascript|js基础|es6|闭包|原型|异步|promise|async|await|类型/i, "JavaScript"],
+  ];
+  for (const [re, tag] of rules) {
+    if (re.test(text)) return tag;
+  }
+  return "Notes";
 }
 
 /** URL 安全 slug：小写、空格转 -、仅保留字母数字与连字符 */

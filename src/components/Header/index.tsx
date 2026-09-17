@@ -165,6 +165,22 @@ const Header: React.FC<HeaderProps> = ({
             />
           </button>
         ))}
+        {/* 世界杯入口暂时隐藏（2026-09-15）——恢复时解开下方注释 */}
+        {/* <a
+          href="/worldcup"
+          className="font-mono text-base lg:text-lg transition-all duration-300 hover:scale-105 relative group"
+          style={{
+            textShadow: dark ? "0 1px 4px rgba(0, 0, 0, 0.3)" : "0 1px 4px rgba(255, 255, 255, 0.5)",
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          🔥 {t("nav.worldcup", { defaultValue: "世界杯" })}
+          <span
+            className="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
+            style={{ backgroundColor: accent }}
+          />
+        </a> */}
         {/* 插槽内容 */}
         {leftSlot}
         {showLanguage && (
@@ -306,6 +322,21 @@ const Header: React.FC<HeaderProps> = ({
               {t(`nav.${section.id}`)}
             </button>
           ))}
+          {/* 移动端世界杯入口暂时隐藏（2026-09-15）——恢复时解开下方注释 */}
+          {/* <a
+            href="/worldcup"
+            className="w-full text-2xl md:text-3xl my-3 py-3 font-mono transition-all duration-300 hover:scale-105"
+            style={{
+              color: baseText,
+              textDecoration: "none",
+              textShadow: dark ? "0 2px 8px rgba(0, 0, 0, 0.3)" : "0 2px 8px rgba(255, 255, 255, 0.5)",
+              textAlign: "center",
+              display: "block",
+            }}
+            onClick={() => setMobileNavOpen(false)}
+          >
+            🔥 {t("nav.worldcup", { defaultValue: "世界杯" })}
+          </a> */}
           {/* 移动端插槽内容 */}
           {leftSlot && <div className="my-6">{leftSlot}</div>}
           <div className="flex mt-8 gap-4">

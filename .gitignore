@@ -37,3 +37,11 @@ pnpm-lock.yaml
 # Skills 相关文件
 SKILLS_USAGE.md
 .agents/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.hermes/

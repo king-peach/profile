@@ -1,0 +1,134 @@
+---
+title: "移动端适配rem方案"
+slug: "mobile-rem-adaptation"
+date: "2019-05-13T00:00:00.000+08:00"
+lastModified: "2019-05-13"
+description: "移动端适配rem方案 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+今天有个朋友问我关于rem的适配问题，我只给出了我自己的一个js解决方案，当我去查找相关资料的时候，发现我写的js跟人家的还是有点差距的，细节的东西没考虑。
+
+  
+
+### 实现思路
+
+rem适配的实现思路: 根据设备视口宽度动态设置html的font-size。
+
+举个例子：如果在iPhone6(设备独立像素为375px)下，一个div的宽度为50px，我们设置iPhone6下html的font-size为100px，当换成一个设备独立像素为400px的设备时，此时html的fon-size应该为：（400 / 375）\* 100px。
+
+  
+
+### 代码实现
+
+首先先贴一下我实现的代码：
+
+  
+
+```javascript
+handleResize();
+window.addEventListener('resize', handleResize, false);
+
+function handleResize() {
+	var clientWidth = document.documentElement.clientWidth || document.body.clientWidth;
+  var rootFont = (clientWidth / 375) * 100 + 'px';
+  document.documentElement.style.fontSize = rootFont;
+}
+```
+
+  
+
+我主要是针对iPhone6的设计稿进行设置的，如果你们的设计稿是其他设备的，根据设备像素比进行换算就行了。
+
+  
+
+再来看一个更加细致的写法：
+
+  
+
+```javascript
+(function() {
+  var docEl = document.documentElement,
+      resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize';
+  
+  function handleResize() {
+  	var clientWidth = docEl.clientWidth;
+    if (!clientWidth) return;
+    
+    docEl.style.fontSize = (clientWidth / 375) * 100 + 'px';
+  }
+  
+  if (!document.addEventListener) return;
+  window.addEventListener(resizeEvt, handleResize, false);
+  window.addEventListener('DOMContentLoaded', handleResize, false);
+})();
+```
+
+  
+
+我们来分析一下，这段代码有什么出众之处，我总结了一下：
+
+1.  使用了立即执行函数，将函数主体逻辑封装起来，避免变量污染
+2.  使用了正确的监听事件
+3.  进行类型判断，如果不存在此事件或方法则跳出函数作用域
+
+  
+
+这里要说一下设备像素比，设备像素比也就是设备上物理像素和设备独立像素的比例，用公式表示就是：  
+dpr = 物理像素 / 设备独立像素;
+
+可以用window.devicePixelRatio获取到当前设备的dpr，不能用这个方法改变dpr哦～～
+
+​  
+
+最后来个终极兼容性写法：
+
+```javascript
+(function (doc, win) {
+	var docEl = document.documentElement,
+      resizeEv = 'orientationchange' in window ? 'orientationchange' : 'resize',
+      recalz = function () {
+      	var clientWidth = docEl.clientWidth;
+        if (!clientWidth) return;
+        
+        // 基于750px设计稿计算rem值，其他尺寸设计稿相应替换750即可
+        if (clientWidth >= 750) {
+        	docEl.style.fontSize = '100px';
+        } else {
+        	docEl.style.fontSize = 100 * (clientWidth / 750) + 'px';
+        };
+        
+        var html = document.getElementsTagName['html'][0];
+        var settedFs = settingFs = parseInt(100 * (clientWidth / 750));
+        var whileCount = 0;
+        
+        while (whileCount < 100) {
+        	var realFs = parseInt(window.getComputedStyle(html).fontSize);
+          var delta = realFs - settedFs;
+          
+          // 未成功设置font-size时
+          if (Math.abs(delta) >= 1) {
+          	delta > 0 ? settingFs-- : settingFs++;
+            html.setAttribute('style', 'font-size: ' + settingFs + 'px!important;');
+          } else {
+          	break;
+          }
+        }
+        
+        if (!doc.addEventListener) return;
+        win.addEventListener(resizeEv, recalz, false);
+        doc.addEventListener('DOMContentLoaded', recalz, false)
+      }
+})(document, window);
+```
+
+  
+
+### 总结
+
+这篇文章更像是一个随笔，知识点不多，主要是给自己看下，回忆知识点。如果对您帮助不大请见谅～～～

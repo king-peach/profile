@@ -1,0 +1,438 @@
+---
+title: "数组去重"
+slug: "javascript-array-unique"
+date: "2019-05-09T00:00:00.000+08:00"
+lastModified: "2019-05-09"
+description: "数组去重 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+数组去重应该是计算机技术里的一个必备知识了吧。曾经在上JAVA课的时候提到数组去重，当时感觉好高深呀。
+
+其实数组去重没那么恐怖，认真想想还是可以想出几种方法来的，今天我们来讲讲这几种实现方法。
+
+  
+
+### 双层循环
+
+我们用js实现的时候可能首先想到的就是`indexOf`方法来实现，在实现`indexOf`方法之前，我们先来实现一个最原始但也是兼容性最好的方法：
+
+  
+
+```javascript
+var arr = [1, 'a', 1, 'a'];
+
+function unique(array) {
+	var newArray = [];
+  for (var i = 0, len = array.length; i < len; i++) {
+  	for (var j = 0, newLen = newArray.length; j < newLen; j++) {
+    	if (newArray[j] === array[i]) {
+      	break;
+      }
+    }
+    // 如果array[i]是唯一的，那么执行完循环，j = newLen
+    if (j === newLen) {
+    	newArray.push(array[i])
+    }
+  }
+  return newArray;
+}
+
+unique(arr); // [1, 'a']
+```
+
+  
+
+在这个方法中，我们使用循环嵌套，外层循环`array`，里层循环`newArray`。如果`array[i] === array[j]`，那么跳出循环，如果不等于，说明元素是唯一的，这时候j是一定等于`newLen`的，将唯一值添加进新数组。以此类推……
+
+  
+
+### indexOf方法
+
+使用`indexOf`方法以后，就不需要内层循环了，逻辑也好理解一些，我们来实现一下：
+
+  
+
+```javascript
+var arr = [1, 'a', 1, 'a'];
+
+function unique(array) {
+	var newArray = [];
+  for (var i = 0, len = array.length; i < len; i++) {
+  	if (newArray.indexOf(array[i]) === -1) {
+    	newArray.push(array[i])
+    }
+  }
+  return newArray;
+}
+
+unique(arr); // [1, 'a']
+```
+
+  
+
+### 排序后去重
+
+试想我们先将要去重的数组使用`Sort`方法排序后，相同的值就会被排在一起，然后我们就可以只判断当前与上一个元素是否相同，相同就说明重复，不相同就添加进`newArray`，我们来实现一下：
+
+  
+
+```javascript
+var array = [1, 'a', 1, 'a'];
+
+function unique(array) {
+	var newArray = [];
+  var sortedArray = array.concat().sort();
+  var prevElement;
+  for (var i = 0, len = sortedArray.length; i < len; i++) {
+  	if (!i || prevElement !== sortedArray[i]) {
+    	newArray.push(sortedArray[i]);
+    }
+    prevElement = sortedArray[i];
+  }
+  return newArray;
+}
+
+unique(array); // [1, 'a']
+```
+
+  
+
+此方法适用于已经排序好的数组，相对于`indexOf`性能上有优势。
+
+  
+
+### 封装uniqueAPI
+
+了解了这两种去重的方法以后，我们可以试着去写一个名为`unique`的工具函数。我们根据一个函数`isSorted`判断传入的数组是否已排序，如果为`true`，我们就判断相邻元素是否相同，如果为`false`我们就使用`indexOf`进行判断
+
+  
+
+```javascript
+var array = [1, 'a', 1, 'a'];
+
+// 第一版
+function unique(array, isSorted) {
+	var newArray = [];
+  var prevElement;
+  
+  for (var i = 0, len = array.length; i < len; i++) {
+  	if (isSorted) {
+    	if (!i || prevElement !== array[i]) {
+      	newArray.push(array[i]);
+      }
+      prevElement = array[i];
+    } else if (newArray.indexOf(array[i]) === -1) {
+    	newArray.push(array[i]);
+    }
+  }
+  return newArray;
+}
+
+unique(array, true); // [1, 'a']
+```
+
+  
+
+优化： 尽管现在的`unique`已经达到去重的要求了，但是我们来考虑一个需求： 
+
+新需求： 字母的大小写视为一致,比如"a"和"A"，只保留一个就可以了
+
+虽然这个需求很鸡肋，可以在去重前先对数组进行处理，但我们在预处理的时候也需要进行一次循环。那我们可以给`unique API`加一个预处理函数作为参数呢。直接在工具函数的循环中进行处理是不是会更好呢？让我们来完成这个需求：
+
+  
+
+```javascript
+var arr = [1, 1, 'a', 'A', '2', '2'];
+
+/**
+ * 第二版
+ * {iteratee} 预处理函数
+*/
+function unique(array, isSorted, iteratee) {
+	var newArray = [];
+  var prevElement = [];
+  
+  for (var i = 0, len = array.length; i < len; i++) {
+  	var value = iteratee ? iteratee(array[i], i, array) : array[i];
+    if (isSorted) {
+    	if (!i || prevElement !== value) {
+      	newArray.push(array[i]);
+      }
+      prevElement = value;
+    } else if (iteratee) {
+    	if (prevElement.indexOf(value) === -1) {
+      	prevElement.push(value);
+        newArray.push(array[i]);
+      }
+    } else if (newArray.indexOf(array[i]) === -1) {
+    	newArray.push(array[i]);
+    }
+  }
+  return newArray;
+}
+
+unique(arr, true, function(item) {
+	return typeof item === 'string' ? item.toUpperCase() : item;
+}); // [1, 'A', '2']
+```
+
+  
+
+这一版才算是完美，在这一版的实现中，`unique`函数传递了三个参数：
+
+1.  `array` ：待转化的原始数组
+2.  `isSorted`：原始数组是否已排序，如果为`true`，将会采用性能更优的去重方法
+3.  `iteratee`：预处理函数，该函数可以对每一个元素进行重新计算，然后根据处理的结果进行去重
+
+  
+
+### ES5去重方法
+
+除了原始的方法以外，ES5提供了一个更方便的API来处理原始去重方法：
+
+我们可以使用`filter`函数代替外层循环，使用`indexOf`方法来实现：
+
+  
+
+```javascript
+var array = [1, 2, 1, 1, '1'];
+
+function unique(array) {
+	var newArray = array.filter(function(item, index, array) {
+  	return array.indexOf(item) === index;
+  })
+  return newArray;
+}
+
+unique(array); // [1, 2, '1']
+```
+
+  
+
+排序去重的方法 ：
+
+  
+
+```javascript
+var array = [1, 2, 1, 1, '1'];
+
+function unique(array) {
+	return array.concat().sort().filter(function(item, index, array) {
+  	return array.indexOf(item) === index;
+  })
+}
+
+unique(array); // [1, '1', 2,]
+```
+
+  
+
+#### object键值对
+
+去重的方法众多，我们再来想想是否还有别的方法呢？用对象是不是可以实现呢
+
+我们用一个空的`Object`对象，我们把数组的值存成`Object`的`key`值，比如`Object[value1] = true`，在判断另一个值的时候，如果`Object[value2]` 存在的话，就说明该值是重复的。示例代码如下：
+
+  
+
+```javascript
+var array = [1, 1, '1', '2'];
+
+function unique(array) {
+	var obj = {};
+  return array.filter(function(item, index, array) {
+  	return obj.hasOwnProperty(item) ? false : (obj[item] = true);
+  })
+}
+
+unique(array); // [1, '2']
+```
+
+  
+
+显然这个方法还是存在一定问题的，1 和 '1' 判断成了同一个值， 这是因为对象的键值只能是字符串，所以我们可以使用`typeof item + item`拼成字符串作为`key`值来避免这个问题：
+
+  
+
+```javascript
+var array = [1, 1, '1', '2'];
+
+function unique(array) {
+	var obj = {};
+  return array.filter(function(item, index, array) {
+  	return obj.hasOwnProperty(typeof item + item) ? false : (obj[typeof item + item] = true);
+  })
+}
+
+unique(array); // [1, '1', '2']
+```
+
+  
+
+然后，即便如此，我们依然无法正确区分两个对象，比如`{ value: 1 }`和`{ value: 1 }`，因为`typeof item + item` 的结果都会是`object[object object]`，不过我们可以使用`JSON.stringify`将对象序列化：
+
+  
+
+```javascript
+var array = [{value: 1}, {value: 1}, {value: 2}];
+
+function unique(array) {
+	var obj = {};
+  return array.filter(function(item, index, array) {
+  	console.log(typeof item + JSON.stringify(item));
+    return obj.hasOwnProperty(typeof item + JSON.stringify(item)) ? false: (obj[typeof item + JSON.stringify(item)] = true);
+  })
+}
+
+unique(array); // [{value: 1}, {value: 2}]
+```
+
+  
+
+### ES6去重方法
+
+随着ES6的到来，去重的方法又有了新的进展，比如我们可以使用`Set`和`Map`数据结构，以`Set`为例，ES6提供了新的数据结构`Set`。它类似于数组，但是成员的值都是唯一的，没有重复的值。
+
+  
+
+我们用`Set`方法来实一下：
+
+  
+
+```javascript
+const array = [1, 1, '1', '2'];
+
+function unique(array) {
+	return Array.from(new Set(array));
+}
+
+unique(array); // [1, '1', '2']
+
+// 再简化一下
+function unique(array) {
+	return [...new Set(array)];
+}
+
+// 箭头函数表示
+const unique = (array) => [...new Set(array)];
+
+unique(array); // [1, '1', '2']
+```
+
+  
+
+用Map方法实现一下：
+
+  
+
+```javascript
+function unique(array) {
+	const seen = new Map();
+  return array.filter((a) => !seen.has(a) && seen.set(a, 1))
+}
+
+unique(array); // [1, '1', '2']
+```
+
+  
+
+从ES6的实现方法可以体验到JavaScript的发展速度，从14代码精简到1行代码实现。感觉有点东西，但是值得警醒的是，如果我们的学习速度跟不上js的发展速度，那也体会不到js的方便与实用了。所以还是好好学习吧，朋友们
+
+  
+
+### 特殊类型比较
+
+去重的方法到此结束了，然而去重的元素类型可能是多种多样的，除了例子中的 1 和 '1' ，其实还有`null、undefined、NaN、对象`等，那么对于这些方法的去重结果又是怎样呢？
+
+  
+
+在此之前我们先来看下类型比较的例子：
+
+  
+
+```javascript
+var str1 = '1';
+var str2 = new String('1');
+
+console.log(str1 == str2); // true
+console.log(str1 === str2); // false
+
+console.log(null == null); // true
+console.log(null === null); // true
+
+console.log(undefined == undefined); // true
+console.log(undefined === undefined); // true
+
+console.log(NaN == NaN); // false
+console.log(NaN === NaN); // false
+
+console.log(/a/ == /a/); // false
+console.log(/a/ === /a/); // false
+
+console.log({} == {}); // false
+console.log({} === {}); // false
+```
+
+  
+
+那么对于一个这样的数组
+
+  
+
+```javascript
+var array = [1, 1, '1', '1', null, null, undefined, undefined, NaN, NaN, {}, {}, new String('1'), /a/, /a/]
+```
+
+  
+
+以上这些类型的去重结果到底是怎样的呢？
+
+  
+
+这里亚于大大提供了一个列表，我这里就直接引用了，我们重点关注下对象和`NaN`的去重情况：
+
+  
+
+![image.png](语雀备份/javaScript疑难梳理/assets/数组去重-1.png)
+
+  
+
+想了解为什么会出现以上结果，看两个demo就明白了：
+
+  
+
+```javascript
+// demo1
+var arr = [1, 2, NaN]; 
+arr.indexOf(NaN); // -1
+```
+
+  
+
+其实`indexOf`方法的底层还是采用`===`进行判断，因为`NaN``===NaN`的结果为false，所以`indexOf`方法查找不到`NaN`
+
+  
+
+```javascript
+// demo2
+function unique(array) {
+	return Array.from(new Set(array));
+}
+console.log(unique([NaN, NaN])); // NaN
+```
+
+  
+
+Set认为尽管`NaN === NaN` 为false，但是两个元素是重复的，还是会去重。
+
+  
+
+### 总结
+
+按照冴羽大大的博客跟着写demo，写完这篇文章，才发现想要实现一个完美的去重函数还是不那么容易呀，虽然本文大部分内容摘抄自原博客，但是，跟着demo走，理解原理，这就够了。写这个一个是为了当作笔记，另一个是希望对您有帮助。如果觉得我写得不是很好可以去看下[冴羽](https://github.com/mqyqingfeng/Blog/issues/27)[大大的原文](https://github.com/mqyqingfeng/Blog/issues/27)

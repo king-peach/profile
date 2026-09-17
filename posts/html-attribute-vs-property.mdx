@@ -1,0 +1,116 @@
+---
+title: "HTML中Attribute和JS中Property的区别"
+slug: "html-attribute-vs-property"
+date: "2019-03-26T00:00:00.000+08:00"
+lastModified: "2019-03-26"
+description: "HTML中Attribute和JS中Property的区别 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+`Property`和`Attribute`在开发中是非常容易混淆的两个概念，两个单词的中文翻译也很接近（`Property`: 属性, `Atrribute`: 特性）。实际两者是不同的概念，属于不同的范畴：
+
+-   Property 是DOM中的属性，属于Javascript中内置对象
+-   Atrribute 是HTML标签上的特性，它的值一定是字符串  
+      
+    
+
+#### Property和Attribute 的关系
+
+  
+
+简单的理解，`Attribute`是HTML标签内部所包含的特性和该标签的默认特性。而`Property`是DOM中包含该标签的所有附加内容， 当然也包括`attributes`对象。
+
+  
+
+```html
+<div class="text" id = "text1" title="111" title1="2222">111</div>
+```
+
+![image.png](语雀备份/javaScript疑难梳理/assets/HTML中Attribute和JS中Property的区别-1.png)
+
+  
+
+如上图所示：这个对象中的部分属性和HTML的`Attribute`特性是重合的（比如说：id、name、title）。但不包含title1这个自定义属性。这是因为每一个DOM对象都会有它默认的基本属性，而在创建的时候，它只会创建基本属性，我们在TAG标签中自定义的属性是不会直接放在DOM中的。那么标签自定义的属性去哪儿了呢？再仔细观察一下这个对象中有一个`attributes`属性中包含有title1，再打开来看看是不是我们自定义的属性：
+
+  
+
+![image.png](语雀备份/javaScript疑难梳理/assets/HTML中Attribute和JS中Property的区别-2.png)
+
+  
+
+诶，还真是自定义属性。而`attributes`是`Property`的子集，自定义属性属于`attributes`的属性，所以标签的自定义属性是`Property`的子集。而一些常见属性比如id、name、classNmae都会存在与`Property`中。如果我们再进一步探索`attributes`中的每一个属性，会发现它们并不是简单的对象，它是一个Attr类型的对象，拥有`NodeType`、`NodeName`等属性。注意：打印`attributes`属性不会直接得到对象的值，而是获取一个包含属性名和值的字符串。
+
+  
+
+#### Property和Attribute的取值和赋值
+
+-   Attribute取值
+
+《javascript高级程序设计》中提到，为了方便操作，建议大家用`getAttribute()`和`setAttribute()`来操作即可。`getAttribute()`可以取得任何标签特性，不管是标准的还是自定义的。但是这个方法存在浏览器兼容性问题，有的浏览器可能会获取属性的`Property`的值，所以需要做一个简单的测试，看`getAttribute()`是否获取特性`Attribute`的值。
+
+  
+
+```javascript
+var div = document.querySelector('#text');
+div.className = 'foo';
+div.getAttribute('className') === 'foo';
+```
+
+  
+
+如果以上判断成立。则说明`getAttribute()`方法存在问题。请不要使用
+
+  
+
+-   Attribute赋值
+
+用`setAtttibute()`方法可以给任何Attribute特性赋值，包括标准的和自定义的，而且赋值的Attribute都会立刻表现在DOM元素上。使用`setAttibute()`方法赋值时，两个参数都必须是字符串
+
+  
+
+-   Property取值
+
+DOM对象Property取值的方式很简单，因为它是对象，所以直接用对象的取值方法即可，一般情况下使用“.”运算符，有的特性在Proprty中的属性名不尽相同，比如说class在Property中被存储在className属性中。
+
+  
+
+-   Property赋值
+
+DOM对象Property的赋值也很简单，采用对象的赋值方式即可，但是值得注意的是：属性Property可以赋任意类型的值，而Attribute只能赋字符串类型的值，而且在IE浏览器中Property赋值可能会引起循环引用，内存泄漏，为防止这个问题，jQuery.data()做了特殊处理。
+
+  
+
+#### Property和Attribute中的value值
+
+对于表单元素中的value值，Attribute和Property有不一样的表达方式。
+
+  
+
+```html
+<input value="111" id="text">
+<script type="text/javascript">
+ var input = document.querySelector('#text');
+  input.value = 'aaa'
+  console.info(input.value); /// aaa
+  console.info(input.getAttribute('value')); // 111
+</script>
+<script type="text/javascript">
+var input = document.querySelector('#text');
+  input.setAttribute('value', '111');
+  console.info(input.value); // 111
+  console.info(input.getAttribute('value')); // 111
+</script>
+```
+
+  
+
+从以上代码可知：通过Property修改的值，并不会修改特性。但是通过setAttribute设置的值会影响Property的值。但是需要注意的是，第一次通过Property赋值会改变Property中的value属性值，输入框显示的也是这个值，而setAttribute()方法是给Property中attributes对象中的value属性赋值。输入框优先显示Property中的value值，如果Property中的value为空，再去attributes对象中查找value值
+
+  
+
+> 参考文档：[JS中attribute和property的区别](https://www.cnblogs.com/lmjZone/p/8760232.html)

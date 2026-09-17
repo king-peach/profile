@@ -1,0 +1,42 @@
+---
+title: "url参数截取方法"
+slug: "javascript-url-params"
+date: "2020-05-08T00:00:00.000+08:00"
+lastModified: "2020-05-08"
+description: "url参数截取方法 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+## 一、字符串截取法
+
+通过location.search获取url中的参数部分，即 '?' 后面那一段字符串，需要注意的是，当url中包含 '#' 并且这个 '#' 在 '?' 前面的时候，search方法获取的字符串为空。上代码：
+
+```javascript
+function getQueryVariable(variable) {
+	var query = location.search.subString(1);
+  var options = query.split('&');
+  for (var i = 0, len = options.length; i < len; i++) {
+		var option = options[i].split('=');
+    if (option[0] === variable) return option[1]
+  }
+  return '';
+}
+```
+
+## 二、正则匹配
+
+```javascript
+function getQueryString(name) {
+    var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+        return unescape(r[2]);
+    }
+    return '';
+}
+```

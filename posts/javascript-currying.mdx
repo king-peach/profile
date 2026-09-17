@@ -1,0 +1,408 @@
+---
+title: "函数柯里化"
+slug: "javascript-currying"
+date: "2019-04-30T00:00:00.000+08:00"
+lastModified: "2019-04-30"
+description: "函数柯里化 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+简介
+
+**柯里化**，即**Currying**的音译。**Currying**是编译原理实现多参函数的一个技术。
+
+  
+
+在说Javascript中柯里化之前，可以了解一下原始的Currying是什么，又是从何而来？
+
+  
+
+**Currying** 为实现多参函数提供一个递归讲解的实现思路---**把接受多个参数的函数变换成接受一个单一参数(最初的函数的第一个参数)的函数，并且返回接受余下的参数而且返回结果的新函数**。
+
+  
+
+在某些编程语言中(如Haskell)，是通过Currying技术支持多参函数这一语言特性的，所以**Currying**原本是一门编译原理层面的技术，用途是**实现多参函数**
+
+举个例子：
+
+  
+
+```javascript
+function add(a, b) {
+	return a + b;
+}
+
+// 执行add函数，一次传入两个参数即可
+add(1, 2);
+
+// 假设有一个 curry函数可以做到柯里化
+var addCurry =  curry(add);
+addCurry(1)(2) // 3
+```
+
+  
+
+### 用途
+
+我们会讲如何写出这个curry函数，并且会将这个curry函数写的很强大，但是在编写之前我们要知道curry函数到底有啥用？
+
+  
+
+举个例子：
+
+  
+
+```javascript
+// 示意而已
+function ajax(type, url, data) {
+	var xhr = new XMLHttpRequest();
+  xhr.open(type, url, true);
+  xhr.send(data);
+}
+
+// 虽然这个ajax函数非常通用，但是在重复调用的时候参数冗余
+ajax('GET', 'www.test.com', 'name=kevin');
+ajax('GET', 'www.test_1.com', 'name=john');
+ajax('GET', 'www.test_2.com', 'name=stephon');
+
+// 利用curry
+var ajaxCurry = curry(ajax);
+
+// 以 GET 类型请求数据
+var get = ajaxCurry('GET');
+get('www.test.com', 'name=kevin');
+
+// 以GET请求来自www.test,com的数据
+var getFromTest = curry(get);
+getFromTest('name=kevin');
+```
+
+  
+
+在JQuery中虽然有$.ajax这种方法，但是也有$.get和$.post的语法糖。(JQuery底层是否是这样做的,我也没去研究了)
+
+  
+
+curry的这种用途可以理解为：参数复用。本质上是降低通用性，提高适用性。
+
+  
+
+但是这样看起来，怎么感觉更复杂了呢？
+
+  
+
+如果我们把参数一个个传进去，意义可能不大。但是如果我们是把柯里化后的函数传给其他函数，比如map呢？
+
+  
+
+举个例子：
+
+  
+
+比如我们有这样一段数据：
+
+  
+
+```javascript
+var person = [{name: 'kevin'}, {name: 'john'}];
+```
+
+  
+
+如果我们要获取所有的name值，我们可以这样做：
+
+  
+
+```javascript
+var result = person.map(function(item) {
+  return item.name;
+})
+```
+
+  
+
+如果我们有curry函数的话，就是这样：
+
+  
+
+```javascript
+var prop = curry(function(key, obj) {
+	return obj[key];
+})
+
+var name = person.map(prop('name'));
+```
+
+  
+
+我们为了获取name属性还要在编写一个prop函数，是不是又麻烦了些？
+
+  
+
+但是要注意的是，prop函数编写一次后，以后可以多次使用，实际上代码从三行缩减为一行，而且看代码是不是更加易懂了？
+
+  
+
+person.map(prop('name'))就好像直白的告诉你：person对象遍历(map)获取prop(name)的属性值。
+
+  
+
+或许看到这里可能还是一脸懵逼，不着急，看看下面的示例是否能理解？
+
+  
+
+### 第一版
+
+未来我们会接触到更多有关柯里化的应用，不过那是未来的事了，现在我们先来编写这个curry函数。
+
+  
+
+一个经常会看到的curry函数的实现为：
+
+  
+
+```javascript
+// 第一版
+var curry = function(fn) {
+	var args = [].slice.call(arguments, 1); // 收集curry方法的非第一元素参数列表,并格式化类数组
+  return function() {
+  	var newArgs = args.concat([].slice.call(arguments));
+    return fn.apply(this, newArgs);
+  }
+}
+```
+
+  
+
+我们可以这样使用：
+
+  
+
+```javascript
+function add(a, b) {
+	return a + b;
+}
+
+var addCurry = curry(add, 1, 2);
+addCurry(); // 3
+// 或者
+var addCurry = curry(add, 1);
+addCurry(2); // 3
+// 又或者
+var addCurry = curry(add);
+addCurry(1, 2); // 3
+```
+
+  
+
+已经有柯里化的感觉了, 但是还没有达到要求, 不过我们可以把这个函数用作辅助函数, 帮助我们写真正的curry函数
+
+  
+
+### 第二版
+
+  
+
+```javascript
+// 第二版
+function sub_curry(fn) {
+  var args = [].slice.call(arguments, 1);
+  return function() {
+  	return fn.apply(this, args.concat([].slice.call(arguments)));
+  }
+}
+
+function curry(fn, length) {
+	var length = length || fn.length;
+  
+  var slice = Array.prototype.slice;
+  
+  return function() {
+  	if (arguments.length < length) {
+    	var combine = [fn].concat(slice.call(arguments));
+      return curry(sub_curry.apply(this, combine), length - arguments.length);
+    } else {
+    	return fn.apply(this, arguments);
+    }
+  };
+}
+```
+
+  
+
+我们验证下这个函数：
+
+  
+
+```javascript
+var fn = curry(function(a, b, c) {
+	return [a, b, c];
+})
+
+fn(1, 2, 3); // [1, 2, 3]
+fn(1, 2)(3); // [1, 2, 3]
+fn(1)(2)(3); // [1, 2, 3]
+fn(1)(2, 3); // [1, 2, 3]
+```
+
+  
+
+效果达到了我们的预期，但是这个curry实现有点难理解……（特别是这个combine的实现）,还有一点小瑕疵，参数必须按照fn的规则来设置
+
+  
+
+为了让大家能更好的理解这个curry函数，我给大家写了一个极简版的代码
+
+  
+
+```javascript
+function curry(fn, args) {
+	var length = fn.length;
+  
+  args = args || [];
+  
+  return function() {
+  	var _args = args.slice(0), arg, i;
+    
+    for (i = 0; i < arguments.length; i++) {
+    	arg = arguments[i];
+      _args.push(arg);
+    }
+    
+    if (_args.length < length) {
+    	return curry.call(this, fn, _args);
+    } else {
+    	return fn.apply(this, _args);
+    }
+  }
+}
+
+var fn = curry(function(a, b, c) {
+	return [1, 2, 3];
+});
+
+fn(1, 2, 3); // [1, 2, 3]
+fn(1, 2)(3); // [1, 2, 3]
+fn(1)(2, 3); // [1, 2, 3]
+fn(1)(2)(3); // [1, 2, 3]
+```
+
+  
+
+这个方法相对来说容易理解一些把～～
+
+  
+
+### 第三版
+
+curry函数写到这里其实已经很完善了，但是注意这个函数的传餐顺序必须是从左至右，根据形象的顺序一次传入，如果我不想根据这个顺序传呢？
+
+  
+
+我们可以创建一个占位符，比如这样：
+
+  
+
+```javascript
+var fn = curry(function(a, b, c) {
+	console.log([a, b , c]);
+})
+
+fn(1, _, 2)(3); // [1, 2, 3]
+```
+
+  
+
+我们直接来看第三版代码：
+
+  
+
+```javascript
+// 第三版
+function curry(fn, args, holes) {
+    length = fn.length;
+
+    args = args || [];
+
+    holes = holes || [];
+
+    return function() {
+
+        var _args = args.slice(0),
+            _holes = holes.slice(0),
+            argsLen = args.length,
+            holesLen = holes.length,
+            arg, i, index = 0;
+
+        for (i = 0; i < arguments.length; i++) {
+            arg = arguments[i];
+            // 处理类似 fn(1, _, _, 4)(_, 3) 这种情况，index 需要指向 holes 正确的下标
+            if (arg === _ && holesLen) {
+                index++
+                if (index > holesLen) {
+                    _args.push(arg);
+                    _holes.push(argsLen - 1 + index - holesLen)
+                }
+            }
+            // 处理类似 fn(1)(_) 这种情况
+            else if (arg === _) {
+                _args.push(arg);
+                _holes.push(argsLen + i);
+            }
+            // 处理类似 fn(_, 2)(1) 这种情况
+            else if (holesLen) {
+                // fn(_, 2)(_, 3)
+                if (index >= holesLen) {
+                    _args.push(arg);
+                }
+                // fn(_, 2)(1) 用参数 1 替换占位符
+                else {
+                    _args.splice(_holes[index], 1, arg);
+                    _holes.splice(index, 1)
+                }
+            }
+            else {
+                _args.push(arg);
+            }
+
+        }
+        if (_holes.length || _args.length < length) {
+            return curry.call(this, fn, _args, _holes);
+        }
+        else {
+            return fn.apply(this, _args);
+        }
+    }
+}
+
+var _ = {};
+
+var fn = curry(function(a, b, c, d, e) {
+    console.log([a, b, c, d, e]);
+});
+
+// 验证 输出全部都是 [1, 2, 3, 4, 5]
+fn(1, 2, 3, 4, 5);
+fn(_, 2, 3, 4, 5)(1);
+fn(1, _, 3, 4, 5)(2);
+fn(1, _, 3)(_, 4)(2)(5);
+fn(1, _, _, 4)(_, 3)(2)(5);
+fn(_, 2)(_, _, 4)(1)(3)(5)
+```
+
+  
+
+至此，我们就实现了一个强大的curry函数，可是这个curry函数符合柯里化的定义吗？柯里化就是将多参数函数转化成多个单一参数的函数。
+
+  
+
+### 结论
+
+起初我本来是不打算写这个文章的，在我google了一些函数柯里化的内容以后，我发现这个概念的实现方法比较复杂，我又不具备模拟的能力，但是既然看都看了，还是要写点东西，以备日后复习。
+
+这篇文章主要是摘抄自[冴羽大大](https://github.com/mqyqingfeng/Blog/issues/42)的博客内容，具体我也只理解了前两版的内容。这篇博客跟我理解的函数柯里化还有些出入，可惜我基础太差，没法自己写一个比较完善的实现方法。这边还有另外以为大牛的博客也详细讲解了柯里化的模拟实现，大家可以去看下：[深入详解函数的柯里化](https://www.jianshu.com/p/5e1899fe7d6b) 。如果发现还不是很理解的话，可以自行google

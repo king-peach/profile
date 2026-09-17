@@ -4,13 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../ThemeContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import SpotlightCard from "../ui/SpotlightCard";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { FiArrowRight, FiLoader, FiTag } from "react-icons/fi";
+import { FiArrowRight, FiClock, FiLoader, FiTag } from "react-icons/fi";
 
-// Notion 类型定义
 type NotionRichText = { plain_text?: string }[];
 type NotionProperty = {
   type: string;
@@ -31,11 +29,9 @@ type NotionPage = {
   properties?: Record<string, NotionProperty>;
 };
 
-// 开发与生产均使用静态 JSON，不调用 Notion API（需先执行 npm run fetch-notion）
 const USE_STATIC_DATA = import.meta.env.VITE_USE_STATIC_DATA !== "false";
 const DATABASE_ID = import.meta.env.VITE_NOTION_DATASOURCE_ID;
 
-// 提取属性值
 function extractTitle(p: NotionPage): string {
   const props = p.properties || {};
   for (const key of Object.keys(props)) {
@@ -73,8 +69,6 @@ function extractMultiSelect(prop?: NotionProperty): { name: string; color: strin
   return prop.multi_select.map((s) => ({ name: s.name || "", color: s.color || "default" }));
 }
 
-// 用于排序的“有效时间”：与文章列表保持一致：
-// PublishDate / 发布日期 / 日期 / Date > last_edited_time > created_time
 function getEffectiveDate(page: NotionPage): string | null {
   const props = page.properties || {};
   const dateProp =
@@ -101,7 +95,6 @@ function selectTopArticles(pages: NotionPage[], limit = 4): NotionPage[] {
     .slice(0, limit);
 }
 
-// Notion 颜色映射
 const notionColors: Record<string, string> = {
   default: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
   gray: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
@@ -115,7 +108,6 @@ const notionColors: Record<string, string> = {
   red: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
-// 获取最近文章 Hook
 function useRecentArticles() {
   const [articles, setArticles] = useState<NotionPage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,13 +117,11 @@ function useRecentArticles() {
     async function fetchArticles() {
       try {
         if (USE_STATIC_DATA) {
-          // 生产环境：从静态 JSON 读取
           const res = await fetch("/data/articles.json");
           if (!res.ok) throw new Error("加载静态数据失败");
           const json = await res.json();
           setArticles(selectTopArticles(json.results || []));
         } else {
-          // 开发环境：从 API 代理获取
           if (!DATABASE_ID) {
             setError("未配置数据源");
             setLoading(false);
@@ -183,50 +173,54 @@ function useRecentArticles() {
   return { articles, loading, error };
 }
 
+function getArticleMeta(article: NotionPage, isEn: boolean) {
+  const props = article.properties || {};
+  const slugTitle = extractText(props["slug"] || props["Slug"] || props["SLUG"]);
+  const title = (isEn ? slugTitle : "") || extractTitle(article);
+  const summary = extractRichText(
+    props["summary"] || props["摘要"] || props["Summary"] || props["描述"] || props["Description"]
+  );
+  const summaryEn = extractText(props["summaryEn"] || props["SummaryEn"] || props["SummaryEN"]);
+  const displayedSummary = (isEn ? summaryEn : "") || summary;
+  const tags = extractMultiSelect(props["标签"] || props["Tags"] || props["tags"]);
+  const date =
+    extractDate(
+      props["PublishDate"] ||
+        props["发布日期"] ||
+        props["日期"] ||
+        props["Date"]
+    ) || article.last_edited_time;
+
+  return { title, displayedSummary, tags, date };
+}
+
 const Blog: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { baseCard, baseText, accentText, dark } = useTheme();
+  const { baseText, accentText, accent, dark } = useTheme();
   const { articles, loading, error } = useRecentArticles();
-  
-  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+  const isEn = i18n.language.startsWith("en");
 
   useEffect(() => {
-    // 标题动画
-    gsap.fromTo(titleRef.current,
-      { y: 50, opacity: 0 },
+    gsap.fromTo(
+      [headerRef.current, cardsRef.current],
+      { y: 36, opacity: 0 },
       {
         y: 0,
         opacity: 1,
-        duration: 0.8,
+        duration: 0.7,
+        stagger: 0.12,
         scrollTrigger: {
-          trigger: titleRef.current,
-          start: "top bottom-=100",
-          toggleActions: "play none none reverse"
-        }
+          trigger: sectionRef.current,
+          start: "top bottom-=110",
+          toggleActions: "play none none reverse",
+        },
       }
     );
-  }, []);
-
-  useEffect(() => {
-    // 卡片动画 - 数据加载后触发
-    if (!loading && cardsRef.current && cardsRef.current.children.length > 0) {
-      gsap.fromTo(Array.from(cardsRef.current.children),
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.2,
-          scrollTrigger: {
-            trigger: cardsRef.current,
-            start: "top bottom-=50",
-            toggleActions: "play none none reverse"
-          }
-        }
-      );
-    }
-  }, [loading, articles]);
+  }, [loading]);
 
   const navigateTo = (target: string, { newTab = false } = {}) => {
     if (newTab) {
@@ -251,140 +245,198 @@ const Blog: React.FC = () => {
     }
   };
 
-  const handleArticleKeyDown = (
-    event: React.KeyboardEvent<HTMLDivElement>,
-    article: NotionPage,
-  ) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleArticleOpen(article);
-    }
-  };
+  const featuredArticle = articles[0];
+  const latestArticles = articles.slice(1);
 
   return (
-    <section id="blog" className="py-12 md:py-16 px-4 md:px-6 max-w-7xl mx-auto" style={{ color: baseText }} data-component="Blog">
-      {/* 标题行：左侧标题 + 右侧查看更多 */}
-      <div className="flex items-center justify-between mb-8 md:mb-10">
-        <h2 ref={titleRef} className="font-bold text-xl md:text-2xl" style={{ color: accentText }}>
-          {t('blog.header')}
-        </h2>
+    <section
+      ref={sectionRef}
+      id="blog"
+      className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20"
+      style={{ color: baseText }}
+      data-component="Blog"
+    >
+      <div ref={headerRef} className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: accent }}>
+            Writing & Thinking
+          </div>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-4xl" style={{ color: accentText }}>
+            {t("blog.header")}
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed opacity-80 md:text-base">
+            {t("blog.lead")}
+          </p>
+        </div>
         <button
           onClick={handleViewMore}
-          className={cn(
-            "flex items-center gap-1.5 text-sm font-medium transition-all",
-            "hover:gap-2.5"
-          )}
-          style={{ color: accentText }}
+          className="inline-flex items-center gap-2 text-sm font-medium transition-all duration-300 hover:gap-3 md:text-base"
+          style={{ color: accent }}
         >
-          {t('blog.viewMore')}
-          <FiArrowRight className="w-4 h-4" />
+          {t("blog.viewMore")}
+          <FiArrowRight className="h-4 w-4" />
         </button>
       </div>
-      
-      {/* 加载状态 */}
+
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <FiLoader className="w-6 h-6 animate-spin text-blue-500" />
+          <FiLoader className="h-6 w-6 animate-spin" style={{ color: accent }} />
         </div>
       )}
 
-      {/* 错误状态 */}
       {error && !loading && (
-        <div className="flex items-center justify-center py-16">
-          <p className="text-sm" style={{ color: baseText }}>{error}</p>
+        <div className={`mt-8 rounded-3xl border p-6 ${dark ? "glass-dark" : "glass"}`} style={{
+          borderColor: `${accent}20`,
+        }}>
+          <p className="text-sm md:text-base">{error}</p>
         </div>
       )}
 
-      {/* 文章列表 */}
       {!loading && !error && (
-        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {articles.map((article) => {
-            const props = article.properties || {};
-            const isEn = i18n.language.startsWith("en");
-            const slugTitle = extractText(props["slug"] || props["Slug"] || props["SLUG"]);
-            const title = (isEn ? slugTitle : "") || extractTitle(article);
-            const readMoreAriaLabel = title
-              ? t("blog.readMoreAriaWithTitle", { title })
-              : t("blog.readMoreAria");
-            const summary = extractRichText(props["summary"] || props["摘要"] || props["Summary"] || props["描述"] || props["Description"]);
-            const summaryEn = extractText(props["summaryEn"] || props["SummaryEn"] || props["SummaryEN"]);
-            const displayedSummary = (isEn ? summaryEn : "") || summary;
-            const tags = extractMultiSelect(props["标签"] || props["Tags"] || props["tags"]);
-            // 发布时间：优先使用 Notion 的 PublishDate，其次退回到其它日期字段或最后编辑时间
-            const date =
-              extractDate(
-                props["PublishDate"] ||
-                props["发布日期"] ||
-                props["日期"] ||
-                props["Date"],
-              ) || article.last_edited_time;
+        <div ref={cardsRef} className="mt-10 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          {featuredArticle && (
+            <SpotlightCard spotlightColor={dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.08)"}>
+              <article
+                className={`h-full cursor-pointer rounded-[28px] border p-6 transition-all duration-300 hover:-translate-y-1 md:p-8 ${
+                  dark ? "glass-dark" : "glass"
+                }`}
+                style={{
+                  borderColor: `${accent}24`,
+                  backgroundColor: dark ? "rgba(24, 24, 48, 0.5)" : "rgba(255,255,255,0.68)",
+                }}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleArticleOpen(featuredArticle)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleArticleOpen(featuredArticle);
+                  }
+                }}
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: accent }}>
+                  {t("blog.featuredLabel")}
+                </div>
+                {(() => {
+                  const { title, displayedSummary, tags, date } = getArticleMeta(featuredArticle, isEn);
+                  return (
+                    <>
+                      <h3 className="mt-4 text-2xl font-bold leading-tight md:text-4xl" style={{ color: accentText }}>
+                        {title}
+                      </h3>
+                      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs opacity-70 md:text-sm">
+                        <span>{date ? format(new Date(date), "yyyy-MM-dd") : ""}</span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <FiClock className="h-3.5 w-3.5" />
+                          {isEn ? "Freshly synced from Notion" : "最新同步自 Notion"}
+                        </span>
+                      </div>
+                      <p className="mt-6 max-w-2xl text-sm leading-relaxed opacity-90 md:text-base">
+                        {displayedSummary || t("articles.noSummary")}
+                      </p>
+                      {tags.length > 0 && (
+                        <div className="mt-6 flex flex-wrap gap-2">
+                          {tags.slice(0, 4).map((tag, index) => (
+                            <span
+                              key={`${tag.name}-${index}`}
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs",
+                                notionColors[tag.color] || notionColors.default
+                              )}
+                            >
+                              <FiTag className="h-3 w-3" />
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold md:text-base" style={{ color: accent }}>
+                        {t("blog.readMore")}
+                        <FiArrowRight className="h-4 w-4" />
+                      </div>
+                    </>
+                  );
+                })()}
+              </article>
+            </SpotlightCard>
+          )}
 
-            return (
-              <SpotlightCard key={article.id} spotlightColor={dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.08)"}>
-                <Card className={cn("overflow-hidden transition-all hover:shadow-lg h-full flex flex-col", dark ? "bg-zinc-800 border-zinc-700" : "")}>
-                  <CardHeader>
-                    <CardTitle className="line-clamp-1" style={{ color: accentText }}>{title}</CardTitle>
-                    <CardDescription className="text-sm" style={{ color: baseText }}>
-                      {date ? format(new Date(date), "yyyy-MM-dd") : ""}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <p className="text-sm line-clamp-2 mb-3" style={{ color: baseText }}>
-                      {displayedSummary || "暂无摘要"}
+          <div className="grid gap-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: accent }}>
+              {t("blog.recentLabel")}
+            </div>
+            {latestArticles.map((article) => {
+              const { title, displayedSummary, tags, date } = getArticleMeta(article, isEn);
+              const readMoreAriaLabel = title
+                ? t("blog.readMoreAriaWithTitle", { title })
+                : t("blog.readMoreAria");
+
+              return (
+                <SpotlightCard
+                  key={article.id}
+                  spotlightColor={dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.06)"}
+                >
+                  <article
+                    className={`cursor-pointer rounded-[24px] border p-5 transition-all duration-300 hover:-translate-y-1 ${
+                      dark ? "glass-dark" : "glass"
+                    }`}
+                    style={{
+                      borderColor: `${accent}20`,
+                      backgroundColor: dark ? "rgba(24, 24, 48, 0.44)" : "rgba(255,255,255,0.62)",
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={readMoreAriaLabel}
+                    onClick={() => handleArticleOpen(article)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleArticleOpen(article);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs opacity-65">{date ? format(new Date(date), "yyyy-MM-dd") : ""}</div>
+                      <div className="text-xs font-medium" style={{ color: accent }}>
+                        {t("blog.readMore")}
+                      </div>
+                    </div>
+                    <h3 className="mt-3 text-lg font-bold leading-snug md:text-xl" style={{ color: accentText }}>
+                      {title}
+                    </h3>
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed opacity-80">
+                      {displayedSummary || t("articles.noSummary")}
                     </p>
-                    {/* 标签 */}
                     {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {tags.slice(0, 3).map((tag, i) => (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {tags.slice(0, 3).map((tag, index) => (
                           <span
-                            key={i}
+                            key={`${tag.name}-${index}`}
                             className={cn(
-                              "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs",
+                              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]",
                               notionColors[tag.color] || notionColors.default
                             )}
                           >
-                            <FiTag className="w-3 h-3" />
+                            <FiTag className="h-3 w-3" />
                             {tag.name}
                           </span>
                         ))}
-                        {tags.length > 3 && (
-                          <span className="text-xs text-gray-500">+{tags.length - 3}</span>
-                        )}
                       </div>
                     )}
-                  </CardContent>
-                  <CardFooter
-                    className="flex justify-end pt-2 border-t border-gray-100 dark:border-zinc-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-800"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleArticleOpen(article)}
-                    onKeyDown={(event) => handleArticleKeyDown(event, article)}
-                    aria-label={readMoreAriaLabel}
-                  >
-                    {(article.urlSlug || article.url) && (
-                      <a
-                        href={article.urlSlug ? `/article/${encodeURIComponent(article.urlSlug)}` : article.url}
-                        target={article.urlSlug ? undefined : "_blank"}
-                        rel={article.urlSlug ? undefined : "noreferrer"}
-                        className="text-sm font-medium hover:underline"
-                        onClick={(event) => event.stopPropagation()}
-                        style={{ color: accentText }}
-                      >
-                        {t('blog.readMore')} →
-                      </a>
-                    )}
-                  </CardFooter>
-                </Card>
-              </SpotlightCard>
-            );
-          })}
+                  </article>
+                </SpotlightCard>
+              );
+            })}
 
-          {/* 无数据时显示占位 */}
-          {articles.length === 0 && (
-            <div className="col-span-full text-center py-8">
-              <p className="text-sm" style={{ color: baseText }}>暂无文章</p>
-            </div>
-          )}
+            {articles.length === 0 && (
+              <div
+                className={`rounded-[24px] border p-6 ${dark ? "glass-dark" : "glass"}`}
+                style={{ borderColor: `${accent}20` }}
+              >
+                <p className="text-sm md:text-base">{t("articles.noArticles")}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </section>

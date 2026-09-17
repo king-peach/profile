@@ -1,0 +1,99 @@
+---
+title: "变量对象"
+slug: "javascript-variable-object"
+date: "2019-03-13T00:00:00.000+08:00"
+lastModified: "2019-03-13"
+description: "变量对象 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+当Javascript执行一段可执行代码时，会创建对应的可执行上下文，而每个可执行上下文又有三个重要属性： 
+
+\>  变量对象
+
+\>  作用域链
+
+\>  this
+
+而其中的变量对象就是与执行上下文相关的数据作用域，存储了在上下文中定义的变量和函数声明
+
+首先了解一下全局对象
+
+> 全局对象是预定义的对象，作为Javascrpt的全局函数和全局属性的占位符。通过使用全局对象，可以访问其他预定义的对象、函数和属性
+> 
+> 在顶层Javascript代码中，可以用关键字this引用全局对象。因为全局对象是作用域的头，这意味着所有非限        定性的变量和函数名都会作为该对象的属性来查询
+
+换句话说全局执行上下文的变量对象就是全局对象
+
+函数上下文
+
+在函数上下文中，我们用活动对象(Activation Object, AO)来表示变量对象，AO是在进入函数上下文的时刻被创建的，它通过函数的arguments属性初始化，函数的arguments属性值是Argument的对象，一般来说执行上下文的代码会分为两个阶段执行：
+
+1、进入执行上下文 (VO，但是VO中的属性不能被访问)
+
+2、代码执行（VO --> AO，AO中的属性可以被访问）
+
+在创建执行上下文的时候也就产生了变量对象、此时变量对象包括：
+
+1、函数的所有形参（没有实参，属性值设为undefined）
+
+2、函数声明（如果变量对象已经存在相同名称的属性，则完全替换这个属性）
+
+3、变量声明（如果变量名称跟已经声明的形式参数或函数相同，则变量声明不会干扰已经存在的这类属性）
+
+示例：
+
+  
+
+```javascript
+function foo(a) {
+	var b = 2
+  function c() {}
+  var d = function() {}
+  
+  b = 3
+}
+// 进入执行上下文时，AO是
+AO = {
+	arguments: {
+  	0: 1,
+    length: 1
+  },
+  b: undefined,
+  c: reference to function c() {}
+	d: undefined
+}
+// 在代码执行阶段，会顺序执行代码，根据代码，修改变量对象的值
+// 代码执行后，AO是
+AO = {
+	arguments: {
+  	0: 1,
+    length: 1
+  },
+  a: 1,
+  b: 2,
+  c: reference to function c() {}
+	d: reference to functionExpression 'd'
+}
+```
+
+  
+
+函数执行上下文中的变量对象可以总结为：
+
+1、全局上下文的变量对象初始化是全局对象
+
+2、函数上下文的变量对象初始化只包括Argument对象
+
+3、在进入执行上下文时会给变量对象添加形参、函数声明、变量声明
+
+4、在代码执行阶段，会再次修改变量对象的属性值
+
+  
+
+> 本资料内容参考自冴羽大神的博客：[传送门](https://github.com/mqyqingfeng/Blog/issues/5)

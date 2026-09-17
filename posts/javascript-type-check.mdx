@@ -1,0 +1,52 @@
+---
+title: "判断数据类型方法"
+slug: "javascript-type-check"
+date: "2019-09-12T00:00:00.000+08:00"
+lastModified: "2019-09-12"
+description: "判断数据类型方法 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+使用Object.prototype.toString配合闭包，通过传入不同的判断类型来返回不同的判断函数，一行代码，简洁优雅灵活。
+
+  
+
+### ES6的实现方法
+
+  
+
+```javascript
+const isType = type => target => `[object ${type}]` === Object.prototype.toString.call(target);
+// 使用
+const isArray = isType('Array');
+isArray([]); // true
+```
+
+  
+
+### ES5的实现方法
+
+  
+
+```javascript
+function isType(type) {
+	return function(target) {
+		return "[object " + type + "]" === Object.prototype.toString.call(target);
+	}
+};
+
+// 使用
+const isObject = isType('Object');
+isObject({}); // true
+```
+
+  
+
+### 结论
+
+需要注意的是这个函数不能用来检测可能会产生包装类型的基本数据类型上，因为call方法始终会将第一个参数进行装箱操作，导致基本类型和包装类型无法区分。

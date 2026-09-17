@@ -1,30 +1,15 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { ThemeProvider, useTheme } from "../components/ThemeContext";
-import Header from "../components/Header";
-import PrismBackground from "../components/ui/PrismBackground";
+import { InkProvider, InkNav } from "../styles/ink";
+import "../styles/ink.css";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import rehypeSlug from "rehype-slug";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import rehypePrism from "rehype-prism-plus/all";
 import SEO from "../components/SEO";
 import { format } from "date-fns";
 import { truncateDescription, DEFAULT_OG_IMAGE, SITE_URL } from "../config/seo";
-import { FiThumbsUp, FiShare2, FiClock, FiEye, FiCalendar, FiMessageCircle, FiHome, FiCopy, FiCheck, FiTrash2, FiEdit2, FiCornerDownRight, FiX, FiUser } from "react-icons/fi";
-import {
-  type Comment,
-  type UserInfo,
-  getCommentsByArticle,
-  addComment,
-  deleteComment,
-  toggleCommentLike,
-  getCurrentUser,
-  updateCurrentUser,
-  formatTimeAgo,
-} from "../lib/commentDB";
-import RandomAvatar from "../components/ui/RandomAvatar";
+import { FiThumbsUp, FiShare2, FiClock, FiEye, FiCalendar, FiHome, FiCopy, FiCheck } from "react-icons/fi";
 
 // Notion 文章类型定义
 type NotionRichText = { plain_text?: string }[];
@@ -55,22 +40,40 @@ type TocItem = {
   level: number;
   index: number;
 };
+type IdleWindow = Window & {
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
+const LazyCommentsSection = lazy(() => import("../components/article/CommentsSection"));
+const LazyCodeRenderer = lazy(() => import("../components/article/LazyCodeRenderer"));
 
 // 辅助函数
-function extractTitle(p: NotionPage): string {
+// 兼容两种 Notion rich_text 格式：{plain_text: "..."} 和 {text: {content: "..."}}
+function getPlainText(t: { plain_text?: string; text?: { content?: string } }): string {
+  return t.plain_text || t.text?.content || "";
+}
+
+function extractTitle(p: NotionPage, fallbackMarkdown?: string): string {
   const props = p.properties || {};
   for (const key of Object.keys(props)) {
     const prop = props[key];
     if (prop?.type === "title" && Array.isArray(prop.title) && prop.title.length > 0) {
-      return prop.title.map((t) => t.plain_text).join("") || "Untitled";
+      const text = prop.title.map(getPlainText).join("");
+      if (text) return text;
     }
+  }
+  // Fallback: 从 content_markdown 提取第一个 # 或 ## 标题
+  if (fallbackMarkdown) {
+    const m = fallbackMarkdown.match(/^#{1,2}\s+(.+)$/m);
+    if (m) return m[1].trim();
   }
   return "Untitled";
 }
 
 function extractRichText(prop?: NotionProperty): string {
   if (!prop || prop.type !== "rich_text") return "";
-  return prop.rich_text?.map((t) => t.plain_text).join("") || "";
+  return prop.rich_text?.map(getPlainText).join("") || "";
 }
 
 function extractDate(p: NotionPage): string | null {
@@ -90,7 +93,20 @@ function extractCover(p: NotionPage): string | null {
 function extractSummary(p: NotionPage): string {
   const props = p.properties || {};
   const summaryProp = props["summary"] || props["Summary"] || props["summaryEn"] || props["摘要"];
-  return summaryProp ? extractRichText(summaryProp) : "";
+  const fromProp = summaryProp ? extractRichText(summaryProp) : "";
+  if (fromProp) return fromProp;
+  // Fallback: 从 content_markdown 截取前 120 字
+  if (p.content_markdown) {
+    const plain = p.content_markdown
+      .replace(/^#{1,6}\s+.+$/gm, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/[#*`>\-\[\]()!]/g, "")
+      .replace(/\n+/g, " ")
+      .trim()
+      .slice(0, 120);
+    if (plain) return plain + "...";
+  }
+  return "";
 }
 
 function extractTags(p: NotionPage): { name: string; color: string }[] {
@@ -341,7 +357,7 @@ function ArticleHeader({ article }: { article: NotionPage }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language.startsWith("en");
 
-  const title = extractTitle(article);
+  const title = extractTitle(article, article?.content_markdown);
   const tags = extractTags(article);
   const date = extractDate(article);
   const formattedDate = useMemo(() => {
@@ -375,31 +391,15 @@ function ArticleHeader({ article }: { article: NotionPage }) {
 
   return (
     <section className="relative overflow-hidden">
-      {/* 渐变背景 */}
-      <PrismBackground
-        animationType="rotate"
-        timeScale={0.2}
-        colorFrequency={0.8}
-        glow={1.0}
-        bloom={1.0}
-        noise={0.1}
-        baseHue={280}
-        hueRange={80}
-        satBase={60}
-        satRange={30}
-        lumBase={70}
-        lumRange={15}
-        suspendWhenOffscreen
-        className="z-0 opacity-70"
+      {/* ink 渐变背景（替代 PrismBackground） */}
+      <div
+        className="detail-hero-gradient"
+        style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
       />
-      
+
       {/* Header */}
       <div className="relative z-10">
-        <Header
-          showNav={false}
-          showLanguage={true}
-          showTheme={true}
-        />
+        <InkNav />
       </div>
 
       {/* 文章信息 */}
@@ -577,9 +577,10 @@ function CodeBlock({ language, children }: { language: string; children: string 
     md: "markdown",
   };
   const normalizedLang = langMap[language] || language || "text";
+  const plainCodeClass = dark ? "text-gray-100 bg-[#1e1e2e]" : "text-gray-100 bg-[#1e293b]";
 
   return (
-    <div className="relative group my-6 rounded-xl overflow-hidden">
+    <div className="article-code-block relative group my-6 rounded-xl overflow-hidden">
       {/* 语言标签 + 复制按钮 */}
       <div className={`flex items-center justify-between px-4 py-2 text-xs ${dark ? "bg-gray-800" : "bg-gray-800"}`}>
         <span className="text-gray-400 uppercase font-mono">{normalizedLang}</span>
@@ -594,37 +595,50 @@ function CodeBlock({ language, children }: { language: string; children: string 
         </button>
       </div>
       {/* 代码区域 */}
-      <SyntaxHighlighter
-        language={normalizedLang}
-        style={oneDark}
-        showLineNumbers
-        lineNumberStyle={{ 
-          color: dark ? "#4b5563" : "#6b7280",
-          minWidth: "2.5em",
-          paddingRight: "1em",
-          userSelect: "none",
-        }}
-        customStyle={{
-          margin: 0,
-          padding: "1rem",
-          fontSize: "0.875rem",
-          lineHeight: "1.5",
-          background: dark ? "#1e1e2e" : "#1e293b",
-          borderRadius: 0,
-        }}
-        codeTagProps={{
-          style: { fontFamily: "'Fira Code', 'JetBrains Mono', Consolas, monospace" }
-        }}
+      <Suspense
+        fallback={
+          <pre className={`m-0 overflow-x-auto p-4 text-sm leading-6 font-mono ${plainCodeClass}`}>
+            <code>{code}</code>
+          </pre>
+        }
       >
-        {code}
-      </SyntaxHighlighter>
+        <LazyCodeRenderer code={code} dark={dark} language={normalizedLang} />
+      </Suspense>
     </div>
   );
 }
 
+// 裸围栏语言嗅探：根据首行代码特征猜测语言（嗅不出返回 "text"）
+export function sniffLang(firstLine: string): string {
+  const line = firstLine.trim();
+  if (!line) return "text";
+  // TypeScript 特征
+  if (/: (string|number|boolean|void|any|Promise<|Record<|Array<)/.test(line) || /<[A-Z]\w*>(\(|: )/.test(line) || /interface \w+|type \w+ =/.test(line)) return "typescript";
+  // JS/TS 通用特征
+  if (/\b(const|let|var|function|return|=>|async|await|import|export|class)\b/.test(line)) return "javascript";
+  // Python
+  if (/^\s*def\s+\w+\(|^\s*import\s+\w+$|^\s*from\s+\w+\s+import\b/.test(line)) return "python";
+  // Bash
+  if (/^(sudo |npm |yarn |pnpm |cd |ls|echo |curl |wget |git |docker |mkdir |rm |chmod |export )/.test(line) || /^#!/.test(line)) return "bash";
+  // SQL
+  if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|SHOW)\b/i.test(line)) return "sql";
+  // HTML
+  if (/^<\/?[a-z][\w-]*[\s>]/i.test(line)) return "html";
+  // CSS
+  if (/^[.#@:a-zA-Z][\w-]*\s*\{/.test(line)) return "css";
+  // JSON
+  if (/^[\[{"]/.test(line)) return "json";
+  // Go
+  if (/^package \w+|^func \w+\(/.test(line)) return "go";
+  // Java
+  if (/^public\s+(class|static|void)\b/.test(line)) return "java";
+  // 没有特征 → text（保持等宽展示，不强猜）
+  return "text";
+}
+
 // 过滤 Notion 特有格式
 function cleanNotionContent(content: string): string {
-  return content
+  let s = content
     // 移除 Notion 链接格式 [[链接]]
     .replace(/\[\[([^\]]+)\]\]/g, "$1")
     // 移除 Notion @mention 格式
@@ -647,6 +661,36 @@ function cleanNotionContent(content: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
+
+  // 归一化代码围栏：语雀/Notion 导出里存在 "```plain text"（带空格，
+  // react-markdown 视为无语言）与裸 ``` 围栏，导致代码块整块掉成纯文本。
+  // 用状态机逐行重写：只在"开围栏"处补语言（嗅探首行代码），闭合围栏保持裸 ```。
+  const lines = s.split("\n");
+  let inFence = false;
+  const fenceRe = /^```(.*)$/;
+  for (let i = 0; i < lines.length; i++) {
+    const m = fenceRe.exec(lines[i]);
+    if (!m) continue;
+    const info = m[1].trim();
+    if (!inFence) {
+      // 开围栏：plain text / 裸 → 补 text 或嗅探语言
+      if (!info) {
+        const firstLine =
+          lines.slice(i + 1).find((l) => l.trim().length > 0 && !/^```/.test(l.trim())) || "";
+        lines[i] = "```" + sniffLang(firstLine);
+      } else if (/^(plain|text|plain\s+text)$/i.test(info)) {
+        lines[i] = "```text";
+      }
+      inFence = true;
+    } else {
+      // 闭合围栏（可能带语言标记的坏数据，如 ```javascript 出现在闭合位）：
+      // 统一重写为裸 ```，保证 markdown 配对正确。
+      if (info) lines[i] = "```";
+      inFence = false;
+    }
+  }
+  s = lines.join("\n");
+  return s;
 }
 
 // 递归提取 React children 中的纯文本
@@ -679,7 +723,9 @@ function MarkdownContent({ content }: { content: string }) {
     return idCount.current[baseId] > 1 ? `${baseId}-${idCount.current[baseId]}` : baseId;
   };
 
-  useEffect(() => { idCount.current = {}; }, [cleanedContent]);
+  useEffect(() => {
+    idCount.current = {};
+  }, [cleanedContent]);
 
   // 列表项颜色
   const listColors = ["#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ec4899"];
@@ -688,7 +734,7 @@ function MarkdownContent({ content }: { content: string }) {
     <article className={`markdown-content ${dark ? "dark" : ""}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeSlug]}
+        rehypePlugins={[[rehypePrism, { ignoreMissing: true, showLineNumbers: false }]]}
         components={{
           img: ({ src, alt }) => <SafeImage src={src} alt={alt} />,
           h1: ({ children }) => {
@@ -729,10 +775,16 @@ function MarkdownContent({ content }: { content: string }) {
             </p>
           ),
           code: ({ className, children, ...props }) => {
-            const match = /language-(\w+)/.exec(className || "");
-            // 代码块
+            const match = /language-([\w+-]+)/.exec(className || "");
+            // 代码块：rehype-prism 已在 hast 里把内容替换为高亮 span/token，
+            // children 是 React 元素而非纯文本，直接透传（样式由 Prism 主题 CSS 承接）。
             if (match) {
-              return <CodeBlock language={match[1]}>{String(children)}</CodeBlock>;
+              return <>{children}</>;
+            }
+            // rehype-prism 对围栏代码（即使无语言）也会给 code.md-block 标记；
+            // 无语言标记的围栏块也要走块级展示，不能掉进行内样式。
+            if (props?.node?.tagName === "code" && String(className || "").includes("md-block")) {
+              return <>{children}</>;
             }
             // 行内代码
             return (
@@ -747,13 +799,37 @@ function MarkdownContent({ content }: { content: string }) {
               </code>
             );
           },
-          pre: ({ children }) => {
-            // 如果子元素是 CodeBlock，直接返回
-            if (React.isValidElement(children) && (children.type as any) === CodeBlock) {
-              return <>{children}</>;
-            }
-            // 否则返回简单的 pre
-            return <>{children}</>;
+          pre: ({ children, node, ...props }) => {
+            // 从 pre>code 的 className 提取语言（rehype-prism 阶段已加）
+            const codeEl: any = React.Children.toArray(children)[0];
+            const cls: string = (codeEl?.props?.className as string) || "";
+            const langMatch = /language-([\w+-]+)/.exec(cls);
+            const lang = (langMatch ? langMatch[1] : "").toUpperCase() || "CODE";
+            const rawText = extractTextFromChildren(children);
+
+            const handleCopy = async () => {
+              try {
+                await navigator.clipboard.writeText(rawText);
+              } catch {}
+            };
+
+            return (
+              <div className="article-code-block relative group my-6 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 text-xs bg-[#1e1e2e] border-b border-white/10">
+                  <span className="text-gray-400 uppercase font-mono">{lang}</span>
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1 px-2 py-1 rounded text-gray-400 hover:text-white transition-all"
+                  >
+                    <FiCopy className="w-4 h-4" />
+                    <span>复制</span>
+                  </button>
+                </div>
+                <pre className="m-0 p-0 overflow-x-auto text-sm leading-6" {...props}>
+                  {children}
+                </pre>
+              </div>
+            );
           },
           a: ({ href, children }) => (
             <a
@@ -893,7 +969,7 @@ function ArticleFooter({ article }: { article: NotionPage }) {
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
-      try { await navigator.share({ title: extractTitle(article), url }); } catch {}
+      try { await navigator.share({ title: extractTitle(article, article?.content_markdown), url }); } catch {}
     } else {
       navigator.clipboard.writeText(url);
       alert(t("articleDetail.copied", { defaultValue: "链接已复制" }));
@@ -955,7 +1031,7 @@ function RelatedArticles({ articles }: { articles: NotionPage[] }) {
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           {articles.map((article) => {
-            const title = extractTitle(article);
+            const title = extractTitle(article, article?.content_markdown);
             const tags = extractTags(article);
             const summary = extractSummary(article);
             const slug = article.urlSlug || article.id;
@@ -996,516 +1072,84 @@ function RelatedArticles({ articles }: { articles: NotionPage[] }) {
   );
 }
 
-// 单条评论组件
-function CommentItem({
-  comment,
-  currentUser,
-  onLike,
-  onReply,
-  onDelete,
-  onEdit,
-  replies,
-  locale,
-}: {
-  comment: Comment;
-  currentUser: UserInfo | null;
-  onLike: (id: string) => void;
-  onReply: (id: string) => void;
-  onDelete: (id: string) => void;
-  onEdit: (id: string, content: string) => void;
-  replies: Comment[];
-  locale: string;
-}) {
-  const { dark, accent } = useTheme();
+function CommentsSectionSkeleton() {
+  const { dark } = useTheme();
   const { t } = useTranslation();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(comment.content);
-  const [showReplies, setShowReplies] = useState(true);
-
-  const isOwner = currentUser?.id === comment.userId;
-  const hasLiked = currentUser ? (comment.likedBy || []).includes(currentUser.id) : false;
-
-  const handleSaveEdit = () => {
-    if (editContent.trim()) {
-      onEdit(comment.id, editContent);
-      setIsEditing(false);
-    }
-  };
-
-  return (
-    <div className="flex gap-3">
-      <RandomAvatar seed={comment.userId || comment.userName} size={40} className="flex-shrink-0" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span className={`font-medium text-sm ${dark ? "text-white" : "text-gray-900"}`}>
-            {comment.userName}
-          </span>
-          {isOwner && (
-            <span
-              className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-              style={{ backgroundColor: `${accent}20`, color: accent }}
-            >
-              {t("articleDetail.you", { defaultValue: "我" })}
-            </span>
-          )}
-          <span className={`text-xs ${dark ? "text-white/50" : "text-gray-500"}`}>
-            {formatTimeAgo(comment.createdAt, locale)}
-          </span>
-          {comment.updatedAt > comment.createdAt + 1000 && (
-            <span className={`text-xs ${dark ? "text-white/40" : "text-gray-400"}`}>
-              ({t("articleDetail.edited", { defaultValue: "已编辑" })})
-            </span>
-          )}
-        </div>
-
-        {isEditing ? (
-          <div className="mt-2">
-            <textarea
-              ref={(el) => {
-                if (el) {
-                  el.focus();
-                  // 将光标移动到文字末尾
-                  el.setSelectionRange(el.value.length, el.value.length);
-                }
-              }}
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className={`w-full px-3 py-2 rounded-lg text-sm resize-none ${
-                dark ? "bg-zinc-800 text-white border-zinc-700" : "bg-gray-50 text-gray-900 border-gray-200"
-              } border focus:outline-none focus:ring-2`}
-              rows={2}
-            />
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={handleSaveEdit}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all"
-                style={{ backgroundColor: accent }}
-              >
-                {t("articleDetail.save", { defaultValue: "保存" })}
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditContent(comment.content);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  dark ? "bg-zinc-700 text-white/80" : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                {t("articleDetail.cancel", { defaultValue: "取消" })}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className={`text-sm leading-relaxed ${dark ? "text-white/80" : "text-gray-700"}`}>
-            {comment.content}
-          </p>
-        )}
-
-        {!isEditing && (
-          <div className="flex items-center gap-4 mt-2 flex-wrap">
-            <button
-              onClick={() => onLike(comment.id)}
-              className={`flex items-center gap-1 text-xs transition-colors ${
-                hasLiked
-                  ? ""
-                  : dark
-                  ? "text-white/50 hover:text-white"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-              style={hasLiked ? { color: accent } : undefined}
-            >
-              <FiThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? "fill-current" : ""}`} />
-              {comment.likes > 0 && comment.likes}
-            </button>
-            <button
-              onClick={() => onReply(comment.id)}
-              className={`flex items-center gap-1 text-xs ${
-                dark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <FiCornerDownRight className="w-3.5 h-3.5" />
-              {t("articleDetail.reply", { defaultValue: "回复" })}
-            </button>
-            {isOwner && (
-              <>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className={`flex items-center gap-1 text-xs ${
-                    dark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <FiEdit2 className="w-3.5 h-3.5" />
-                  {t("articleDetail.edit", { defaultValue: "编辑" })}
-                </button>
-                <button
-                  onClick={() => onDelete(comment.id)}
-                  className={`flex items-center gap-1 text-xs ${
-                    dark ? "text-red-400/70 hover:text-red-400" : "text-red-500/70 hover:text-red-500"
-                  }`}
-                >
-                  <FiTrash2 className="w-3.5 h-3.5" />
-                  {t("articleDetail.delete", { defaultValue: "删除" })}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* 回复列表 */}
-        {replies.length > 0 && (
-          <div className="mt-4">
-            <button
-              onClick={() => setShowReplies(!showReplies)}
-              className={`text-xs mb-3 ${dark ? "text-white/60" : "text-gray-500"}`}
-            >
-              {showReplies ? "▼" : "▶"} {replies.length} {t("articleDetail.replies", { defaultValue: "条回复" })}
-            </button>
-            {showReplies && (
-              <div className="space-y-4 pl-4 border-l-2" style={{ borderColor: dark ? "#3f3f46" : "#e5e7eb" }}>
-                {replies.map((reply) => (
-                  <CommentItem
-                    key={reply.id}
-                    comment={reply}
-                    currentUser={currentUser}
-                    onLike={onLike}
-                    onReply={onReply}
-                    onDelete={onDelete}
-                    onEdit={onEdit}
-                    replies={[]}
-                    locale={locale}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 评论区组件
-function CommentsSection({ articleId }: { articleId: string }) {
-  const { dark, accent } = useTheme();
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language;
-
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
-  const [newComment, setNewComment] = useState("");
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [editingUserName, setEditingUserName] = useState("");
-
-  // 加载评论和用户信息
-  const loadData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [commentsData, userData] = await Promise.all([
-        getCommentsByArticle(articleId),
-        getCurrentUser(),
-      ]);
-      setComments(commentsData);
-      setCurrentUser(userData);
-    } catch (error) {
-      console.error("加载评论失败:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [articleId]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // 提交新评论
-  const handleSubmitComment = async () => {
-    if (!newComment.trim() || isSubmitting) return;
-
-    try {
-      setIsSubmitting(true);
-      await addComment(articleId, newComment);
-      setNewComment("");
-      await loadData();
-    } catch (error) {
-      console.error("发表评论失败:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 提交回复
-  const handleSubmitReply = async (parentId: string) => {
-    if (!replyContent.trim() || isSubmitting) return;
-
-    try {
-      setIsSubmitting(true);
-      await addComment(articleId, replyContent, parentId);
-      setReplyContent("");
-      setReplyingTo(null);
-      await loadData();
-    } catch (error) {
-      console.error("回复失败:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 点赞
-  const handleLike = async (commentId: string) => {
-    try {
-      await toggleCommentLike(commentId);
-      await loadData();
-    } catch (error) {
-      console.error("点赞失败:", error);
-    }
-  };
-
-  // 删除评论
-  const handleDelete = async (commentId: string) => {
-    if (!confirm(t("articleDetail.confirmDelete", { defaultValue: "确定要删除这条评论吗？" }))) {
-      return;
-    }
-
-    try {
-      await deleteComment(commentId);
-      await loadData();
-    } catch (error) {
-      console.error("删除失败:", error);
-    }
-  };
-
-  // 编辑评论
-  const handleEdit = async (commentId: string, content: string) => {
-    try {
-      const { updateComment } = await import("../lib/commentDB");
-      await updateComment(commentId, content);
-      await loadData();
-    } catch (error) {
-      console.error("编辑失败:", error);
-    }
-  };
-
-  // 更新用户名
-  const handleUpdateUserName = async () => {
-    if (!editingUserName.trim()) return;
-
-    try {
-      const updated = await updateCurrentUser({ name: editingUserName.trim() });
-      setCurrentUser(updated);
-      setShowUserModal(false);
-    } catch (error) {
-      console.error("更新用户名失败:", error);
-    }
-  };
-
-  // 按层级组织评论
-  const topLevelComments = comments.filter((c) => !c.parentId);
-  const getReplies = (parentId: string) => comments.filter((c) => c.parentId === parentId);
 
   return (
     <section className="py-12">
       <div className="max-w-4xl mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className={`text-xl font-bold flex items-center gap-2 ${dark ? "text-white" : "text-gray-900"}`}>
-            <FiMessageCircle className="w-5 h-5" />
-            {t("articleDetail.comments", { defaultValue: "评论" })} ({comments.length})
-          </h2>
-          
-          {/* 用户信息显示/编辑 */}
-          {currentUser && (
-            <button
-              onClick={() => {
-                setEditingUserName(currentUser.name);
-                setShowUserModal(true);
-              }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                dark ? "bg-zinc-800 text-white/80 hover:bg-zinc-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              <RandomAvatar seed={currentUser.id} size={20} />
-              <span>{currentUser.name}</span>
-              <FiEdit2 className="w-3 h-3 opacity-60" />
-            </button>
-          )}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="h-7 w-40 rounded-lg animate-pulse bg-gray-200 dark:bg-zinc-700" />
+          <div className="h-8 w-28 rounded-lg animate-pulse bg-gray-200 dark:bg-zinc-700" />
         </div>
-
-        {/* 用户名编辑弹窗 */}
-        {showUserModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div
-              className={`w-full max-w-sm mx-4 p-6 rounded-2xl shadow-2xl ${
-                dark ? "bg-zinc-900" : "bg-white"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-bold ${dark ? "text-white" : "text-gray-900"}`}>
-                  <FiUser className="inline-block mr-2 w-5 h-5" />
-                  {t("articleDetail.editProfile", { defaultValue: "编辑资料" })}
-                </h3>
-                <button
-                  onClick={() => setShowUserModal(false)}
-                  className={`p-1 rounded-lg ${dark ? "hover:bg-zinc-800" : "hover:bg-gray-100"}`}
-                >
-                  <FiX className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm mb-1.5 ${dark ? "text-white/70" : "text-gray-600"}`}>
-                    {t("articleDetail.userName", { defaultValue: "昵称" })}
-                  </label>
-                  <input
-                    type="text"
-                    value={editingUserName}
-                    onChange={(e) => setEditingUserName(e.target.value)}
-                    maxLength={20}
-                    className={`w-full px-4 py-2.5 rounded-xl text-sm ${
-                      dark ? "bg-zinc-800 text-white border-zinc-700" : "bg-gray-50 text-gray-900 border-gray-200"
-                    } border focus:outline-none focus:ring-2`}
-                    placeholder={t("articleDetail.userNamePlaceholder", { defaultValue: "输入昵称（最多20字）" })}
-                  />
-                </div>
-                <p className={`text-xs ${dark ? "text-white/50" : "text-gray-500"}`}>
-                  {t("articleDetail.localStorageNote", { defaultValue: "评论数据存储在本地浏览器中，清除浏览器数据后将丢失。" })}
-                </p>
-                <button
-                  onClick={handleUpdateUserName}
-                  className="w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-                  style={{ backgroundColor: accent }}
-                >
-                  {t("articleDetail.save", { defaultValue: "保存" })}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 评论输入框 */}
-        <div className="flex gap-3 mb-8">
-          <RandomAvatar seed={currentUser?.id || "guest"} size={40} className="flex-shrink-0" />
-          <div className="flex-1">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={t("articleDetail.commentPlaceholder", { defaultValue: "分享你的想法..." })}
-              className={`w-full px-4 py-3 rounded-xl text-sm resize-none ${
-                dark ? "bg-zinc-800 text-white border-zinc-700" : "bg-gray-50 text-gray-900 border-gray-200"
-              } border focus:outline-none focus:ring-2`}
-              rows={3}
-              maxLength={1000}
-            />
-            <div className="flex items-center justify-between mt-2">
-              <span className={`text-xs ${dark ? "text-white/40" : "text-gray-400"}`}>
-                {newComment.length}/1000
-              </span>
-              <button
-                onClick={handleSubmitComment}
-                disabled={!newComment.trim() || isSubmitting}
-                className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
-                style={{ backgroundColor: accent }}
-              >
-                {isSubmitting
-                  ? t("articleDetail.posting", { defaultValue: "发布中..." })
-                  : t("articleDetail.postComment", { defaultValue: "发表评论" })}
-              </button>
-            </div>
-          </div>
+        <div className={`rounded-2xl border p-6 ${dark ? "border-zinc-700 bg-zinc-800/70" : "border-gray-200 bg-gray-50"}`}>
+          <div className={`h-4 w-40 rounded animate-pulse ${dark ? "bg-zinc-700" : "bg-gray-200"}`} />
+          <p className={`mt-3 text-sm ${dark ? "text-white/60" : "text-gray-500"}`}>
+            {t("articleDetail.loadingComments", { defaultValue: "评论区将在你滚动到此处时加载" })}
+          </p>
         </div>
-
-        {/* 评论列表 */}
-        {isLoading ? (
-          <div className="space-y-6">
-            {[1, 2].map((i) => (
-              <div key={i} className="flex gap-3 animate-pulse">
-                <div className={`w-10 h-10 rounded-full ${dark ? "bg-zinc-700" : "bg-gray-200"}`} />
-                <div className="flex-1 space-y-2">
-                  <div className={`h-4 w-32 rounded ${dark ? "bg-zinc-700" : "bg-gray-200"}`} />
-                  <div className={`h-4 w-full rounded ${dark ? "bg-zinc-700" : "bg-gray-200"}`} />
-                  <div className={`h-4 w-3/4 rounded ${dark ? "bg-zinc-700" : "bg-gray-200"}`} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : comments.length === 0 ? (
-          <div className={`text-center py-12 ${dark ? "text-white/50" : "text-gray-500"}`}>
-            <FiMessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>{t("articleDetail.noComments", { defaultValue: "还没有评论，来说点什么吧~" })}</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {topLevelComments.map((comment) => (
-              <div key={comment.id}>
-                <CommentItem
-                  comment={comment}
-                  currentUser={currentUser}
-                  onLike={handleLike}
-                  onReply={(id) => {
-                    setReplyingTo(id);
-                    setReplyContent("");
-                  }}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  replies={getReplies(comment.id)}
-                  locale={locale}
-                />
-
-                {/* 回复输入框 */}
-                {replyingTo === comment.id && (
-                  <div className="ml-13 mt-4 pl-4 border-l-2" style={{ borderColor: dark ? "#3f3f46" : "#e5e7eb" }}>
-                    <div className="flex gap-3">
-                      <RandomAvatar seed={currentUser?.id || "guest"} size={32} className="flex-shrink-0" />
-                      <div className="flex-1">
-                        <textarea
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          placeholder={t("articleDetail.replyPlaceholder", {
-                            defaultValue: `回复 ${comment.userName}...`,
-                            name: comment.userName,
-                          })}
-                          className={`w-full px-3 py-2 rounded-lg text-sm resize-none ${
-                            dark ? "bg-zinc-800 text-white border-zinc-700" : "bg-gray-50 text-gray-900 border-gray-200"
-                          } border focus:outline-none focus:ring-2`}
-                          rows={2}
-                          autoFocus
-                          maxLength={500}
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => handleSubmitReply(comment.id)}
-                            disabled={!replyContent.trim() || isSubmitting}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all disabled:opacity-50"
-                            style={{ backgroundColor: accent }}
-                          >
-                            {t("articleDetail.reply", { defaultValue: "回复" })}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReplyingTo(null);
-                              setReplyContent("");
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                              dark ? "bg-zinc-700 text-white/80" : "bg-gray-200 text-gray-700"
-                            }`}
-                          >
-                            {t("articleDetail.cancel", { defaultValue: "取消" })}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
       </div>
     </section>
+  );
+}
+
+function DeferredCommentsSection({ articleId }: { articleId: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const target = containerRef.current;
+    if (!target) return;
+
+    const preload = () => {
+      import("../components/article/CommentsSection").catch(() => {
+        // Ignore prefetch errors and rely on Suspense retry.
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setShouldRender(true);
+        observer.disconnect();
+      },
+      { rootMargin: "420px 0px" }
+    );
+    observer.observe(target);
+
+    const idleWindow = window as IdleWindow;
+    let idleHandle: number | undefined;
+    const timeoutHandle = window.setTimeout(preload, 1400);
+
+    if (idleWindow.requestIdleCallback) {
+      idleHandle = idleWindow.requestIdleCallback(
+        () => {
+          preload();
+        },
+        { timeout: 2400 }
+      );
+    }
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeoutHandle);
+      if (idleHandle && idleWindow.cancelIdleCallback) {
+        idleWindow.cancelIdleCallback(idleHandle);
+      }
+    };
+  }, [articleId]);
+
+  return (
+    <div ref={containerRef}>
+      {shouldRender ? (
+        <Suspense fallback={<CommentsSectionSkeleton />}>
+          <LazyCommentsSection articleId={articleId} />
+        </Suspense>
+      ) : (
+        <CommentsSectionSkeleton />
+      )}
+    </div>
   );
 }
 
@@ -1673,7 +1317,7 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const title = useMemo(() => (article ? extractTitle(article) : ""), [article]);
+  const title = useMemo(() => (article ? extractTitle(article, article?.content_markdown) : ""), [article]);
   const summary = useMemo(() => (article ? extractSummary(article) : ""), [article]);
   const coverUrl = useMemo(() => (article ? extractCover(article) : null), [article]);
   const contentMarkdown = article?.content_markdown ?? "";
@@ -1699,8 +1343,8 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${dark ? "bg-zinc-900" : "bg-white"}`}>
-        <Header showNav={false} showLanguage={true} showTheme={true} leftSlot={<HomeButton />} />
+      <div className={`min-h-screen`}>
+        <InkNav active="blog" />
         {/* 骨架屏加载动画 */}
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-12">
           {/* 标签骨架 */}
@@ -1756,8 +1400,8 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
 
   if (error || !article) {
     return (
-      <div className={`min-h-screen ${dark ? "bg-zinc-900" : "bg-white"}`}>
-        <Header showNav={false} showLanguage={true} showTheme={true} leftSlot={<HomeButton />} />
+      <div className={`min-h-screen`}>
+        <InkNav active="blog" />
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-sm">{error || t("articleDetail.notFound", { defaultValue: "未找到文章" })}</div>
         </div>
@@ -1770,7 +1414,7 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
       {seoConfig && (
         <SEO title={seoConfig.title} description={seoConfig.description} keywords={seoConfig.keywords} ogImage={seoConfig.ogImage} ogType={seoConfig.ogType} canonicalUrl={seoConfig.canonicalUrl} schemaLD={seoConfig.schemaLD} locale={locale} />
       )}
-      <div className={`min-h-screen ${dark ? "bg-zinc-900" : "bg-white"}`} data-page="ArticleDetail">
+      <div className={`min-h-screen`} data-page="ArticleDetail">
         {/* 文章头部（含渐变背景和Header） */}
         <div className="animate-fade-in">
           <ArticleHeader article={article} />
@@ -1796,7 +1440,7 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
         <RelatedArticles articles={relatedArticles} />
 
         {/* 评论区 */}
-        <CommentsSection articleId={article.urlSlug || article.id} />
+        <DeferredCommentsSection articleId={article.urlSlug || article.id} />
 
         {/* Footer */}
         <Footer />
@@ -1808,7 +1452,9 @@ function ArticleDetailInner({ slug: slugProp }: { slug?: string }) {
 export default function ArticleDetail({ slug }: { slug?: string }) {
   return (
     <ThemeProvider>
-      <ArticleDetailInner slug={slug} />
+      <InkProvider>
+        <ArticleDetailInner slug={slug} />
+      </InkProvider>
     </ThemeProvider>
   );
 }

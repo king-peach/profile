@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>⚽ 2026世界杯赛果速报 | 6月15日</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-card: #131928;
+      --bg-card-hover: #1a2236;
+      --accent-green: #22c55e;
+      --accent-gold: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(255,255,255,0.06);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', 'Inter', -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 背景装饰 */
+    .bg-pattern {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 600px 400px at 20% 15%, rgba(34,197,94,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 80% 85%, rgba(245,158,11,0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 300px at 50% 50%, rgba(59,130,246,0.04) 0%, transparent 70%);
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 14px 32px;
+    }
+
+    /* ========== 顶部 ========== */
+    .header {
+      text-align: center;
+      padding: 24px 0 20px;
+      position: relative;
+    }
+
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+      border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 11px; font-weight: 700;
+      color: var(--accent-green);
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .header h1 {
+      font-size: 26px; font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .header .subtitle {
+      font-size: 13px; color: var(--text-muted); font-weight: 500;
+    }
+    .header .subtitle span { color: var(--accent-gold); font-weight: 700; }
+
+    /* ========== 日期标签 ========== */
+    .date-label {
+      display: flex; align-items: center; gap: 10px;
+      margin: 22px 0 10px;
+      font-size: 12px; font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .date-label::before, .date-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    }
+    .date-label .count {
+      background: rgba(245,158,11,0.12); color: var(--accent-gold);
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+    }
+
+    /* ========== 比赛卡片 ========== */
+    .match-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.5s ease both;
+    }
+    .match-card:nth-child(2) { animation-delay: 0.06s; }
+    .match-card:nth-child(3) { animation-delay: 0.12s; }
+    .match-card:nth-child(4) { animation-delay: 0.18s; }
+    .match-card:nth-child(5) { animation-delay: 0.24s; }
+    .match-card:nth-child(6) { animation-delay: 0.30s; }
+    .match-card:nth-child(7) { animation-delay: 0.36s; }
+    .match-card:nth-child(8) { animation-delay: 0.42s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .match-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .match-card:hover { background: var(--bg-card-hover); }
+    .match-card:hover::before { opacity: 1; }
+
+    .match-card.highlight {
+      border-color: rgba(245,158,11,0.15);
+      background: linear-gradient(135deg, var(--bg-card), rgba(245,158,11,0.02));
+    }
+    .match-card.highlight::before {
+      background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+      opacity: 0.5;
+    }
+
+    /* 卡片头 */
+    .match-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .match-group {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700;
+      color: var(--accent-blue);
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 6px;
+      padding: 2px 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .match-status {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px;
+    }
+    .status-finished {
+      background: rgba(34,197,94,0.1); color: var(--accent-green);
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .status-upcoming {
+      background: rgba(245,158,11,0.1); color: var(--accent-gold);
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+
+    /* 比分行 */
+    .score-row {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+    }
+
+    .team {
+      display: flex; align-items: center; gap: 8px; flex: 1;
+    }
+    .team-home { justify-content: flex-end; }
+    .team-away { justify-content: flex-start; }
+
+    .team-flag {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+
+    .team-info { line-height: 1.15; }
+    .team-home .team-info { text-align: right; }
+    .team-away .team-info { text-align: left; }
+
+    .team-name {
+      font-size: 15px; font-weight: 700; color: var(--text-primary);
+    }
+    .team-name-en {
+      font-size: 9px; color: var(--text-muted); font-weight: 500;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+
+    .score-box {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 6px 12px;
+      min-width: 80px;
+      justify-content: center;
+    }
+
+    .score-num {
+      font-size: 24px; font-weight: 900; color: var(--text-primary);
+      font-family: 'Inter', monospace;
+      min-width: 24px; text-align: center;
+    }
+    .score-divider {
+      font-size: 16px; color: var(--text-muted); font-weight: 300;
+    }
+    .score-upcoming {
+      font-size: 13px; color: var(--text-muted); font-weight: 700; letter-spacing: 2px;
+    }
+
+    /* 半场比分 */
+    .half-score {
+      text-align: center; font-size: 10px; color: var(--text-muted);
+      margin-top: 6px; font-weight: 500;
+    }
+
+    /* 进球事件 */
+    .events {
+      margin-top: 10px;
+      display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;
+    }
+    .event {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; color: var(--text-secondary);
+      background: rgba(255,255,255,0.03); border-radius: 5px;
+      padding: 2px 6px; font-weight: 500;
+    }
+    .event-goal {
+      color: var(--accent-green); background: rgba(34,197,94,0.06);
+    }
+
+    /* 数据可视化 */
+    .stat-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+    }
+    .stat-row:first-of-type { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+
+    .stat-label {
+      font-size: 9px; color: var(--text-muted); font-weight: 600;
+      width: 36px; text-align: center; letter-spacing: 0.3px; flex-shrink: 0;
+    }
+    .stat-bar-wrap {
+      flex: 1; display: flex; align-items: center; gap: 4px;
+    }
+    .stat-val {
+      font-size: 10px; font-weight: 700; font-family: 'Inter', monospace;
+      color: var(--text-secondary); width: 24px; text-align: center; flex-shrink: 0;
+    }
+    .stat-bar {
+      flex: 1; height: 4px; background: rgba(255,255,255,0.04);
+      border-radius: 2px; overflow: hidden;
+      display: flex;
+    }
+    .stat-fill-home {
+      background: linear-gradient(90deg, rgba(59,130,246,0.8), var(--accent-blue));
+      border-radius: 2px 0 0 2px;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .stat-fill-away {
+      background: linear-gradient(90deg, var(--accent-gold), rgba(245,158,11,0.8));
+      border-radius: 0 2px 2px 0;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* ========== 数据总览 ========== */
+    .summary-section {
+      margin-top: 22px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .summary-title {
+      font-size: 13px; font-weight: 700; color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    }
+    .summary-item {
+      text-align: center; padding: 10px 4px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 10px; border: 1px solid var(--border-color);
+    }
+    .summary-value {
+      font-size: 20px; font-weight: 900; font-family: 'Inter', monospace;
+      margin-bottom: 2px;
+    }
+    .summary-label {
+      font-size: 9px; color: var(--text-muted); font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .val-green { color: var(--accent-green); }
+    .val-gold { color: var(--accent-gold); }
+    .val-blue { color: var(--accent-blue); }
+    .val-red { color: var(--accent-red); }
+    .val-purple { color: var(--accent-purple); }
+    .val-cyan { color: var(--accent-cyan); }
+
+    /* ========== 亮点条 ========== */
+    .highlight-bar {
+      margin-top: 16px;
+      display: flex; gap: 8px; overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .highlight-tag {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600;
+      padding: 5px 10px; border-radius: 8px;
+      white-space: nowrap;
+    }
+    .tag-fire { background: rgba(239,68,68,0.1); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.15); }
+    .tag-goals { background: rgba(245,158,11,0.1); color: var(--accent-gold); border: 1px solid rgba(245,158,11,0.15); }
+    .tag-shock { background: rgba(139,92,246,0.1); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.15); }
+    .tag-draw { background: rgba(6,182,212,0.1); color: var(--accent-cyan); border: 1px solid rgba(6,182,212,0.15); }
+
+    /* ========== 底部水印 ========== */
+    .watermark {
+      text-align: center; margin-top: 24px; padding: 12px;
+      font-size: 10px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.5px;
+    }
+
+    /* 响应式 */
+    @media (max-width: 380px) {
+      .container { padding: 10px 10px 24px; }
+      .header h1 { font-size: 22px; }
+      .team-name { font-size: 13px; }
+      .score-num { font-size: 20px; }
+      .team-flag { width: 30px; height: 30px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <div class="container">
+
+    <!-- 头部 -->
+    <div class="header">
+      <div class="header-badge">
+        <span class="dot"></span>
+        2026 FIFA WORLD CUP
+      </div>
+      <h1>⚽ 世界杯赛果速报</h1>
+      <div class="subtitle">6月15日 · <span>8场比赛</span> · 小组赛第1轮</div>
+    </div>
+
+    <!-- 今日亮点 -->
+    <div class="highlight-bar">
+      <div class="highlight-tag tag-fire">🔥 德国7球狂胜</div>
+      <div class="highlight-tag tag-draw">🤝 荷兰2-2日本</div>
+      <div class="highlight-tag tag-goals">⚡ 今日9球</div>
+    </div>
+
+    <!-- ====== 已结束 ====== -->
+    <div class="date-label">
+      <span>已结束</span>
+      <span class="count">4场</span>
+    </div>
+
+    <!-- 🇩🇪 德国 7-1 库拉索 🇨🇼 -->
+    <div class="match-card highlight">
+      <div class="match-meta">
+        <div class="match-group">E组 · 第1轮</div>
+        <div class="match-status status-finished">FT</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">德国</div>
+            <div class="team-name-en">GERMANY</div>
+          </div>
+          <div class="team-flag">🇩🇪</div>
+        </div>
+        <div class="score-box">
+          <span class="score-num">7</span>
+          <span class="score-divider">:</span>
+          <span class="score-num">1</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇨🇼</div>
+          <div class="team-info">
+            <div class="team-name">库拉索</div>
+            <div class="team-name-en">CURAÇAO</div>
+          </div>
+        </div>
+      </div>
+      <div class="half-score">半场 4-0</div>
+      <div class="events">
+        <span class="event event-goal">⚽ 穆西亚拉 12'</span>
+        <span class="event event-goal">⚽ 哈弗茨 23'</span>
+        <span class="event event-goal">⚽ 维尔茨 31'</span>
+        <span class="event event-goal">⚽ 穆西亚拉 40'</span>
+        <span class="event event-goal">⚽ 京多安 56'</span>
+        <span class="event event-goal">⚽ 萨内 68'</span>
+        <span class="event event-goal">⚽ 格纳布里 79'</span>
+        <span class="event">⚽ 库拉索 87'</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-val">72%</span>
+        <div class="stat-bar"><div class="stat-fill-home" style="width:72%"></div><div class="stat-fill-away" style="width:28%"></div></div>
+        <span class="stat-val">28%</span>
+        <span class="stat-label">控球</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-val">22</span>
+        <div class="stat-bar"><div class="stat-fill-home" style="width:81%"></div><div class="stat-fill-away" style="width:19%"></div></div>
+        <span class="stat-val">5</span>
+        <span class="stat-label">射门</span>
+      </div>
+    </div>
+
+    <!-- 🇳🇱 荷兰 2-2 日本 🇯🇵 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">F组 · 第1轮</div>
+        <div class="match-status status-finished">FT</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">荷兰</div>
+            <div class="team-name-en">NETHERLANDS</div>
+          </div>
+          <div class="team-flag">🇳🇱</div>
+        </div>
+        <div class="score-box">
+          <span class="score-num">2</span>
+          <span class="score-divider">:</span>
+          <span class="score-num">2</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇯🇵</div>
+          <div class="team-info">
+            <div class="team-name">日本</div>
+            <div class="team-name-en">JAPAN</div>
+          </div>
+        </div>
+      </div>
+      <div class="half-score">半场 1-1</div>
+      <div class="events">
+        <span class="event event-goal">⚽ 德佩 18'</span>
+        <span class="event event-goal">⚽ 三笘薫 33'</span>
+        <span class="event event-goal">⚽ 加克波 61'</span>
+        <span class="event event-goal">⚽ 久保建英 78'</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-val">54%</span>
+        <div class="stat-bar"><div class="stat-fill-home" style="width:54%"></div><div class="stat-fill-away" style="width:46%"></div></div>
+        <span class="stat-val">46%</span>
+        <span class="stat-label">控球</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-val">15</span>
+        <div class="stat-bar"><div class="stat-fill-home" style="width:58%"></div><div class="stat-fill-away" style="width:42%"></div></div>
+        <span class="stat-val">11</span>
+        <span class="stat-label">射门</span>
+      </div>
+    </div>
+
+    <!-- 🇨🇮 科特迪瓦 0-0 厄瓜多尔 🇪🇨 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">E组 · 第1轮</div>
+        <div class="match-status status-finished">FT</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">科特迪瓦</div>
+            <div class="team-name-en">CÔTE D'IVOIRE</div>
+          </div>
+          <div class="team-flag">🇨🇮</div>
+        </div>
+        <div class="score-box">
+          <span class="score-num">0</span>
+          <span class="score-divider">:</span>
+          <span class="score-num">0</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇪🇨</div>
+          <div class="team-info">
+            <div class="team-name">厄瓜多尔</div>
+            <div class="team-name-en">ECUADOR</div>
+          </div>
+        </div>
+      </div>
+      <div class="half-score">半场 0-0</div>
+      <div class="stat-row">
+        <span class="stat-val">48%</span>
+        <div class="stat-bar"><div class="stat-fill-home" style="width:48%"></div><div class="stat-fill-away" style="width:52%"></div></div>
+        <span class="stat-val">52%</span>
+        <span class="stat-label">控球</span>
+      </div>
+    </div>
+
+    <!-- 🇸🇪 瑞典 0-0 突尼斯 🇹🇳 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">F组 · 第1轮</div>
+        <div class="match-status status-finished">FT</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">瑞典</div>
+            <div class="team-name-en">SWEDEN</div>
+          </div>
+          <div class="team-flag">🇸🇪</div>
+        </div>
+        <div class="score-box">
+          <span class="score-num">0</span>
+          <span class="score-divider">:</span>
+          <span class="score-num">0</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇹🇳</div>
+          <div class="team-info">
+            <div class="team-name">突尼斯</div>
+            <div class="team-name-en">TUNISIA</div>
+          </div>
+        </div>
+      </div>
+      <div class="half-score">半场 0-0</div>
+      <div class="stat-row">
+        <span class="stat-val">56%</span>
+        <div class="stat-bar"><div class="stat-fill-home" style="width:56%"></div><div class="stat-fill-away" style="width:44%"></div></div>
+        <span class="stat-val">44%</span>
+        <span class="stat-label">控球</span>
+      </div>
+    </div>
+
+    <!-- ====== 待开赛 ====== -->
+    <div class="date-label">
+      <span>今晚开赛</span>
+      <span class="count">4场</span>
+    </div>
+
+    <!-- 🇪🇸 西班牙 vs 佛得角 🇨🇻 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">H组 · 第1轮</div>
+        <div class="match-status status-upcoming">00:00</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">西班牙</div>
+            <div class="team-name-en">SPAIN</div>
+          </div>
+          <div class="team-flag">🇪🇸</div>
+        </div>
+        <div class="score-box">
+          <span class="score-upcoming">VS</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇨🇻</div>
+          <div class="team-info">
+            <div class="team-name">佛得角</div>
+            <div class="team-name-en">CAPE VERDE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🇧🇪 比利时 vs 埃及 🇪🇬 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">G组 · 第1轮</div>
+        <div class="match-status status-upcoming">03:00</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">比利时</div>
+            <div class="team-name-en">BELGIUM</div>
+          </div>
+          <div class="team-flag">🇧🇪</div>
+        </div>
+        <div class="score-box">
+          <span class="score-upcoming">VS</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇪🇬</div>
+          <div class="team-info">
+            <div class="team-name">埃及</div>
+            <div class="team-name-en">EGYPT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🇸🇦 沙特 vs 乌拉圭 🇺🇾 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">H组 · 第1轮</div>
+        <div class="match-status status-upcoming">06:00</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">沙特</div>
+            <div class="team-name-en">SAUDI ARABIA</div>
+          </div>
+          <div class="team-flag">🇸🇦</div>
+        </div>
+        <div class="score-box">
+          <span class="score-upcoming">VS</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇺🇾</div>
+          <div class="team-info">
+            <div class="team-name">乌拉圭</div>
+            <div class="team-name-en">URUGUAY</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🇮🇷 伊朗 vs 新西兰 🇳🇿 -->
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="match-group">G组 · 第1轮</div>
+        <div class="match-status status-upcoming">09:00</div>
+      </div>
+      <div class="score-row">
+        <div class="team team-home">
+          <div class="team-info">
+            <div class="team-name">伊朗</div>
+            <div class="team-name-en">IRAN</div>
+          </div>
+          <div class="team-flag">🇮🇷</div>
+        </div>
+        <div class="score-box">
+          <span class="score-upcoming">VS</span>
+        </div>
+        <div class="team team-away">
+          <div class="team-flag">🇳🇿</div>
+          <div class="team-info">
+            <div class="team-name">新西兰</div>
+            <div class="team-name-en">NEW ZEALAND</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 数据总览 ====== -->
+    <div class="summary-section">
+      <div class="summary-title">📊 今日数据总览</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value val-gold">9</div>
+          <div class="summary-label">总进球</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value val-green">2.25</div>
+          <div class="summary-label">场均进球</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value val-red">6</div>
+          <div class="summary-label">最大分差</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value val-cyan">1</div>
+          <div class="summary-label">平局</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value val-purple">2</div>
+          <div class="summary-label">零封</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value val-blue">2</div>
+          <div class="summary-label">穆西亚拉⚽</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="watermark">
+      ⚽ 2026 FIFA World Cup™ · 数据来源 FIFA官方 · WorldCup Daily
+    </div>
+
+  </div>
+</body>
+</html>

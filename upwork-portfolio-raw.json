@@ -1,0 +1,45 @@
+{
+  "scraped_at": "2026-09-15",
+  "source": "Upwork portfolio (Eric Wang, ~014b9123cf6c2a2244)",
+  "projects": [
+    {
+      "name": "Enterprise AI Training & Distributed Inference Platform",
+      "role": "Senior Full-Stack Engineer / Core Platform Developer",
+      "description": "Built core modules for an enterprise AI platform managing datasets, model registries, and training/inference workloads. Engineered intuitive React/TypeScript dashboards to streamline asset versioning, task execution, and real-time job tracking. Containerized application services using Docker and coordinated deployment pipelines across Kubernetes clusters. Bridged ML pipelines and production workflows, significantly reducing configuration friction and deployment errors for engineering teams.",
+      "skills": [
+        "Generative AI",
+        "Full-Stack Development",
+        "Docker",
+        "TypeScript",
+        "React"
+      ],
+      "cover": "https://www.upwork.com/att/download/portfolio/persons/uid/1849296684300619386/profile/projects/files/882f9c45-337a-49ad-9a38-e59e69cff7a3"
+    },
+    {
+      "name": "Long CoT (Chain-of-Thought) Data Annotation & Synthesis Platform",
+      "role": "Lead Full-Stack Developer",
+      "description": "Extended open-source easy-dataset for enterprise Long-CoT curation. Integrated OAuth2 for seamless SSO with the host platform. Engineered advanced dataset search/querying, step-level reasoning annotation, and critique workflows. Implemented high-throughput MinIO chunked uploads alongside an automated sync pipeline that flows processed CoT reasoning traces directly back into the upstream training cycle. Cut curation overhead by 3x and completed a robust, closed-loop AI data ecosystem.",
+      "skills": [
+        "AI Agent Development",
+        "LLM Prompt",
+        "Next.js",
+        "Python",
+        "PostgreSQL"
+      ],
+      "cover": "https://www.upwork.com/att/download/portfolio/persons/uid/1849296684300619386/profile/projects/files/42926544-2d17-4a5b-866a-632c5d402717"
+    },
+    {
+      "name": "ForgeC — AI-Powered Python to C/C++ Transpilation Engine",
+      "role": "Full-Stack & Systems Developer",
+      "description": "Built ForgeC, a production-grade AI transpiler converting multi-file Python codebases into compilable, standards-compliant C/C++. Engineered an automated compile-verify-repair loop using isolated Docker containers (clang -Werror) with cross-file linker diagnostics to auto-resolve dependency and symbol conflicts. Delivered a modern React/TypeScript control plane, FastAPI/Redis queue, and a 400MB air-gapped Linux deployment bundle. Verified by 480+ automated tests.",
+      "skills": [
+        "Python",
+        "Compiler",
+        "FastAPI",
+        "Docker",
+        "Next.js"
+      ],
+      "cover": "https://www.upwork.com/att/download/portfolio/persons/uid/1849296684300619386/profile/projects/files/3b51d36c-1cdd-48cf-915f-7ca6880e6fe0"
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+---
+title: "前端安全之XSS"
+slug: "frontend-security-xss"
+date: "2019-03-21T00:00:00.000+08:00"
+lastModified: "2019-03-21"
+description: "前端安全之XSS - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+XSS(Cross Site Scripting)，意为跨站脚本，是发生在目标用户的浏览器层面的，当渲染DOM树的过程中发生了不在预期内执行的js代码时，就发生了XSS攻击。
+
+大部分XSS攻击的主要方式是嵌入一段远程或者第三方域上的JS代码，实际上是在目标网站的作用域下执行了这段JS代码。
+
+XSS攻击方式分为：反射型XSS、存储型XSS、DOM XSS
+
+反射型XSS：也称为非持久型XSS，是指发生请求时，XSS代码出现在URL中，作为参数提交到服务器，服务器解析并响应，响应结果中包含XSS代码，最后浏览器解析并执行。一般情况表现为开发者将用户输入的内容作为请求参数发送给服务器。用户可以通过输入一段js代码输出cookie，甚至于将这个cookie发送到自己的服务器供以后使用。（一般是在搜索框中输入脚本代码或者链接第三方脚本地址）
+
+存储型XSS：也称为持久型XSS，主要是将 XSS代码发送到服务器（不管是数据库、内存还是文件系统等），然后在下次请求页面的时候就不用带上XSS代码了。典型的存储型XSS攻击就是留言板XSS，用户提交了一条包含XSS代码的留言到数据库。当目标用户查询留言时，那些留言的内容会从服务器解析之后加载出来。浏览器将XSS代码当作正常的HTML和JS执行，XSS攻击就发生了
+
+DOM XSS：通过浏览器的DOM解析，一般是开发者的JS将用户输入的内容错误的解析成js代码执行。典型的DOM XSS攻击就是在JS代码中使用eval()语句来处理用户输入的内容。eval会将字符串语句解析成js，这是很危险的行为。所以JS代码中应尽量避免使用eval
+
+  
+
+---
+
+  
+
+#### XSS的危害：
+
+1、通过document.cookie盗取cookie
+
+2、使用js或css破坏页面正常的结构与样式
+
+3、流量劫持（通过XSS攻击跳转到第三方网站）
+
+4、Dos攻击：利用合理的客户端请求来占用过多的服务器资源，从而使合法用户无法访问服务器
+
+5、利用iframe、frame、XMLHttpRequest或上述Flash等方式，以（被攻击）用户身份执行一些管理动作，或执行一些一般的如发微博、加好友、发私信的操作
+
+6、利用可被攻击的域受到其他域信任的特点，以受信任来源的身份请求一些平时不允许的操作，如进行不当的投票活动
+
+  
+
+---
+
+  
+
+#### XSS常见攻击方法：
+
+1、绕过XSS-Filter，利用<>标签注入HTML/Javascript代码
+
+2、利用HTML标签的属性值进行XSS攻击。例如：`<img src="javascript: alert('xss')" />`（并不是所有浏览器都支持javascript伪协议，所以此类XSS攻击具有一定的局限性）
+
+3、空格、回车和Tab。如果XSS Fileter仅仅是将敏感的输入字符列入黑名单，比如javascript，用户可以利用空格、回车、Tab键来绕过过滤，例如： `<img src="java script: alert('xss');" />`
+
+4、利用事件来执行跨站脚本。例如：`<img src="#" onerror="alert('xss')">`,当src错误的时候就会执行onerror语句
+
+5、利用css跨站。例如： `body { background: url("javascript: alert('xss')")}`;
+
+6、扰乱过滤规则。例如: `<img src="javaSCript:  alert(/xss/);" />`
+
+7、通过字符编码，通过这种技巧，不仅能让XSS代码绕过服务器的过滤，还能更好地隐蔽Shellcode（js支持unicode、eacapes、十六进制、十进制等编码形式）
+
+8、拆分跨站法，将XSS攻击的代码拆分开来，适用于应用程序没有过滤XSS关键字符(如< 、>)却对输入字符长度有限制的情况下；
+
+9、DOM型的XSS主要是由客户端的脚本通过DOM动态的输出数据到页面上，它不依赖于提交数据到数据库，而是从客户端获得DOM中的数据在本地执行。容易导致DOM型的XSS的输入源包括：`Document.URL`、`Location(.pathname | .href | .search | .hash)`、`Document.referrer`、`window.name`、`Document.cookie`、`localStorage/globalStorage`;
+
+持久型的xss攻击是危害比较大的，举个例子：
+
+  
+
+```html
+<textarea id="text"></textarea>
+<button id="submit">提交</button>
+<div id="showText"></div>
+<script type="text/javascript">
+	var submit = document.querySelector('#submit');
+  var text = document.querySelector('#text');
+  var showText = document.querySelector('#showText');
+  submit.addEventListener('click', function() {
+  	var comment = text.value;
+    $.ajax('xxx.xxxx.com', {
+    	method: 'post',
+      data: comment
+    }).success(function(data, textStatus) {
+    		showText.innerHTML = data.response;
+    })
+  })
+</script>
+// 这种情况下没对用户输入的信息进行解码，会产生很大的安全性问题。
+// 比如我在文本框里输入<img src="#" onerror="alert('凉了！');">
+// 在评论成功以后返回评论信息时就会弹出信息框‘凉了！’,并且这个XSS攻击会一直存在
+// innerHTML是个危险性很大的属性，最好使用innerText和textContent替换
+```
+
+  
+
+---
+
+  
+
+#### XSS如何防御：
+
+从上面的介绍可知，XSS漏洞是由于对用户提交的数据没有经过严格的过滤处理造成的，所以防御的原则就是不相信用户输入的数据，对输入进行过滤，对输出进行编码。
+
+1、使用XSS Filter
+
+针对用户提交的数据进行有效的验证，只接受我们规定的长度或内容的提交，过滤掉其他的输入内容。比如：
+
+-   表单数据指定值的类型：年龄可能是int、name只能是字母数字等
+-   过滤或移除特殊的html标签：<script>、<iframe>等
+-   过滤js事件的标签: onclick、onerror、onfocus等
+
+2、html实体
+
+当需要往HTML标签之间插入不可信数据的时候，首先要做的就是对不可信数据进行HTML Entity编码，在html中有些字符对于HTML来说是具有特殊意义的，所以这些特殊字符不允许在文本中直接使用，需要使用实体字符。html实体的存在是导致XSS漏洞的主要意愿之一，因此我们需要将实体转化为相应的实体编号。比如（空格：&nbsp; 、< : &lt; 、> : &gt; 、& : &amp; 、" : &quot;） 示例：
+
+  
+
+```html
+ <textarea id="text"></textarea>
+  <button id="submit_xss">XSS提交</button>
+  <button id="submit_com">解码提交</button>
+  <div class="showComment"></div>
+  <script type="text/javascript">
+    var submitXss = document.querySelector('#submit_xss');
+    var submitCom = document.querySelector('#submit_com')
+    // 未进行XSS处理的情况
+    var showComment = document.querySelector('.showComment');
+    submitXss.addEventListener('click', function() {
+      var text = document.querySelector('#text');
+      showComment.innerHTML = text.value; // 使用innerHTML是个很危险的行为
+     	// showComment.textContent = htmlEncodeByRegExp(text.value);
+    })
+    // 使用文本显示方式
+    var showComment = document.querySelector('.showComment');
+    submitCom.addEventListener('click', function() {
+      var text = document.querySelector('#text');
+      // 将这个要显示的字符用innerText（ie支持）或textContent（firefox、chrome支持）显示
+      showComment.innerText ? showComment.innerText = text.value : showComment.textContent = text.value;
+    })
+
+    // 用正则实现转码
+    function htmlEncodeByRegExp(text) {
+      var s = '';
+      if (text.length === 0) return '';
+      s = text.replace(/&/g, "&amp;");
+      s = s.replace(/</g, "&lt;");
+      s = s.replace(/>/g, "&gt;");
+      s = s.replace(/ /g, "&#39;");
+      s = s.replace(/\'/g, "&lt;");
+      s = s.replace(/\"/g, "&quot;");
+      s = s.replace(/\//g, "//");
+      return s;
+    }
+	</script>
+```
+
+  
+
+3、javascript编码
+
+这条原则主要针对动态生成Javascript代码，这包括脚本部分以及HTML标签的事件处理属性(如onerror, onload等)。在往Javascript代码里插入数据的时候，只有一种情况是安全的，就是对不可信数据进行javascript转码，并且只把这些数据放到使用引号包围起来的值部分(data value)之中，除了上面的那些转义之外，还要附加上实体转义  
+4、Http Only cookie
+
+许多XSS攻击的目的就是为了获取用户的cookie，将重要的cookie标记为http only，这样的话当浏览器向服务器端发送请求时就会带上cookie字段，但是在脚本中却不能访问cookie，这样就避免了XSS攻击利用js的`document.cookie`获取cookie
+
+  
+
+---
+
+  
+
+#### 总结
+
+很多地方都可能产生XSS漏洞，并且产生的方式不一样，所以对于这些漏洞，我们需要找到正确的方法来防御。XSS漏洞在不断的发展，上面介绍的防御方法几乎能够解决大部分的XSS漏洞，即便是这样，我们也不能掉以轻心，为了让Web更加安全。我们还需要结合其他的方法来加强XSS防御。
+
+随着科技的不断发展，Web应用变得越来越复杂，随之而产生的漏洞也越来越多，没有什么方法能够一次性解决所有安全问题，我们只能在实际的工作过程中，针对不同的安全漏洞进行针对性防御。

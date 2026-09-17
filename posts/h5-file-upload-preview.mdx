@@ -1,0 +1,41 @@
+---
+title: "原生H5文件上传并预览"
+slug: "h5-file-upload-preview"
+date: "2019-03-05T00:00:00.000+08:00"
+lastModified: "2019-03-05"
+description: "原生H5文件上传并预览 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+预览方法：使用h5的原生api---window.URL.createObjectURL(this.files.item(0))来获取表单上传元素的url绝对地址、然后将这个值赋给一个新增的img，这样简单的预览效果就实现了，上传至后端有待学习。
+
+值得注意的是：window.URL.createObjectURL()不得不去考虑一下，兼容性函数为
+
+  
+
+```javascript
+function getFileUrl(sourceId) {
+  // 兼容不同浏览器的URL对象
+  var polyfill = window.URL || window.webkitURL || window.moxURL
+   return polyfill.createObjectURL(sourceId)
+}
+```
+
+  
+
+FileReader() API可以获取文件的base64格式数据，示例
+
+  
+
+```plain
+const reader = new FileReader()
+reader.onload = () => {
+	console.info(reader.result)
+	document.querySelector('#img').src = reader.result
+}
+```

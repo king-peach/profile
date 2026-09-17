@@ -1,0 +1,170 @@
+---
+title: "解读块格式上下文"
+slug: "css-bfc"
+date: "2019-04-10T00:00:00.000+08:00"
+lastModified: "2019-04-10"
+description: "解读块格式上下文 - JavaScript 核心概念与疑难问题解析"
+category: "JavaScript"
+tags:
+  - JavaScript
+  - 前端
+draft: true
+---
+
+
+### 1\. 定义
+
+MDN定义：块格式上下文(Block Formatting Context, BFC)是Web页面的可视化CSS渲染的一部分，是块盒子的布局过程发生的区域，也是浮动元素与其他元素交互的区域。
+
+看了MDN对BFC的定义可能会有点懵，其实简单来说BFC就是一块独立渲染的区域，它规定了block-level box如何布局，并且与外部元素毫不相干。（也就是创建一个封闭的区域，与外部毫不相干）
+
+block-level box：块级元素。dispaly属性为block、list-item、table的元素，会生成block-level box；并且参与Block Formatting Context
+
+inline-level box：行内元素。display属性为inline、inline-block、inline-table的元素，会生成inline-level block。并且参与inline formatting context。
+
+### 2\. 创建块格式上下文的方式
+
+-   根元素或包含根元素的元素（html、body）
+-   浮动元素（元素的float不是`none`）
+-   绝对定位元素（元素的position为`absolute`或`fixed`）
+-   行内块元素（元素的display为`inline-block`）
+-   表格单元格（元素的diplay为`table-cell`，HTML表格单元格默认为该值）
+-   表格标题（元素的display为`table-caption`，HTML表格标题默认为该值）
+
+匿名表格单元格元素（元素的display为`table`、`table-row`、`table-row-group`、`t``able-header-group`、`table-footer-group`（分别是HTML table、row、tbody、thead、tfoot的默认属性）或`inline-table`）
+
+-   overflow值`不为visible`的块元素
+-   display值为`flow-root`的元素
+-   contain值为`layout`、`content`或`strict`的元素
+-   弹性元素（display为`flex`或`inline-flex`元素的直接子元素）
+-   网格元素
+-   多列容器（元素`column-count`或`column-width不为auto`，包括`column-count为1`）
+-   `column-span为all`的元素始终会创建一个新的BFC，即使该元素没有包裹在一个多列容器中
+
+### 3\. 块格式上下文所具有的特性
+
+1.  在BFC中，盒子从顶端开始垂直地一个接一个地排列
+2.  盒子垂直方向的距离由margin决定。属于同一个BFC的两个相邻盒子垂直方向的margin会发生重叠
+3.  在BFC中，每一个盒子的左外边距（margin-left）会触碰到容器的外边缘（border-left），对于从右往左的格式来说，会触碰到右边缘
+4.  BFC不会与浮动盒子产生交集，而是紧贴浮动元素边缘
+5.  计算BFC高度时，自然也会检测浮动的子盒子高度
+
+### 4\. 块格式上下文的应用
+
+块格式上下文在布局中主要用来清除元素内部浮动、垂直margin合并、创建自适应两栏布局
+
+#### 4.1 清除内部浮动
+
+我们在布局时经常碰到一个问题：对子元素设置浮动后，父元素高度会坍塌，高度变为0。
+
+解决方案：将父元素设置为BFC，通过创建块级上下文的方式中的任意一种，为了不破坏HTML结构推荐使用`overflow：hidden；`或`oveflow：auto`。当然还有很多其他清除浮动的办法，这里只介绍使用BFC解决的方案
+
+#### 4.2 垂直margin合并
+
+在标准文档流中，相邻的两个盒子的外边距(margin)会结合成一个单独的外边距(margin)。这种合并外边距的方式被成为折叠，并且因而所结合成的外边距称为折叠外边距  
+
+折叠情况：
+
+1、两个兄弟元素之间、都存在外边距(margin)时，会存在其中一个外边距失效，如图：
+
+  
+![](语雀备份/javaScript疑难梳理/assets/解读块格式上下文-1.png)
+
+  
+
+2、两个元素是父子关系时（没有内边距或边框把外边距分隔开）
+
+  
+![](语雀备份/javaScript疑难梳理/assets/解读块格式上下文-2.png)
+
+  
+
+3、一个空元素，没有边框和填充
+
+  
+
+![](语雀备份/javaScript疑难梳理/assets/解读块格式上下文-3.png)
+
+如果这个外边距遇到另一个元素的外边距，还会发生合并
+
+  
+
+![](语雀备份/javaScript疑难梳理/assets/解读块格式上下文-4.png)
+
+  
+
+  
+
+折叠的结果：
+
+1、 两个相邻的外边距(margin)都是正数时，折叠结果是它们两者之间的较大的值
+
+2、 两个相邻的外边距(margin)都是负数时，折叠结果是两者绝对值的较大值
+
+3、两个外边距(margin)一正一负时，折叠结果是两者的相加的和  
+  
+
+解决方案：一种方式是修改其中的一个margin 值；另一种方式是将其中一个元素创建成BFC与常规文档流脱离，就可以解决，不推荐使用，会破坏HTML结构；
+
+#### 4.3 创建自适应两栏布局
+
+在日常开发需求中经常会遇到，左右两个盒子需要自适应布局，比如说左边是图片、右边文字。我们一般是将图片进行浮动来解决。看似没啥毛病，但是当文字一多，我们会发现，文字会环绕图片展示。如果我们要文字只在图片右边展示，怎么办呢？
+
+  
+
+```html
+<style>
+  .box {
+  	width: 200px;
+    height: 100px;
+    border: 1px solid #000;
+    background-color: orange;
+  }
+  .box img { width: 50px; height: 50px; float: left; }
+</style>
+<body>
+  <div class="box">
+    <img src="./pic1.jpg" />
+    <p>信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息
+    信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息
+    信息信息信息信息信息信息信息信息信息信息信息信息</p>
+  </div>
+</body>
+```
+
+  
+
+![image.png](语雀备份/javaScript疑难梳理/assets/解读块格式上下文-5.png)
+
+如果我们需要文字在图片右边对齐呢?只需要将p元素设置成BFC即可
+
+  
+
+```html
+<style>
+  .box {
+  	width: 200px;
+    height: 100px;
+    border: 1px solid #000;
+    background-color: orange;
+  }
+  .box img { width: 50px; height: 50px; float: left; }
+  .box p { overflow: hidden; }
+</style>
+<body>
+  <div class="box">
+    <img src="./pic1.jpg" />
+    <p>信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息
+    信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息信息
+    信息信息信息信息信息信息信息信息信息信息信息信息</p>
+  </div>
+</body>
+```
+
+  
+
+![image.png](语雀备份/javaScript疑难梳理/assets/解读块格式上下文-6.png)
+
+#### 总结
+
+BFC是我们日常开发中经常碰到但是很容易被忽视的知识点，理解BFC对我们的页面布局很有好处，之前碰到过很多类似的问题都不知道是啥原因，今天通过查找资料然后自己总结这个知识点以后豁然开朗。以前一直觉得HTML布局很简单，慢慢深入了解之后，会发现之前地方的布局是不合理的，大概我现在到了看山不是山，看水不是水的境界了吧，还有很多知识待消化～～～

@@ -52,38 +52,44 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
-  const { dark, accent, accentHover, isOrange } = useTheme();
+  const { dark, accent, accentHover } = useTheme();
   const { t, i18n } = useTranslation();
   const isEnglish = i18n.language?.toLowerCase().startsWith("en");
-  
+
   // 国际化默认值
-  const finalStatus = status ?? t('hero.status');
-  const finalContactText = contactText ?? t('hero.cta');
-  const finalTechStackTitle = techStackTitle ?? t('hero.techStack');
+  const finalStatus = status ?? t("hero.status");
+  const finalContactText = contactText ?? t("hero.cta");
+  const finalTechStackTitle = techStackTitle ?? t("hero.techStack");
+  const profileLabel = isEnglish ? "PROFILE SNAPSHOT" : "个人信息";
 
-  // 根据主题色生成渐变背景
-  const bgBehind = useMemo(() => {
+  const shellBackground = useMemo(() => {
     if (behindGradient) return behindGradient;
-    if (dark) {
-      // 暗色模式：使用主题色的低透明度渐变
-      const accentRgb = isOrange ? "217, 63, 49" : "147, 51, 234";
-      return `radial-gradient(1200px 700px at 25% 25%, rgba(${accentRgb}, 0.15) 0%, rgba(${accentRgb}, 0.05) 40%, rgba(0,0,0,0.0) 100%)`;
+    if (!showBehindGradient) {
+      return dark ? "rgba(24, 24, 48, 0.44)" : "rgba(255, 255, 255, 0.68)";
     }
-    return "radial-gradient(1000px 600px at 20% 20%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 40%, rgba(0,0,0,0.0) 100%)";
-  }, [behindGradient, dark, accent, isOrange]);
+    if (dark) {
+      return `radial-gradient(120% 90% at 0% 0%, ${accent}22 0%, transparent 58%),
+        rgba(24, 24, 48, 0.44)`;
+    }
+    return `radial-gradient(120% 90% at 0% 0%, ${accent}16 0%, transparent 58%),
+      rgba(255, 255, 255, 0.68)`;
+  }, [behindGradient, showBehindGradient, dark, accent]);
 
-  const bgInner = useMemo(() => {
+  const panelBackground = useMemo(() => {
     if (innerGradient) return innerGradient;
     if (dark) {
-      const accentRgb = isOrange ? "217, 63, 49" : "147, 51, 234";
-      return `linear-gradient(135deg, rgba(${accentRgb}, 0.12) 0%, rgba(${accentRgb}, 0.03) 100%)`;
+      return "rgba(18, 18, 36, 0.54)";
     }
-    return "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)";
-  }, [innerGradient, dark, accent, isOrange]);
+    return "rgba(255, 255, 255, 0.82)";
+  }, [innerGradient, dark, accent]);
+
+  const panelBorderColor = dark ? "rgba(255, 255, 255, 0.12)" : `${accent}22`;
+  const mutedTextColor = dark ? "rgba(255, 255, 255, 0.68)" : "rgba(39, 48, 64, 0.68)";
+  const cardTitleColor = dark ? "#f8fafc" : "#1f2937";
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || !enableTilt) return;
 
     // 移动端默认不启用 3D tilt，除非显式开启 enableMobileTilt
     const isMobile = typeof window !== "undefined" && window.matchMedia
@@ -99,7 +105,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     let ty = 0;
 
     const onMove = (e: MouseEvent | TouchEvent) => {
-      if (!enableTilt) return;
       const rect = el.getBoundingClientRect();
       let clientX = 0;
       let clientY = 0;
@@ -114,7 +119,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       const y = clientY - rect.top;
       const pctX = (x / rect.width) * 2 - 1; // -1..1
       const pctY = (y / rect.height) * 2 - 1; // -1..1
-      const maxRotate = 10;
+      const maxRotate = e instanceof TouchEvent ? mobileTiltSensitivity : 4.2;
       tx = -pctX * maxRotate;
       ty = pctY * maxRotate;
 
@@ -157,39 +162,34 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl ${className}`}
+      className={`relative overflow-hidden rounded-[26px] border ${className}`}
       style={{
         transformStyle: "preserve-3d",
-        transition: isHovering ? "transform 80ms ease" : "transform 300ms ease",
-        backdropFilter: "blur(24px) saturate(200%)",
-        WebkitBackdropFilter: "blur(24px) saturate(200%)",
-        backgroundColor: dark 
-          ? "rgba(24, 24, 48, 0.5)" 
-          : "rgba(255, 255, 255, 0.15)",
-        border: `1px solid ${dark ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.25)"}`,
+        transition: isHovering ? "transform 120ms ease" : "transform 260ms ease",
+        backdropFilter: "blur(12px) saturate(140%)",
+        WebkitBackdropFilter: "blur(12px) saturate(140%)",
+        background: shellBackground,
+        borderColor: dark ? `${accent}2e` : `${accent}24`,
         boxShadow: dark
-          ? "0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)"
-          : "0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.2)",
+          ? "0 18px 42px -24px rgba(0, 0, 0, 0.64), 0 0 0 1px rgba(255, 255, 255, 0.03)"
+          : "0 18px 44px -26px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.45)",
       }}
       ref={containerRef}
     >
-      {showBehindGradient && (
-        <div
-          className="absolute inset-0"
-          style={{ 
-            background: bgBehind,
-            opacity: 0.8,
-          }}
-          aria-hidden
-        />
-      )}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-1.5"
+        style={{
+          background: `linear-gradient(180deg, ${accent}d9 0%, ${accent}20 78%, transparent 100%)`,
+        }}
+        aria-hidden
+      />
 
       {/* Optional icon/grain overlays */}
       {iconUrl && (
         <img
           src={iconUrl}
           alt="bg-icon"
-          className="absolute inset-0 w-full h-full object-cover opacity-15"
+          className="absolute inset-0 z-[1] h-full w-full object-cover opacity-10"
           aria-hidden
         />
       )}
@@ -197,139 +197,153 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <img
           src={grainUrl}
           alt="grain"
-          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-15"
+          className="absolute inset-0 z-[1] h-full w-full object-cover mix-blend-overlay opacity-10"
           aria-hidden
         />
       )}
 
-      {/* 上半：个人介绍 */}
-      <div
-        className="relative z-10 p-4 md:p-5 lg:p-6 flex items-center gap-4 md:gap-5 lg:gap-6 flex-shrink-0"
-        style={{ 
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          background: bgInner,
-        }}
-      >
-        <img
-          src={avatarUrl}
-          alt="avatar"
-          className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl object-cover border-2 flex-shrink-0"
+      <div className="relative z-10 grid gap-3 p-4 md:gap-4 md:p-5">
+        <div
+          className="rounded-[22px] border p-4 md:p-5"
           style={{
-            borderColor: dark ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.4)",
-            boxShadow: dark
-              ? "0 8px 24px rgba(0, 0, 0, 0.3)"
-              : "0 8px 24px rgba(0, 0, 0, 0.1)",
+            borderColor: panelBorderColor,
+            background: panelBackground,
           }}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.background = "#eee";
-          }}
-        />
-
-        {showUserInfo && (
-          <div className="flex-1 min-w-0">
-            <div className={`flex items-center gap-2 md:gap-3 ${isEnglish ? "flex-wrap" : ""}`}>
-              {miniAvatarUrl && (
-                <img
-                  src={miniAvatarUrl}
-                  alt="mini-avatar"
-                  className="w-5 h-5 md:w-6 md:h-6 rounded-lg object-cover border flex-shrink-0"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div
+              className="text-[10px] font-semibold uppercase tracking-[0.22em]"
+              style={{ color: mutedTextColor }}
+            >
+              {profileLabel}
+            </div>
+            {finalStatus && (
+              <span
+                className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium md:text-xs"
+                style={{
+                  borderColor: panelBorderColor,
+                  color: mutedTextColor,
+                  backgroundColor: dark ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.72)",
+                }}
+              >
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
                   style={{
-                    borderColor: dark ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.4)",
+                    backgroundColor: "#22c55e",
+                    boxShadow: "0 0 8px rgba(34, 197, 94, 0.44)",
                   }}
                 />
-              )}
-              <h3
-                className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold ${dark ? "text-white" : "text-gray-800"} ${
-                  isEnglish ? "basis-full md:basis-auto" : "truncate"
-                }`}
-                style={{
-                  textShadow: dark ? "0 2px 8px rgba(0, 0, 0, 0.3)" : "0 2px 8px rgba(255, 255, 255, 0.5)",
-                }}
-              >
-                {name}
-              </h3>
-              <span
-                className={`text-sm sm:text-base md:text-lg ${dark ? "text-white/85" : "text-gray-600"} ${
-                  isEnglish ? "basis-full md:basis-auto" : "truncate ml-2 md:ml-3"
-                }`}
-              >
-                {title}
+                {finalStatus}
               </span>
-            </div>
-            <div
-              className={`mt-2 md:mt-2.5 flex items-center gap-3 md:gap-4 text-xs sm:text-sm md:text-base ${dark ? "text-white/75" : "text-gray-600"}`}
-            >
-              {handle && <span>@{handle}</span>}
-              {finalStatus && (
-                <span className="flex items-center gap-1.5 md:gap-2">
-                  <span 
-                    className="inline-block w-2 h-2 md:w-2.5 md:h-2.5 rounded-full"
-                    style={{
-                      backgroundColor: '#22c55e',
-                      boxShadow: '0 0 8px rgba(34, 197, 94, 0.4)',
-                    }}
-                  />
-                  {finalStatus}
-                </span>
-              )}
-            </div>
-            {/* 联系我按钮 */}
-            {onContactClick && (
-              <button
-                className="mt-3 md:mt-4 px-5 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 hover:scale-105 hover:brightness-110 active:scale-95"
-                style={{
-                  backgroundColor: accent,
-                  color: '#ffffff',
-                  boxShadow: `0 4px 16px ${accent}40`,
-                }}
-                onClick={onContactClick}
-              >
-                {finalContactText}
-              </button>
             )}
           </div>
-        )}
-      </div>
 
-      {/* 下半：技术栈 */}
-      {techStack && (
-        <div className="relative z-10 w-full">
-          {/* 技术栈标题 */}
-          {finalTechStackTitle && (
-            <div
-              className={`text-xs font-medium tracking-widest text-center py-2 ${
-                dark ? "text-white/50" : "text-gray-500"
-              }`}
+          <div className="mt-4 flex items-start gap-4 md:gap-5">
+            <img
+              src={avatarUrl}
+              alt="avatar"
+              className="h-20 w-20 flex-shrink-0 rounded-2xl border object-cover md:h-24 md:w-24"
               style={{
-                borderTop: `1px solid ${dark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)"}`,
+                borderColor: dark ? "rgba(255, 255, 255, 0.26)" : `${accent}40`,
+                boxShadow: dark
+                  ? "0 10px 24px rgba(0, 0, 0, 0.34)"
+                  : "0 10px 22px rgba(15, 23, 42, 0.12)",
               }}
-            >
-              {finalTechStackTitle}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.background = "#eee";
+              }}
+            />
+
+            {showUserInfo && (
+              <div className="min-w-0 flex-1">
+                <h3
+                  className={`text-xl font-bold md:text-2xl ${dark ? "text-white" : "text-gray-800"} ${
+                    isEnglish ? "leading-tight" : "truncate"
+                  }`}
+                  style={{
+                    color: cardTitleColor,
+                    textShadow: dark ? "0 2px 8px rgba(0, 0, 0, 0.34)" : "0 2px 8px rgba(255, 255, 255, 0.5)",
+                  }}
+                >
+                  {name}
+                </h3>
+                <div className={`mt-1.5 text-sm md:text-base ${dark ? "text-white/82" : "text-gray-600"}`}>{title}</div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2.5 text-xs md:text-sm" style={{ color: mutedTextColor }}>
+                  {miniAvatarUrl && (
+                    <img
+                      src={miniAvatarUrl}
+                      alt="mini-avatar"
+                      className="h-5 w-5 rounded-lg border object-cover md:h-6 md:w-6"
+                      style={{
+                        borderColor: dark ? "rgba(255, 255, 255, 0.25)" : `${accent}3d`,
+                      }}
+                    />
+                  )}
+                  {handle && <span>@{handle}</span>}
+                </div>
+
+                {onContactClick && (
+                  <button
+                    className="mt-4 inline-flex rounded-full px-5 py-2.5 text-xs font-semibold transition-all duration-300 hover:translate-y-[-1px] active:translate-y-0 md:px-6 md:text-sm"
+                    style={{
+                      backgroundColor: accent,
+                      color: "#ffffff",
+                      boxShadow: `0 8px 20px ${accent}38`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = accentHover;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = accent;
+                    }}
+                    onClick={onContactClick}
+                  >
+                    {finalContactText}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {techStack && (
+          <div
+            className="rounded-[22px] border p-4 md:p-5"
+            style={{
+              borderColor: panelBorderColor,
+              backgroundColor: dark ? "rgba(14, 14, 30, 0.5)" : "rgba(255, 255, 255, 0.8)",
+            }}
+          >
+            {finalTechStackTitle && (
+              <div className="flex items-center gap-3">
+                <div
+                  className="text-[10px] font-semibold uppercase tracking-[0.22em]"
+                  style={{ color: mutedTextColor }}
+                >
+                  {finalTechStackTitle}
+                </div>
+              <div
+                className="h-px flex-1"
+                style={{
+                  backgroundColor: dark ? "rgba(255, 255, 255, 0.14)" : `${accent}23`,
+                }}
+              />
             </div>
           )}
-          {/* 技术栈展示区域 */}
           <div
-            className={`relative w-full flex items-center justify-center ${
-              dark ? "text-white" : "text-gray-700"
-            }`}
+            className={`mt-3 rounded-2xl border px-2 py-2 ${dark ? "text-white" : "text-gray-700"}`}
             style={{
-              backdropFilter: "blur(16px) saturate(180%)",
-              WebkitBackdropFilter: "blur(16px) saturate(180%)",
-              backgroundColor: dark 
-                ? "rgba(24, 24, 48, 0.3)" 
-                : "rgba(255, 255, 255, 0.08)",
-              paddingTop: "0.5rem",
-              paddingBottom: "0.625rem",
-              paddingLeft: "0.75rem",
-              paddingRight: "0.75rem",
+              borderColor: panelBorderColor,
+              backgroundColor: dark ? "rgba(255, 255, 255, 0.02)" : "rgba(247, 248, 250, 0.9)",
             }}
           >
             {techStack}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
