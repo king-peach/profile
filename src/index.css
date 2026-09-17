@@ -525,3 +525,39 @@ html.ink [data-page="ArticleList"] {
 .article-code-block .token.italic {
   font-style: italic;
 }
+
+/*
+ * TOC on ink pages — legacy ThemeContext is NOT bridged to ink theme on
+ * article routes (the bridge only exists on the home page), so `dark`
+ * here is unreliable. Force ink variables instead of legacy inline colors.
+ */
+html.ink [data-page="ArticleDetail"] .sticky.rounded-xl {
+  background-color: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 4px 6px 0 var(--paper-deep), 4px 6px 0 1px var(--line) !important;
+  font-family: var(--sans);
+}
+html.ink [data-page="ArticleDetail"] .sticky.rounded-xl h3 {
+  color: var(--ink) !important;
+  font-family: var(--serif);
+}
+html.ink [data-page="ArticleDetail"] .sticky.rounded-xl a {
+  color: var(--ink-soft) !important;
+}
+html.ink [data-page="ArticleDetail"] .sticky.rounded-xl a[style*="font-weight: 500"],
+html.ink [data-page="ArticleDetail"] .sticky.rounded-xl .font-medium {
+  color: var(--cinnabar) !important;
+}
+html.ink .ink-btn-ink {
+  background: var(--ink) !important;
+  color: var(--paper) !important;
+}
+html.ink .ink-btn-ink:hover {
+  background: var(--cinnabar) !important;
+  border-color: var(--cinnabar) !important;
+  box-shadow: 3px 4px 0 var(--shadow-ink);
+}
+html.ink .ink-btn-line {
+  background: transparent;
+  color: var(--ink);
+}

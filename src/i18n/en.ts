@@ -126,7 +126,7 @@ const en = {
         {
           company: "Gradient Technology Co., Ltd.",
           role: "Senior Frontend Developer",
-          period: "May 2022 - Jul 2025",
+          period: "May 2022 - Present",
           desc: "Led frontend development for Big Data Platform and pioneered AI-assisted programming workflow. Established AI Rules & Skills system, driving team-wide AI engineering adoption.",
           responsibilities: [
             "Introduced AI-assisted programming workflow for page development, component encapsulation, and complex logic implementation",

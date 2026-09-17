@@ -73,12 +73,12 @@ const Hero: React.FC = () => {
           }}
         />
         <div className="ink-hero-ctas">
-          <a className="ink-btn ink-btn-ink" href="#projects">
+          <InkButton variant="ink" href="#projects">
             {isEn ? "View Works" : "观其作品"}
-          </a>
-          <a className="ink-btn ink-btn-line" href="#contact">
+          </InkButton>
+          <InkButton variant="line" href="#contact">
             {isEn ? "Work With Me" : "与之共事"}
-          </a>
+          </InkButton>
         </div>
       </div>
       <div className="ink-hero-vertical">
@@ -490,12 +490,12 @@ const Contact: React.FC = () => {
             : "可沟通全职机会，也欢迎项目合作与技术交流。默认 1-2 天内回复。"}
         </p>
         <div className="ink-hero-ctas" style={{ justifyContent: "center" }}>
-          <a className="ink-btn ink-btn-ink" href="mailto:hello@linxianglive.cn">
+          <InkButton variant="ink" href="mailto:hello@linxianglive.cn">
             {isEn ? "Get in Touch" : "联系我"}
-          </a>
-          <a className="ink-btn ink-btn-line" href="https://github.com/king-peach" target="_blank" rel="noreferrer">
+          </InkButton>
+          <InkButton variant="line" href="https://github.com/king-peach" external>
             GitHub
-          </a>
+          </InkButton>
         </div>
         <div className="ink-contact-links">
           <a href="https://github.com/king-peach" target="_blank" rel="noreferrer">GitHub ↗</a>
@@ -521,6 +521,87 @@ function InkHome() {
       <About />
       <Contact />
     </div>
+  );
+}
+
+/* ============================================================
+   InkButton — deterministic CTA buttons for ink pages.
+   Inline styles beat whatever cascade order issue shadowed the
+   .ink-btn-ink class in the final CSS bundle (computed bg was
+   transparent / color stuck dark). Hover via React state.
+   ============================================================ */
+export function InkButton({
+  variant,
+  href,
+  external,
+  children,
+  style,
+}: {
+  variant: "ink" | "line";
+  href: string;
+  external?: boolean;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
+  const { inkTheme } = useInk();
+  const [hover, setHover] = React.useState(false);
+  const dark = inkTheme === "dark";
+
+  const base: React.CSSProperties = {
+    fontSize: 14,
+    padding: "12px 28px",
+    borderRadius: 4,
+    cursor: "pointer",
+    transition: "all .25s",
+    display: "inline-block",
+    textDecoration: "none",
+  };
+
+  const palette =
+    variant === "ink"
+      ? {
+          rest: {
+            background: dark ? "#e9e1d2" : "#191512",
+            color: dark ? "#16110c" : "#f5f1e8",
+            border: "1px solid " + (dark ? "#e9e1d2" : "#191512"),
+          },
+          hover: {
+            background: dark ? "#f08a5f" : "#c2401c",
+            color: dark ? "#16110c" : "#f5f1e8",
+            borderColor: dark ? "#f08a5f" : "#c2401c",
+            boxShadow: "3px 4px 0 rgba(25,21,18,.85)",
+            transform: "translate(-1px,-1px)",
+          },
+        }
+      : {
+          rest: {
+            background: "transparent",
+            color: dark ? "#e9e1d2" : "#191512",
+            border: "1px solid " + (dark ? "#e9e1d2" : "#191512"),
+          },
+          hover: {
+            background: dark ? "rgba(233,225,210,.08)" : "rgba(255,255,255,.35)",
+            color: dark ? "#f08a5f" : "#c2401c",
+            borderColor: dark ? "#f08a5f" : "#c2401c",
+            boxShadow: "3px 4px 0 rgba(194,64,28,.18)",
+            transform: "translate(-1px,-1px)",
+          },
+        };
+
+  const s = { ...base, ...(hover ? palette.hover : palette.rest), ...style };
+
+  return (
+    <a
+      className="ink-btn"
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      style={s}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {children}
+    </a>
   );
 }
 

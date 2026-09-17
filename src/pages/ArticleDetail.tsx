@@ -477,7 +477,13 @@ function SafeImage({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElem
   // 处理不同来源的图片 URL
   const processImageUrl = (url: string | undefined): string => {
     if (!url) return "";
-    
+
+    // 语雀备份的相对路径（如 "语雀备份/xxx/assets/y.png"）→ 仓库静态目录
+    // 相对路径在 /article/<slug> 路由下会被浏览器解析成 /article/... 导致 404
+    if (!/^(https?:|\/|data:)/.test(url)) {
+      return "/images/yuque/" + url;
+    }
+
     // 如果是 Notion S3 签名 URL 且已过期，尝试使用代理或显示占位
     // 微信图片等外部图片保持原样，通过 referrerPolicy 处理防盗链
     return url;
