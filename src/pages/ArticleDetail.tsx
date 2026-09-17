@@ -20,6 +20,7 @@ type NotionProperty = {
   date?: { start?: string };
   multi_select?: { name?: string; color?: string }[];
   select?: { name?: string; color?: string };
+  status?: { name?: string };
 };
 type NotionPage = {
   object: "page";
@@ -428,6 +429,13 @@ function ArticleHeader({ article }: { article: NotionPage }) {
         <h1 className={`text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-6 ${dark ? "text-white" : "text-gray-900"}`}>
           {title}
         </h1>
+
+        {/* 发布状态徽章（草稿显式标注） */}
+        {(article.properties?.Published?.status?.name || "").toLowerCase() !== "published" && (
+          <div className="mb-4">
+            <span className="ink-badge">{isEn ? "DRAFT" : "草稿"}</span>
+          </div>
+        )}
 
         {/* 作者和元信息 */}
         <div className={`flex flex-wrap items-center gap-2 text-sm ${dark ? "text-white/70" : "text-gray-600"}`}>

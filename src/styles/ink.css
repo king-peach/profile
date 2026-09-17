@@ -1423,3 +1423,98 @@ html.ink .glass,
 html.ink .glass-dark {
   backdrop-filter: blur(8px);
 }
+
+/* ============================================================
+   Prism token palette — ink theme (ported from 004-ink-v2)
+   ============================================================ */
+html.ink .article-code-block {
+  border-radius: 8px;
+}
+html.ink .article-code-block .bg-\[\#1e1e2e\] {
+  background: transparent;
+  border-color: var(--line);
+}
+html.ink .article-code-block .text-gray-400 {
+  color: rgba(233, 225, 210, 0.45);
+}
+html.ink .article-code-block pre,
+html.ink .article-code-block code {
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.65;
+}
+html.ink .token.comment,
+html.ink .token.prolog,
+html.ink .token.doctype,
+html.ink .token.cdata {
+  color: rgba(233, 225, 210, 0.4);
+  font-style: italic;
+}
+html.ink .token.punctuation {
+  color: rgba(233, 225, 210, 0.6);
+}
+html.ink .token.property,
+html.ink .token.tag,
+html.ink .token.constant,
+html.ink .token.symbol,
+html.ink .token.deleted {
+  color: #e0704a;
+}
+html.ink .token.boolean,
+html.ink .token.number {
+  color: #c9a24d;
+}
+html.ink .token.selector,
+html.ink .token.attr-name,
+html.ink .token.string,
+html.ink .token.char,
+html.ink .token.builtin,
+html.ink .token.inserted {
+  color: #9db85c;
+}
+html.ink .token.operator,
+html.ink .token.entity,
+html.ink .token.url {
+  color: #d3b88f;
+}
+html.ink .token.atrule,
+html.ink .token.attr-value,
+html.ink .token.keyword {
+  color: #e0876a;
+  font-weight: 600;
+}
+html.ink .token.function,
+html.ink .token.class-name {
+  color: #7fb5c9;
+}
+html.ink .token.regex,
+html.ink .token.important,
+html.ink .token.variable {
+  color: #c9a24d;
+}
+
+/* ============================================================
+   Detail header — serif title + draft badge
+   ============================================================ */
+html.ink [data-page="ArticleDetail"] h1 {
+  font-family: var(--serif);
+  letter-spacing: 1px;
+}
+html.ink[lang="en"] [data-page="ArticleDetail"] h1 {
+  letter-spacing: 0;
+}
+.ink-badge {
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--ink-faint);
+  display: inline-flex;
+  align-items: center;
+}
+.ink-badge.pub {
+  color: var(--cinnabar);
+  border-color: var(--cinnabar);
+  background: var(--shadow-cin);
+  font-weight: 600;
+}
