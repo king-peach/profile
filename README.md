@@ -2,7 +2,7 @@
 
 > **AI 应用开发工程师 · 7 年前端架构背景** — 把 AI 能力做成可上线的应用，不做 Demo 式玩具。
 
-🔗 **[我的作品集 →](https://linxianglive.cn)** · [技术博客](https://linxianglive.cn/articles) · [Upwork](https://www.upwork.com/freelancers/~014b9123cf6c2a2244)
+🔗 **[我的作品集 →](https://linxianglive.cn)** · [技术博客](https://linxianglive.cn/articles) · [Upwork](https://www.upwork.com/freelancers/~014b9123cf6c2a2244) · **[English](README.en.md)**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
@@ -49,8 +49,8 @@
 ## 📊 GitHub 统计
 
 <p>
-  <img height="160" src="https://github-readme-stats.vercel.app/api?username=king-peach&show_icons=true&hide_border=true&include_all_commits=true" alt="GitHub stats" />
-  <img height="160" src="https://github-readme-stats.vercel.app/api/top-langs/?username=king-peach&layout=compact&hide_border=true&langs_count=8" alt="Top langs" />
+  <img height="160" src="https://github-readme-stats-sigma-five.vercel.app/api?username=king-peach&show_icons=true&hide_border=true&include_all_commits=true" alt="GitHub stats" />
+  <img height="160" src="https://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=king-peach&layout=compact&hide_border=true&langs_count=8" alt="Top langs" />
 </p>
 
 ## ✍️ 最近在写
