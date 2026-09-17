@@ -63,7 +63,7 @@ Engineering, design patterns, deep JavaScript notes, and AI application practice
 
 - 💼 Open to **full-time opportunities** (AI application development / frontend architecture)
 - 🤝 Project collaboration and technical exchange — I usually reply within 1-2 days
-- 📧 hello@linxianglive.cn
+- 📧 wtiroo@163.com
 
 ---
 
