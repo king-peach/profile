@@ -10,6 +10,7 @@ import {
   useInk,
   EN_STAMP_SVG,
 } from "./styles/ink";
+import InkAsk from "./components/ask/InkAsk";
 import "./styles/ink.css";
 
 const sections = [
@@ -623,6 +624,7 @@ export default function App() {
             <InkNav />
             <InkHome />
             <InkFooter />
+            <InkAsk />
           </div>
         </InkShell>
       </InkProvider>

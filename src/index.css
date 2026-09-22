@@ -561,3 +561,177 @@ html.ink .ink-btn-line {
   background: transparent;
   color: var(--ink);
 }
+
+/* ============================================================
+   InkAsk — AI assistant FAB + panel (ink theme)
+   ============================================================ */
+.ink-ask-fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 90;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--cinnabar);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 3px 4px 0 var(--shadow-cin);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.ink-ask-fab:hover {
+  background: var(--cinnabar);
+  transform: translate(-1px, -1px);
+}
+.ink-ask-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 86px;
+  z-index: 90;
+  width: min(380px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 130px));
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 6px 8px 0 var(--paper-deep), 6px 8px 0 1px var(--line), 0 18px 50px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  font-family: var(--sans);
+}
+.ink-ask-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--serif);
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--ink);
+}
+.ink-ask-x {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.ink-ask-x:hover {
+  color: var(--cinnabar);
+}
+.ink-ask-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ink-ask-hello p {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+.ink-ask-sugs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.ink-ask-sugs button {
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--card);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ink-ask-sugs button:hover {
+  color: var(--cinnabar);
+  border-color: var(--cinnabar);
+}
+.ink-ask-msg {
+  display: flex;
+}
+.ink-ask-msg.user {
+  justify-content: flex-end;
+}
+.ink-ask-bubble {
+  max-width: 88%;
+  padding: 9px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ink-ask-msg.user .ink-ask-bubble {
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom-right-radius: 3px;
+}
+.ink-ask-msg.assistant .ink-ask-bubble {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-bottom-left-radius: 3px;
+}
+.ink-ask-src {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.ink-ask-input {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.ink-ask-input input {
+  flex: 1;
+  font-size: 13px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+}
+.ink-ask-input input:focus {
+  border-color: var(--cinnabar);
+}
+.ink-ask-input button {
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.ink-ask-input button:hover {
+  background: var(--cinnabar);
+  border-color: var(--cinnabar);
+}
+.ink-ask-input button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 480px) {
+  .ink-ask-panel {
+    right: 16px;
+    bottom: 80px;
+    width: calc(100vw - 32px);
+  }
+}
