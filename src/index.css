@@ -699,12 +699,15 @@ html.ink .ink-btn-line {
   background: var(--ink);
   color: var(--paper);
   border-bottom-right-radius: 3px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .ink-ask-msg.assistant .ink-ask-bubble {
   background: var(--card);
   border: 1px solid var(--line);
   color: var(--ink-soft);
   border-bottom-left-radius: 3px;
+  word-break: break-word;
 }
 .ink-ask-src {
   margin-top: 8px;
@@ -848,7 +851,11 @@ html.ink .ink-btn-line {
 }
 
 /* ---- markdown inside assistant bubbles ---- */
+/* white-space: normal is CRITICAL — the bubble sets pre-wrap (plain-text
+   legacy), which would render react-markdown's source newlines as empty
+   lines between every block/list item */
 .ink-ask-md {
+  white-space: normal;
   font-size: 13px;
   line-height: 1.65;
 }
