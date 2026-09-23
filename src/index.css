@@ -585,6 +585,31 @@ html.ink .ink-btn-line {
   background: var(--cinnabar);
   transform: translate(-1px, -1px);
 }
+/* ink-style hover tooltip */
+.ink-ask-fab::after {
+  content: attr(data-tip);
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  white-space: nowrap;
+  font-size: 12px;
+  font-family: var(--sans);
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--cinnabar);
+  box-shadow: 2px 3px 0 var(--shadow-cin);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease 0.15s, transform 0.2s ease 0.15s;
+}
+.ink-ask-fab:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
 .ink-ask-panel {
   position: fixed;
   right: 22px;
@@ -825,10 +850,10 @@ html.ink .ink-btn-line {
 /* ---- markdown inside assistant bubbles ---- */
 .ink-ask-md {
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.65;
 }
 .ink-ask-md p {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 .ink-ask-md p:last-child {
   margin-bottom: 0;
@@ -843,23 +868,45 @@ html.ink .ink-btn-line {
   font-size: 14px;
   font-weight: 900;
   color: var(--ink);
-  margin: 10px 0 6px;
+  margin: 8px 0 3px;
   letter-spacing: 0.5px;
+  line-height: 1.45;
+}
+/* headings from react-markdown (final render) */
+.ink-ask-md h1,
+.ink-ask-md h2,
+.ink-ask-md h3,
+.ink-ask-md h4 {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--ink);
+  margin: 8px 0 3px;
+  line-height: 1.45;
 }
 .ink-ask-md ul,
 .ink-ask-md ol {
-  margin: 4px 0 8px;
+  margin: 2px 0 6px;
   padding-left: 20px;
+  /* restore markers removed by Tailwind preflight */
+  list-style: disc;
 }
-.ink-ask-md ul li::marker {
+.ink-ask-md ol {
+  list-style: decimal;
+}
+.ink-ask-md li {
+  margin: 0;
+  line-height: 1.6;
+}
+/* react-markdown loose lists wrap item content in <p> — kill the extra gap */
+.ink-ask-md li > p {
+  margin: 0;
+}
+.ink-ask-md li::marker {
   color: var(--cinnabar);
 }
 .ink-ask-md ol li::marker {
-  color: var(--cinnabar);
   font-weight: 700;
-}
-.ink-ask-md li {
-  margin-bottom: 4px;
 }
 .ink-ask-md li:last-child {
   margin-bottom: 0;

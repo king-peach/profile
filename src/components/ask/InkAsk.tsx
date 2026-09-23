@@ -259,6 +259,7 @@ const InkAsk: React.FC = () => {
       <button
         type="button"
         className="ink-ask-fab"
+        data-tip={isEn ? "Ask my blog" : "问我的博客"}
         aria-label={isEn ? "Ask AI about Eric" : "AI 问答"}
         onClick={() => setOpen((o) => !o)}
       >
