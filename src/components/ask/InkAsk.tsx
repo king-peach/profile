@@ -1,9 +1,103 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { retrieve, type Retrieved } from "../../lib/askInk";
 
 type Phase = "idle" | "retrieving" | "waiting" | "streaming";
 type Msg = { role: "user" | "assistant"; content: string; sources?: Retrieved[]; error?: boolean };
+
+/* ---------- lightweight streaming renderer ----------
+   Parses **bold** / *italic* / `code` / links into React nodes.
+   Block-level (headings/lists) is handled by splitting into lines
+   and grouping list items; no HTML injection. */
+function renderInline(text: string, keyBase: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    const tok = m[0];
+    const key = `${keyBase}-${i++}`;
+    if (tok.startsWith("**")) nodes.push(<strong key={key}>{tok.slice(2, -2)}</strong>);
+    else if (tok.startsWith("`")) nodes.push(<code key={key}>{tok.slice(1, -1)}</code>);
+    else if (tok.startsWith("*")) nodes.push(<em key={key}>{tok.slice(1, -1)}</em>);
+    else {
+      const lm = /\[([^\]]+)\]\(([^)]+)\)/.exec(tok);
+      nodes.push(
+        <a key={key} href={lm![2]} target="_blank" rel="noreferrer">{lm![1]}</a>
+      );
+    }
+    last = m.index + tok.length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+const StreamMarkdown: React.FC<{ text: string }> = ({ text }) => {
+  const lines = text.split("\n");
+  const blocks: React.ReactNode[] = [];
+  let list: { ordered: boolean; items: string[] } | null = null;
+  const flush = (key: string) => {
+    if (!list) return;
+    const Tag = (list.ordered ? "ol" : "ul") as "ol" | "ul";
+    blocks.push(
+      <Tag key={key}>
+        {list.items.map((it, i) => (
+          <li key={i}>{renderInline(it, `${key}-${i}`)}</li>
+        ))}
+      </Tag>
+    );
+    list = null;
+  };
+  lines.forEach((line, idx) => {
+    const key = `b${idx}`;
+    const t = line.trim();
+    const ol = /^\d+[.、]\s+(.*)$/.exec(t);
+    const ul = /^[-*]\s+(.*)$/.exec(t);
+    const h = /^(#{1,4})\s+(.*)$/.exec(t);
+    if (ol) {
+      if (!list || !list.ordered) {
+        flush(key);
+        list = { ordered: true, items: [] };
+      }
+      list.items.push(ol[1]);
+    } else if (ul) {
+      if (!list || list.ordered) {
+        flush(key);
+        list = { ordered: false, items: [] };
+      }
+      list.items.push(ul[1]);
+    } else {
+      flush(key);
+      if (h) {
+        blocks.push(<strong key={key} className="ink-ask-md-h">{renderInline(h[2], key)}</strong>);
+      } else if (t) {
+        blocks.push(<p key={key}>{renderInline(t, key)}</p>);
+      }
+    }
+  });
+  flush("tail");
+  return <div className="ink-ask-md">{blocks}</div>;
+};
+
+/* Full markdown for finished messages (consistent with the site's article renderer) */
+const FinalMarkdown: React.FC<{ text: string }> = ({ text }) => (
+  <div className="ink-ask-md">
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        a: ({ href, children }) => (
+          <a href={href} target="_blank" rel="noreferrer">{children}</a>
+        ),
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  </div>
+);
 
 const SUGGESTIONS_ZH = ["王涛擅长什么？", "有哪些 AI 落地项目？", "讲讲微前端的实践经验", "怎么联系他？"];
 const SUGGESTIONS_EN = ["What is Eric good at?", "Any AI delivery projects?", "Micro-frontend experience?", "How to get in touch?"];
@@ -197,8 +291,16 @@ const InkAsk: React.FC = () => {
               return (
                 <div key={i} className={`ink-ask-msg ${m.role}`}>
                   <div className={`ink-ask-bubble${m.error ? " err" : ""}`}>
-                    {m.content}
-                    {isStreamingTail && <span className="ink-ask-cursor" />}
+                    {m.role === "user" ? (
+                      m.content
+                    ) : isStreamingTail ? (
+                      <>
+                        <StreamMarkdown text={m.content} />
+                        <span className="ink-ask-cursor" />
+                      </>
+                    ) : (
+                      <FinalMarkdown text={m.content} />
+                    )}
                     {m.sources && m.sources.length > 0 && !isStreamingTail && (
                       <div className="ink-ask-src">
                         {m.sources.slice(0, 3).map((s, j) => (

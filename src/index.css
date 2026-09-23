@@ -821,3 +821,87 @@ html.ink .ink-btn-line {
   background: var(--cinnabar) !important;
   color: var(--paper) !important;
 }
+
+/* ---- markdown inside assistant bubbles ---- */
+.ink-ask-md {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ink-ask-md p {
+  margin: 0 0 8px;
+}
+.ink-ask-md p:last-child {
+  margin-bottom: 0;
+}
+.ink-ask-md strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.ink-ask-md .ink-ask-md-h {
+  display: block;
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--ink);
+  margin: 10px 0 6px;
+  letter-spacing: 0.5px;
+}
+.ink-ask-md ul,
+.ink-ask-md ol {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+}
+.ink-ask-md ul li::marker {
+  color: var(--cinnabar);
+}
+.ink-ask-md ol li::marker {
+  color: var(--cinnabar);
+  font-weight: 700;
+}
+.ink-ask-md li {
+  margin-bottom: 4px;
+}
+.ink-ask-md li:last-child {
+  margin-bottom: 0;
+}
+.ink-ask-md code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.88em;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--cinnabar-bright);
+}
+.ink-ask-md pre {
+  background: #221b14;
+  color: #e9e1d2;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 6px 0 8px;
+}
+.ink-ask-md pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ink-ask-md a {
+  color: var(--cinnabar);
+  border-bottom: 1px solid var(--shadow-cin);
+  word-break: break-all;
+}
+.ink-ask-md blockquote {
+  margin: 6px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--cinnabar);
+  background: var(--card);
+  color: var(--ink-soft);
+}
+/* streaming light renderer inherits same spacing */
+.ink-ask-md p:has(+ .ink-ask-md-h) {
+  margin-bottom: 4px;
+}
